@@ -1,7 +1,10 @@
 import { Schema, model } from "mongoose";
-import User from "@/resources/user/user-interface";
-import { ContactFormType } from "@/utils/types/index";
+import { User, OTPData } from "@/resources/user/user-interface";
+import jwt from "jsonwebtoken";
+import otpGenerator from "otp-generator";
 import bcrypt from "bcrypt";
+
+// const OTP_EXPIRY = 20 * 60 * 1000;
 
 const userSchema = new Schema<User>(
     {
@@ -27,6 +30,12 @@ const userSchema = new Schema<User>(
         image: { imageId: String, imageUrl: String },
         isEmailVerified: { type: Boolean, default: false },
         googleId: { type: String, trim: true },
+        passwordResetToken: String,
+        passwordResetExpires: Date,
+        otpData: {
+            code: String,
+            expiresAt: Date,
+        },
     },
     { timestamps: true },
 );
@@ -49,46 +58,35 @@ userSchema.methods.comparePassword = async function (
     return await bcrypt.compare(password, this.password);
 };
 
-// userSchema.methods.generateToken = function (): string {
-//     // Your token generation logic
-//     return jwt.sign({ id: this._id }, process.env.JWT_SECRET!);
-// };
+userSchema.methods.generateOTP = async function (): Promise<string> {
+    const otp = otpGenerator.generate(6, {
+        lowerCaseAlphabets: false,
+        upperCaseAlphabets: false,
+        specialChars: false,
+    });
+
+    const hashedOTP = await bcrypt.hash(otp, 10);
+
+    this.otpData = {
+        code: hashedOTP,
+        expiresAt: new Date(Date.now() + Number(process.env.OTP_EXPIRY)),
+    };
+
+    return otp;
+};
+
+userSchema.methods.generatePasswordResetToken = function (): string {
+    const resetToken = jwt.sign({ userId: this._id }, process.env.JWT_SECRET!, {
+        expiresIn: process.env.PASSWORD_RESET_TOKEN_EXPIRY,
+        audience: "password-reset",
+    });
+
+    this.passwordResetToken = resetToken;
+    this.passwordResetExpires = new Date(
+        Date.now() + Number(process.env.OTP_EXPIRY),
+    );
+
+    return resetToken;
+};
 
 export default model<User>("User", userSchema);
-
-const contactSchema = new Schema(
-    {
-        first_name: {
-            type: String,
-            required: true,
-        },
-        last_name: {
-            type: String,
-            required: true,
-        },
-        number: {
-            type: String,
-            required: true,
-        },
-        email: {
-            type: String,
-            required: true,
-            unique: true,
-            trim: true,
-        },
-        subject: {
-            type: String,
-            required: true,
-        },
-        message: {
-            type: String,
-            required: true,
-        },
-    },
-    { timestamps: true },
-);
-
-export const ContactUsModel = model<ContactFormType>(
-    "ContactUs",
-    contactSchema,
-);

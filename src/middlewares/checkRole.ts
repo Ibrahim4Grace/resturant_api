@@ -1,11 +1,14 @@
 import { Router, Request, Response, NextFunction } from "express";
 import { Forbidden } from "@/middlewares/index";
 
-export const checkRole = (roles: string[]) => {
-    return (req: Request, res: Response, next: NextFunction) => {
-        const user = req.user; // Set by authenticated middleware
+//Define allowed roles type
+type UserRole = "admin" | "super_admin";
 
-        if (!user || !roles.includes(user.role)) {
+export const checkRole = (roles: UserRole[]) => {
+    return (req: Request, res: Response, next: NextFunction) => {
+        const user = req.user;
+
+        if (!user || !roles.includes(user.role as UserRole)) {
             throw new Forbidden(
                 "You do not have permission to access this resource.",
             );

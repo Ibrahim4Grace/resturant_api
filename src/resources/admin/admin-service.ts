@@ -60,7 +60,7 @@ export class AdminService {
     }
 
     /**
-     * Get all users
+     * Get all admin
      */
     public async getAdmins(): Promise<Admin[]> {
         const admins = await this.admin
@@ -68,5 +68,31 @@ export class AdminService {
             .select("-password") // Exclude password from results
             .sort({ createdAt: -1 });
         return admins;
+    }
+
+    /**
+     * Get admin by id
+     */
+    public async getAdminById(id: string): Promise<Admin | null> {
+        const admin = await this.admin
+            .findOne({ _id: id, deleted: false })
+            .select("-password");
+        return admin;
+    }
+
+    /**
+     * Submit data for an admin
+     */
+    public async updateAdminById(
+        id: string,
+        data: Partial<Admin>,
+    ): Promise<Admin | null> {
+        const admin = await this.admin.findOneAndUpdate(
+            { _id: id, deleted: false }, // Match admin by ID and not deleted
+            { $set: data }, // Update with new data
+            { new: true }, // Return the updated document
+        );
+
+        return admin;
     }
 }

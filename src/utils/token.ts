@@ -1,5 +1,5 @@
 import jwt from "jsonwebtoken";
-import User from "@/resources/user/user-interface";
+import { User } from "@/resources/user/user-interface";
 import Token from "@/utils/interfaces/token-interface";
 
 const createToken = (user: User): string => {

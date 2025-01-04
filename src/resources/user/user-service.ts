@@ -1,10 +1,11 @@
 import UserModel from "@/resources/user/user-model";
-import ContactUsModel from "@/resources/user/user-model";
 import token from "@/utils/token";
-import User from "@/resources/user/user-interface";
-import { ContactFormType } from "@/utils/types/index";
+import { User } from "@/resources/user/user-interface";
+import { sendOTPByEmail, PasswordResetEmail } from "@/resources/user/user-mail";
+import bcrypt from "bcrypt";
+import { sendMail } from "@/utils/mail";
+
 import {
-    asyncHandler,
     Conflict,
     ResourceNotFound,
     BadRequest,
@@ -14,20 +15,7 @@ import {
 
 export class UserService {
     private user = UserModel;
-    private contactUs = ContactUsModel;
 
-    /**
-     * Contact us
-     */
-    public async contact(userData: ContactFormType): Promise<void> {
-        const user = await this.contactUs.create({
-            ...userData,
-        });
-    }
-
-    /**
-     * Register a new user
-     */
     public async register(userData: {
         name: string;
         email: string;
@@ -48,9 +36,69 @@ export class UserService {
         return { user, token: accessToken };
     }
 
-    /**
-     * Attempt to login
-     */
+    public async handleForgotPassword(email: string): Promise<string> {
+        const user = await this.user.findOne({
+            email: email.toLowerCase().trim(),
+        });
+        if (!user) {
+            throw new ResourceNotFound("Email not found");
+        }
+
+        const otp = await user.generateOTP();
+        const resetToken = user.generatePasswordResetToken();
+        await user.save();
+
+        const emailOptions = sendOTPByEmail(user as User, otp);
+        await sendMail(emailOptions);
+
+        return resetToken;
+    }
+
+    public async verifyOTP(resetToken: string, otp: string): Promise<boolean> {
+        const user = await this.user.findOne({
+            passwordResetToken: resetToken,
+            passwordResetExpires: { $gt: new Date() },
+        });
+
+        if (!user?.otpData?.code) {
+            throw new BadRequest("Invalid or expired reset token");
+        }
+
+        if (new Date() > user.otpData.expiresAt) {
+            throw new BadRequest("OTP has expired");
+        }
+
+        const isValid = await bcrypt.compare(otp, user.otpData.code);
+        if (!isValid) {
+            throw new BadRequest("Invalid OTP");
+        }
+
+        return true;
+    }
+
+    public async resetPassword(
+        resetToken: string,
+        newPassword: string,
+    ): Promise<void> {
+        const user = await this.user.findOne({
+            passwordResetToken: resetToken,
+            passwordResetExpires: { $gt: new Date() },
+        });
+
+        if (!user) {
+            throw new BadRequest("Invalid or expired reset token");
+        }
+
+        user.password = newPassword;
+        user.passwordResetToken = undefined;
+        user.passwordResetExpires = undefined;
+        user.otpData = undefined;
+
+        await user.save();
+
+        await PasswordResetEmail(user as User);
+    }
+
     public async login(credentials: {
         email: string;
         password: string;
@@ -69,14 +117,31 @@ export class UserService {
         return { user, token: accessToken };
     }
 
-    /**
-     * Get all users
-     */
     public async getUsers(): Promise<User[]> {
         const users = await this.user
             .find({ deleted: false })
-            .select("-password") // Exclude password from results
+            .select("-password")
             .sort({ createdAt: -1 });
         return users;
+    }
+
+    public async getUserById(id: string): Promise<User | null> {
+        const user = await this.user
+            .findOne({ _id: id, deleted: false })
+            .select("-password");
+        return user;
+    }
+
+    public async updateUserById(
+        id: string,
+        data: Partial<User>,
+    ): Promise<User | null> {
+        const user = await this.user.findOneAndUpdate(
+            { _id: id, deleted: false },
+            { $set: data },
+            { new: true },
+        );
+
+        return user;
     }
 }
