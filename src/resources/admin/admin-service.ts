@@ -1,6 +1,6 @@
 import AdminModel from "@/resources/admin/admin-model";
-import token from "@/utils/token";
-import Admin from "@/resources/admin/admin-interface";
+import { createToken } from "@/utils/token";
+import { Admin } from "@/resources/admin/admin-interface";
 import {
     asyncHandler,
     Conflict,
@@ -33,8 +33,8 @@ export class AdminService {
             ...adminData,
             role: adminData.role || "admin",
         });
-
-        const accessToken = token.createToken(admin);
+        const accessToken = createToken({ _id: admin._id, role: admin.role });
+        // const accessToken = token.createToken(admin);
         return { admin, token: accessToken };
     }
 
@@ -55,7 +55,7 @@ export class AdminService {
             throw new Error("Invalid email or password");
         }
 
-        const accessToken = token.createToken(admin);
+        const accessToken = createToken({ _id: admin._id, role: admin.role });
         return { admin, token: accessToken };
     }
 

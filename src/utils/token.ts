@@ -1,14 +1,13 @@
 import jwt from "jsonwebtoken";
-import { User } from "@/resources/user/user-interface";
-import Token from "@/utils/interfaces/token-interface";
+import { Token, TokenPayload } from "@/utils/interfaces/token-interface";
 
-const createToken = (user: User): string => {
+export const createToken = (entity: TokenPayload): string => {
     if (!process.env.JWT_SECRET) {
         throw new Error("JWT_SECRET is not defined in environment variables");
     }
 
     return jwt.sign(
-        { id: user._id }, // Use _id instead of id for MongoDB documents
+        { id: entity._id, role: entity.role },
         process.env.JWT_SECRET as jwt.Secret,
         {
             expiresIn: "1d",
@@ -16,7 +15,7 @@ const createToken = (user: User): string => {
     );
 };
 
-const verifyToken = async (token: string): Promise<Token> => {
+export const verifyToken = async (token: string): Promise<Token> => {
     if (!process.env.JWT_SECRET) {
         throw new Error("JWT_SECRET is not defined in environment variables");
     }
@@ -33,5 +32,3 @@ const verifyToken = async (token: string): Promise<Token> => {
         );
     });
 };
-
-export default { createToken, verifyToken };

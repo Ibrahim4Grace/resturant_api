@@ -2,10 +2,13 @@ import express, { Application } from "express";
 import mongoose from "mongoose";
 import compression from "compression";
 import cors from "cors";
+import { corsOptions, specs } from "@/config/index";
+import swaggerUi from "swagger-ui-express";
 import morgan from "morgan";
-import Controller from "@/utils/interfaces/controller.interface";
+import { Controller } from "@/utils/interfaces/controller.interface";
 import { errorHandler, routeNotFound } from "@/middlewares/index";
 import helmet from "helmet";
+import log from "@/utils/logger";
 
 class App {
     public express: Application;
@@ -24,23 +27,34 @@ class App {
 
     private initializeMiddlewares(): void {
         this.express.use(helmet());
-        this.express.use(cors());
+        this.express.use(cors(corsOptions));
         this.express.use(morgan("dev"));
-        this.express.use(express.json());
-        this.express.use(express.urlencoded({ extended: false }));
+        this.express.use(express.json({ limit: "15mb" }));
+        this.express.use(
+            express.urlencoded({ limit: "15mb", extended: false }),
+        );
         this.express.use(compression());
+        this.express.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs));
     }
 
     private initializeControllers(controllers: Controller[]): void {
         controllers.forEach((controller: Controller) => {
+            console.log(
+                "Registering routes:",
+                controller.router.stack.map((r) => r.route?.path),
+            );
+            // Add debug middleware to log all incoming requests
+            this.express.use((req, res, next) => {
+                log.info(`${req.method} ${req.url}`);
+                next();
+            });
             this.express.use("/api/v1", controller.router);
         });
     }
 
     private initializeDefaultRoute(): void {
         this.express.get("/", (req, res) => {
-            res.status(200).json({
-                success: true,
+            res.send({
                 message:
                     "Welcome to resturant API. Use /api/v1 for all API routes.",
             });

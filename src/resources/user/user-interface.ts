@@ -6,6 +6,7 @@ export interface OTPData {
 }
 
 export interface User extends Document {
+    _id: string;
     name: string;
     email: string;
     password: string;
@@ -31,11 +32,11 @@ export interface EmailOptions {
     html: string;
 }
 
-export interface IPasswordResetService {
-    handleForgotPassword(email: string): Promise<string>;
-    handleVerifyOTP(otp: string): Promise<string>;
-    handleResetPassword(
-        resetToken: string,
-        newPassword: string,
-    ): Promise<string>;
-}
+// export interface IPasswordResetService {
+//     handleForgotPassword(email: string): Promise<string>;
+//     handleVerifyOTP(otp: string): Promise<string>;
+//     handleResetPassword(
+//         resetToken: string,
+//         newPassword: string,
+//     ): Promise<string>;
+// }

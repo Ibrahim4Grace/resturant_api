@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
-import verifyToken from "@/utils/token";
+import { verifyToken } from "@/utils/token";
 import UserModel from "@/resources/user/user-model";
-import Token from "@/utils/interfaces/token-interface";
+import { Token } from "@/utils/interfaces/token-interface";
 import { ServerError } from "@/middlewares/index";
 
 export const authMiddleware = async (
@@ -31,7 +31,7 @@ export const authMiddleware = async (
             return;
         }
 
-        const payload: Token = await verifyToken.verifyToken(accessToken);
+        const payload: Token = await verifyToken(accessToken);
         const user = await UserModel.findById(payload.id)
             .select("-password")
             .exec();

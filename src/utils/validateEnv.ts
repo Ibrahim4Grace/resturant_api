@@ -14,6 +14,7 @@ function validateEnv(): void {
         MAILER_SERVICE: str(),
         NODEMAILER_EMAIL: str(),
         NODEMAILER_PASSWORD: str(),
+        CORS_WHITELIST: str(),
     });
 }
 

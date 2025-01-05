@@ -1,7 +1,10 @@
-interface Token extends Object {
+export interface Token extends Object {
     id: number;
     iat: number;
     expiresIn: number;
 }
 
-export default Token;
+export interface TokenPayload {
+    _id: string;
+    role?: string;
+}

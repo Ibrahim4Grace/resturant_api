@@ -1,5 +1,5 @@
 import { Router, Request, Response, NextFunction } from "express";
-import Controller from "@/utils/interfaces/controller.interface";
+import { Controller } from "@/utils/interfaces/controller.interface";
 import validate from "@/resources/admin/admin-validation";
 import { AdminService } from "@/resources/admin/admin-service";
 import { authMiddleware, checkRole } from "@/middlewares/index";

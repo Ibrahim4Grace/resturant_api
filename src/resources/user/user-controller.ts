@@ -12,38 +12,56 @@ import {
 } from "@/middlewares/index";
 
 export default class UserController implements Controller {
-    public paths = "/auth/users";
     public path = "/users";
     public router = Router();
     private userService = new UserService();
 
+    // constructor() {
+    //     this.initializeRoutes();
+    // }
+
     constructor() {
+        // Add a console log here
+        console.log("Initializing UserController");
         this.initializeRoutes();
+        // Add another console log to see all registered routes
+        console.log(
+            "Registered routes:",
+            this.router.stack
+                .map((layer) => {
+                    if (layer.route) {
+                        return `${layer.route.stack[0].method.toUpperCase()} ${layer.route.path}`;
+                    }
+                })
+                .filter(Boolean),
+        );
     }
 
     private initializeRoutes(): void {
+        console.log("Initializing user routes...");
         this.router.post(
-            `${this.paths}/password/forgot`,
-            validateData(validate.register),
-            asyncHandler(this.handleForgotPassword),
-        );
-        this.router.post(
-            `${this.paths}/password/verify-otp`,
-            validateData(validate.register),
-            asyncHandler(this.verifyOTP),
-        );
-        this.router.post(
-            `${this.paths}/password/reset`,
-            validateData(validate.register),
-            asyncHandler(this.resetPassword),
-        );
-        this.router.post(
-            `${this.paths}/register`,
+            `${this.path}/register`,
             validateData(validate.register),
             asyncHandler(this.register),
         );
+
         this.router.post(
-            `${this.paths}/login`,
+            `${this.path}/forgot`,
+            validateData(validate.forgetPwd),
+            asyncHandler(this.handleForgotPassword),
+        );
+        this.router.post(
+            `${this.path}/password/verify-otp`,
+            validateData(validate.verifyOtp),
+            asyncHandler(this.verifyOTP),
+        );
+        this.router.post(
+            `${this.path}/password/reset`,
+            validateData(validate.resetPassword),
+            asyncHandler(this.resetPassword),
+        );
+        this.router.post(
+            `${this.path}/login`,
             validateData(validate.login),
             asyncHandler(this.login),
         );
@@ -64,11 +82,27 @@ export default class UserController implements Controller {
         );
     }
 
+    private register = async (
+        req: Request,
+        res: Response,
+        next: NextFunction,
+    ): Promise<void> => {
+        const { name, email, password, role } = req.body;
+        const result = await this.userService.register({
+            name,
+            email,
+            password,
+            role,
+        });
+        sendJsonResponse(res, 201, "Registration successful", result);
+    };
+
     private handleForgotPassword = async (
         req: Request,
         res: Response,
         next: NextFunction,
     ): Promise<void> => {
+        console.log("Received forgot password request:", req.body);
         const { email } = req.body;
 
         if (!email) {
@@ -122,21 +156,6 @@ export default class UserController implements Controller {
 
         await this.userService.resetPassword(resetToken, newPassword);
         sendJsonResponse(res, 200, "Password reset successfully.");
-    };
-
-    private register = async (
-        req: Request,
-        res: Response,
-        next: NextFunction,
-    ): Promise<void> => {
-        const { name, email, password, role } = req.body;
-        const result = await this.userService.register({
-            name,
-            email,
-            password,
-            role,
-        });
-        sendJsonResponse(res, 201, "Registration successful", result);
     };
 
     private login = async (

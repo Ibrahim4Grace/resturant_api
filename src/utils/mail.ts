@@ -17,6 +17,6 @@ export const sendMail = async (emailcontent: EmailOptions): Promise<string> => {
         return "Email sent successfully.";
     } catch (error) {
         console.error(error);
-        throw new ServerError((error as Error).message);
+        throw new ServerError("INTERNAL_SERVER_ERROR");
     }
 };

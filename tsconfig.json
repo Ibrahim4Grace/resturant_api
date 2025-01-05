@@ -6,16 +6,18 @@
         "paths": {
             "@/resources/*": ["resources/*"],
             "@/utils*": ["utils/*"],
-            "@/middlewares*": ["middlewares/*"]
+            "@/middlewares*": ["middlewares/*"],
+            "@/config*": ["config/*"],
+            "@/email-services*": ["email-services/*"]
         },
         "outDir": "dist",
         "esModuleInterop": true,
+        "resolveJsonModule": true,
         "allowSyntheticDefaultImports": true,
         "forceConsistentCasingInFileNames": true,
         "strict": true,
         "skipLibCheck": true
     },
-    "types": ["node"],
-    "include": ["src/**/*", "config"],
+    "include": ["src/**/*"],
     "exclude": ["node_modules", "dist", "**/*spec.ts"]
 }

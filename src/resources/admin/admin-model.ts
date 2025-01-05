@@ -1,5 +1,5 @@
 import { Schema, model } from "mongoose";
-import Admin from "@/resources/admin/admin-interface";
+import { Admin } from "@/resources/admin/admin-interface";
 import bcrypt from "bcrypt";
 
 const adminSchema = new Schema<Admin>(

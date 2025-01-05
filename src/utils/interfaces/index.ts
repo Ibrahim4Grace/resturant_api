@@ -12,13 +12,6 @@ export interface MulterFile {
     stream: any;
 }
 
-export interface EmailData {
-    from: string;
-    to: string;
-    subject: string;
-    html: string;
-}
-
 export interface JwtPayload {
     user_id: string;
     role: string;

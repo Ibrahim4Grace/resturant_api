@@ -1,6 +1,7 @@
 import { Document } from "mongoose";
 
-export default interface Admin extends Document {
+export interface Admin extends Document {
+    _id: string;
     name: string;
     email: string;
     password: string;
@@ -16,17 +17,4 @@ export default interface Admin extends Document {
 
     // Added return type for token
     generateToken(): string;
-
-    // Improved typing for toJSON
-    toJSON(): {
-        _id: string;
-        name: string;
-        email: string;
-        role: string;
-        image: String;
-        isEmailVerified: boolean;
-        googleId: string;
-        createdAt: Date;
-        updatedAt: Date;
-    };
 }

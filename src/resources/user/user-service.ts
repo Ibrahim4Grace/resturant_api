@@ -1,9 +1,13 @@
 import UserModel from "@/resources/user/user-model";
-import token from "@/utils/token";
+import { createToken } from "@/utils/token";
 import { User } from "@/resources/user/user-interface";
-import { sendOTPByEmail, PasswordResetEmail } from "@/resources/user/user-mail";
+import {
+    sendOTPByEmail,
+    PasswordResetEmail,
+} from "@/resources/user/user-email-template";
 import bcrypt from "bcrypt";
 import { sendMail } from "@/utils/mail";
+import { EmailService } from "@/email-services/index";
 
 import {
     Conflict,
@@ -15,6 +19,11 @@ import {
 
 export class UserService {
     private user = UserModel;
+    // private emailService: EmailService;
+
+    // constructor() {
+    //     this.emailService = new EmailService();
+    // }
 
     public async register(userData: {
         name: string;
@@ -32,7 +41,7 @@ export class UserService {
             role: userData.role || "user", // Default to "user" if role not provided
         });
 
-        const accessToken = token.createToken(user);
+        const accessToken = createToken({ _id: user._id, role: user.role });
         return { user, token: accessToken };
     }
 
@@ -47,6 +56,16 @@ export class UserService {
         const otp = await user.generateOTP();
         const resetToken = user.generatePasswordResetToken();
         await user.save();
+
+        // await this.emailService.queueEmail({
+        //     to: user.email,
+        //     templateName: "otpVerification",
+        //     data: {
+        //         name: user.name,
+        //         otp,
+        //         expiryHours: process.env.OTP_EXPIRY || 15,
+        //     },
+        // });
 
         const emailOptions = sendOTPByEmail(user as User, otp);
         await sendMail(emailOptions);
@@ -113,7 +132,7 @@ export class UserService {
             throw new Error("Invalid email or password");
         }
 
-        const accessToken = token.createToken(user);
+        const accessToken = createToken({ _id: user._id, role: user.role });
         return { user, token: accessToken };
     }
 
