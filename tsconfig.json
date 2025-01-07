@@ -2,13 +2,14 @@
     "compilerOptions": {
         "target": "es2016",
         "module": "commonjs",
+        "rootDir": "src",
         "baseUrl": "./src",
         "paths": {
             "@/resources/*": ["resources/*"],
-            "@/utils*": ["utils/*"],
-            "@/middlewares*": ["middlewares/*"],
-            "@/config*": ["config/*"],
-            "@/email-services*": ["email-services/*"]
+            "@/utils/*": ["utils/*"],
+            "@/middlewares/*": ["middlewares/*"],
+            "@/config/*": ["config/*"],
+            "@/types/*": ["types/*"]
         },
         "outDir": "dist",
         "esModuleInterop": true,

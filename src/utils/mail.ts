@@ -1,8 +1,8 @@
 import nodemailer from "nodemailer";
-import { EmailOptions } from "@/resources/user/user-interface";
+import { EmailOptions } from "@/types/index";
 import { ServerError } from "@/middlewares/index";
 
-export const sendMail = async (emailcontent: EmailOptions): Promise<string> => {
+export const sendMail = async (emailcontent: EmailOptions) => {
     const transporter = nodemailer.createTransport({
         service: process.env.MAILER_SERVICE,
         host: "smtp.gmail.com",

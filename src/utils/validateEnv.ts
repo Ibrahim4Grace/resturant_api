@@ -15,6 +15,8 @@ function validateEnv(): void {
         NODEMAILER_EMAIL: str(),
         NODEMAILER_PASSWORD: str(),
         CORS_WHITELIST: str(),
+        // REDIS_HOST: str(),
+        // REDIS_PORT: str(),
     });
 }
 

@@ -2,7 +2,7 @@ import { Schema, model } from "mongoose";
 import { User, OTPData } from "@/resources/user/user-interface";
 import jwt from "jsonwebtoken";
 import otpGenerator from "otp-generator";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 
 // const OTP_EXPIRY = 20 * 60 * 1000;
 

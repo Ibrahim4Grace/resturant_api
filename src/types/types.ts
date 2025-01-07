@@ -16,3 +16,23 @@ export interface JwtPayload {
     user_id: string;
     role: string;
 }
+
+export interface EmailTemplate {
+    subject: string;
+    template: string;
+}
+
+export interface EmailData {
+    from: string;
+    to: string;
+    subject: string;
+    html: string;
+}
+
+//omit soon
+export interface EmailOptions {
+    from: string;
+    to: string;
+    subject: string;
+    html: string;
+}

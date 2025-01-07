@@ -1,13 +1,13 @@
 import UserModel from "@/resources/user/user-model";
-import { createToken } from "@/utils/token";
+import { createToken, sendMail } from "@/utils/index";
 import { User } from "@/resources/user/user-interface";
 import {
     sendOTPByEmail,
     PasswordResetEmail,
 } from "@/resources/user/user-email-template";
-import bcrypt from "bcrypt";
-import { sendMail } from "@/utils/mail";
-import { EmailService } from "@/email-services/index";
+import bcrypt from "bcryptjs";
+// import { EmailService } from "@/queues/mailer-processing";
+import sendEmailTemplate from "../../views/sendEmailTemplate";
 
 import {
     Conflict,
@@ -19,11 +19,6 @@ import {
 
 export class UserService {
     private user = UserModel;
-    // private emailService: EmailService;
-
-    // constructor() {
-    //     this.emailService = new EmailService();
-    // }
 
     public async register(userData: {
         name: string;
@@ -38,7 +33,7 @@ export class UserService {
 
         const user = await this.user.create({
             ...userData,
-            role: userData.role || "user", // Default to "user" if role not provided
+            role: userData.role || "user",
         });
 
         const accessToken = createToken({ _id: user._id, role: user.role });
@@ -57,18 +52,18 @@ export class UserService {
         const resetToken = user.generatePasswordResetToken();
         await user.save();
 
-        // await this.emailService.queueEmail({
-        //     to: user.email,
-        //     templateName: "otpVerification",
-        //     data: {
-        //         name: user.name,
-        //         otp,
-        //         expiryHours: process.env.OTP_EXPIRY || 15,
-        //     },
-        // });
+        await sendEmailTemplate({
+            to: email,
+            subject: "Password Reset Request",
+            templateName: "password-forget",
+            variables: {
+                otp: otp,
+                expiryTime: 10, // minutes
+            },
+        });
 
-        const emailOptions = sendOTPByEmail(user as User, otp);
-        await sendMail(emailOptions);
+        // const emailOptions = sendOTPByEmail(user as User, otp);
+        // await sendMail(emailOptions);
 
         return resetToken;
     }

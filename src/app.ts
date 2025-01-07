@@ -2,13 +2,13 @@ import express, { Application } from "express";
 import mongoose from "mongoose";
 import compression from "compression";
 import cors from "cors";
-import { corsOptions, specs } from "@/config/index";
+import { corsOptions, specs, ServerAdapter } from "@/config/index";
 import swaggerUi from "swagger-ui-express";
 import morgan from "morgan";
-import { Controller } from "@/utils/interfaces/controller.interface";
+import { log } from "@/utils/index";
+import { Controller } from "@/types/index";
 import { errorHandler, routeNotFound } from "@/middlewares/index";
 import helmet from "helmet";
-import log from "@/utils/logger";
 
 class App {
     public express: Application;
@@ -21,6 +21,7 @@ class App {
         this.initializeDatabaseConnection();
         this.initializeMiddlewares();
         this.initializeControllers(controllers);
+        this.initializeQueueRoutes();
         this.initializeDefaultRoute();
         this.initializeErrorHandling();
     }
@@ -39,17 +40,12 @@ class App {
 
     private initializeControllers(controllers: Controller[]): void {
         controllers.forEach((controller: Controller) => {
-            console.log(
-                "Registering routes:",
-                controller.router.stack.map((r) => r.route?.path),
-            );
-            // Add debug middleware to log all incoming requests
-            this.express.use((req, res, next) => {
-                log.info(`${req.method} ${req.url}`);
-                next();
-            });
             this.express.use("/api/v1", controller.router);
         });
+    }
+
+    private initializeQueueRoutes(): void {
+        this.express.use("/admin/queues", ServerAdapter.getRouter());
     }
 
     private initializeDefaultRoute(): void {
@@ -74,13 +70,13 @@ class App {
 
         mongoose
             .connect(MONGODB_URI)
-            .then(() => console.log("Database connected successfully"))
+            .then(() => log.info("Database connected successfully"))
             .catch((err) => console.error("Database connection failed:", err));
     }
 
     public listen(): void {
         this.express.listen(this.port, () => {
-            console.log(`App listening on the port ${this.port}`);
+            log.info(`App listening on the port ${this.port}`);
         });
     }
 }

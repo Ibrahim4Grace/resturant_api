@@ -1,5 +1,5 @@
 import { Router, Request, Response, NextFunction } from "express";
-import { Controller } from "@/utils/interfaces/controller.interface";
+import { Controller } from "@/types/index";
 import validate from "@/resources/user/user-validation";
 import { UserService } from "@/resources/user/user-service";
 import { authMiddleware } from "@/middlewares/index";
@@ -12,56 +12,39 @@ import {
 } from "@/middlewares/index";
 
 export default class UserController implements Controller {
+    public authPath = "/auth/users";
     public path = "/users";
     public router = Router();
     private userService = new UserService();
 
-    // constructor() {
-    //     this.initializeRoutes();
-    // }
-
     constructor() {
-        // Add a console log here
-        console.log("Initializing UserController");
         this.initializeRoutes();
-        // Add another console log to see all registered routes
-        console.log(
-            "Registered routes:",
-            this.router.stack
-                .map((layer) => {
-                    if (layer.route) {
-                        return `${layer.route.stack[0].method.toUpperCase()} ${layer.route.path}`;
-                    }
-                })
-                .filter(Boolean),
-        );
     }
 
     private initializeRoutes(): void {
-        console.log("Initializing user routes...");
         this.router.post(
-            `${this.path}/register`,
+            `${this.authPath}/register`,
             validateData(validate.register),
             asyncHandler(this.register),
         );
 
         this.router.post(
-            `${this.path}/forgot`,
+            `${this.authPath}/forgot`,
             validateData(validate.forgetPwd),
             asyncHandler(this.handleForgotPassword),
         );
         this.router.post(
-            `${this.path}/password/verify-otp`,
+            `${this.authPath}/password/verify-otp`,
             validateData(validate.verifyOtp),
             asyncHandler(this.verifyOTP),
         );
         this.router.post(
-            `${this.path}/password/reset`,
+            `${this.authPath}/password/reset`,
             validateData(validate.resetPassword),
             asyncHandler(this.resetPassword),
         );
         this.router.post(
-            `${this.path}/login`,
+            `${this.authPath}/login`,
             validateData(validate.login),
             asyncHandler(this.login),
         );

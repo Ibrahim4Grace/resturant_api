@@ -25,13 +25,6 @@ export interface User extends Document {
     generatePasswordResetToken(): string;
 }
 
-export interface EmailOptions {
-    from: string;
-    to: string;
-    subject: string;
-    html: string;
-}
-
 // export interface IPasswordResetService {
 //     handleForgotPassword(email: string): Promise<string>;
 //     handleVerifyOTP(otp: string): Promise<string>;
@@ -40,3 +33,10 @@ export interface EmailOptions {
 //         newPassword: string,
 //     ): Promise<string>;
 // }
+
+export interface EmailOptions {
+    from: string;
+    to: string;
+    subject: string;
+    html: string;
+}

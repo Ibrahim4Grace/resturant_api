@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { verifyToken } from "@/utils/token";
 import UserModel from "@/resources/user/user-model";
-import { Token } from "@/utils/interfaces/token-interface";
+import { Token } from "@/types/index";
 import { ServerError } from "@/middlewares/index";
 
 export const authMiddleware = async (

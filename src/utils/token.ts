@@ -1,5 +1,5 @@
 import jwt from "jsonwebtoken";
-import { Token, TokenPayload } from "@/utils/interfaces/token-interface";
+import { Token, TokenPayload } from "@/types/index";
 
 export const createToken = (entity: TokenPayload): string => {
     if (!process.env.JWT_SECRET) {

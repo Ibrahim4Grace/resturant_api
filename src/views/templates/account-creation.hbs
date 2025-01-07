@@ -1,0 +1,13 @@
+{{! Purpose: This template is used to send an email to a user who has created an account. }}
+{{#> base_template}}
+  {{#*inline "content"}}
+    <div>
+      <div class="verification-header">
+        <img src="https://i.imghippo.com/files/21z1w1724265467.png" alt="registration" />
+      </div>
+    </div>
+    <h1>Successful Registration</h1>
+    <p class="greeting"><strong>Hi {{name}},</strong></p>
+    <p>Thank you for registering your account with us. We're excited to have you on board!</p>
+  {{/inline}}
+{{/base_template}}
