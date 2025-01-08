@@ -28,11 +28,3 @@ export interface EmailData {
     subject: string;
     html: string;
 }
-
-//omit soon
-export interface EmailOptions {
-    from: string;
-    to: string;
-    subject: string;
-    html: string;
-}

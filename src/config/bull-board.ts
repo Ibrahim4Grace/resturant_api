@@ -13,5 +13,5 @@ createBullBoard({
     serverAdapter: ServerAdapter,
 });
 
-ServerAdapter.setBasePath(`/api/queues/${process.env.BULL_PASSKEY}`);
+ServerAdapter.setBasePath(`/admin/queues`);
 export { ServerAdapter };

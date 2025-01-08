@@ -33,10 +33,3 @@ export interface User extends Document {
 //         newPassword: string,
 //     ): Promise<string>;
 // }
-
-export interface EmailOptions {
-    from: string;
-    to: string;
-    subject: string;
-    html: string;
-}

@@ -58,7 +58,8 @@ class App {
     }
 
     private initializeErrorHandling(): void {
-        this.express.use(errorHandler, routeNotFound);
+        this.express.use(routeNotFound);
+        this.express.use(errorHandler);
     }
 
     private initializeDatabaseConnection(): void {

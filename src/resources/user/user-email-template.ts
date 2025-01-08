@@ -1,9 +1,9 @@
-import { EmailOptions } from "@/resources/user/user-interface";
+import { EmailData } from "@/types/index";
 
 export const sendOTPByEmail = (
     user: { name: string; email: string },
     otp: string,
-): EmailOptions => {
+): EmailData => {
     const otpExpiryHours = process.env.OTP_EXPIRY || 15;
     return {
         from: process.env.nodemailerEmail as string,
@@ -21,7 +21,7 @@ export const sendOTPByEmail = (
 export const PasswordResetEmail = (user: {
     name: string;
     email: string;
-}): EmailOptions => {
+}): EmailData => {
     return {
         from: process.env.nodemailerEmail as string,
         to: user.email,
@@ -34,17 +34,3 @@ export const PasswordResetEmail = (user: {
             The Korex Team</p>`,
     };
 };
-
-// <!-- prettier-ignore -->
-// {{#> base_template}}
-//   {{#*inline "content"}}
-
-//         <h1>Password Reset</h1>
-//         <p class="greeting"><strong>Hi {{name}},</strong></p>
-//         <p>You recently requested to reset your password. If you did not make this request, you can ignore this email.</p>
-//         <p>To reset your password, please click the button below.</p>
-//         <div class='button-container'>
-//           <a href='{{resetUrl}}'>Reset Password</a>
-//         </div>
-// {{/inline}}
-// {{/base_template}}

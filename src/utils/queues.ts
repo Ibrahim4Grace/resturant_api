@@ -1,7 +1,7 @@
 import Bull, { Job } from "bull";
-// import { batchGradeAssignments } from "../services/grading.service";
 import { sendMail, log } from "@/utils/index";
 import { EmailData } from "@/types/index";
+
 const retries: number = 2;
 const delay: number = 1000 * 30;
 
@@ -22,7 +22,7 @@ function asyncHandler(fn: (job: Job) => Promise<void>) {
     };
 }
 
-export const emailQueue = new Bull("support@chefkayfood.com", {
+export const emailQueue = new Bull("email", {
     redis: redisConfig,
     limiter: {
         max: 20,
@@ -58,15 +58,16 @@ export const addEmailToQueue = async (data: EmailData) => {
 };
 
 emailQueue.process(
-    5,
+    2,
     asyncHandler(async (job: Job) => {
-        await sendMail(job.data);
-        job.log("Email sent successfully to " + job.data.to);
-        log.info({
-            message: `Email sent to ${job.data.to}`,
-            jobId: job.id,
-            timestamp: new Date().toISOString(),
-        });
+        try {
+            const emailOptions = job.data as EmailData;
+            await sendMail(emailOptions);
+            job.log("Email sent successfully to " + emailOptions.to);
+        } catch (error) {
+            log.error("Email processing error:", error);
+            throw error;
+        }
     }),
 );
 
@@ -81,5 +82,15 @@ const handleJobCompletion = (queue: Bull.Queue, type: string) => {
         );
     });
 };
+
+emailQueue.on("error", (error) => {
+    console.error("Redis connection error:", error);
+});
+
+// Verify Redis connection
+const redis = emailQueue.client;
+redis.on("error", (error) => {
+    console.error("Redis client error:", error);
+});
 
 handleJobCompletion(emailQueue, "Email");

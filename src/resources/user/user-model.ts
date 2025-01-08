@@ -4,8 +4,6 @@ import jwt from "jsonwebtoken";
 import otpGenerator from "otp-generator";
 import bcrypt from "bcryptjs";
 
-// const OTP_EXPIRY = 20 * 60 * 1000;
-
 const userSchema = new Schema<User>(
     {
         name: {
@@ -66,7 +64,6 @@ userSchema.methods.generateOTP = async function (): Promise<string> {
     });
 
     const hashedOTP = await bcrypt.hash(otp, 10);
-
     this.otpData = {
         code: hashedOTP,
         expiresAt: new Date(Date.now() + Number(process.env.OTP_EXPIRY)),

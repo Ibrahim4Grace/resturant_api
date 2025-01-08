@@ -1,14 +1,11 @@
 import UserModel from "@/resources/user/user-model";
-import { createToken, sendMail } from "@/utils/index";
+import { createToken, addEmailToQueue } from "@/utils/index";
 import { User } from "@/resources/user/user-interface";
+import bcrypt from "bcryptjs";
 import {
     sendOTPByEmail,
     PasswordResetEmail,
 } from "@/resources/user/user-email-template";
-import bcrypt from "bcryptjs";
-// import { EmailService } from "@/queues/mailer-processing";
-import sendEmailTemplate from "../../views/sendEmailTemplate";
-
 import {
     Conflict,
     ResourceNotFound,
@@ -45,25 +42,17 @@ export class UserService {
             email: email.toLowerCase().trim(),
         });
         if (!user) {
-            throw new ResourceNotFound("Email not found");
+            throw new ResourceNotFound("User not found");
         }
 
         const otp = await user.generateOTP();
         const resetToken = user.generatePasswordResetToken();
         await user.save();
 
-        await sendEmailTemplate({
-            to: email,
-            subject: "Password Reset Request",
-            templateName: "password-forget",
-            variables: {
-                otp: otp,
-                expiryTime: 10, // minutes
-            },
-        });
+        const emailOptions = sendOTPByEmail(user as User, otp);
 
-        // const emailOptions = sendOTPByEmail(user as User, otp);
-        // await sendMail(emailOptions);
+        // Add the email to the queue
+        await addEmailToQueue(emailOptions);
 
         return resetToken;
     }
