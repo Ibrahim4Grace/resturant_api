@@ -37,19 +37,19 @@ export default class AdminController implements Controller {
         );
         this.router.get(
             `${this.path}/admins`,
-            authMiddleware,
+            // authMiddleware,
             checkRole(["admin"]),
             asyncHandler(this.getAdmins),
         );
         this.router.get(
             `${this.path}/admins/:id`,
-            authMiddleware,
+            // authMiddleware,
             checkRole(["admin"]),
             asyncHandler(this.getAdminById),
         );
         this.router.put(
             `${this.path}/admins/:id`,
-            authMiddleware,
+            // authMiddleware,
             checkRole(["admin"]),
             asyncHandler(this.updateAdminById),
         );
@@ -67,7 +67,12 @@ export default class AdminController implements Controller {
             password,
             role,
         });
-        sendJsonResponse(res, 201, "Registration successful", result);
+        sendJsonResponse(
+            res,
+            201,
+            "Registration initiated. Please verify your email with the OTP sent.",
+            result,
+        );
     };
 
     private login = async (

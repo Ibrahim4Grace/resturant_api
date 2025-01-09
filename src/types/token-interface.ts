@@ -5,6 +5,6 @@ export interface Token extends Object {
 }
 
 export interface TokenPayload {
-    _id: string;
+    id: string;
     role?: string;
 }

@@ -1,10 +1,11 @@
 import { Schema, model } from "mongoose";
-import { User, OTPData } from "@/resources/user/user-interface";
+import { IUser, OTPData } from "@/resources/user/user-interface";
 import jwt from "jsonwebtoken";
 import otpGenerator from "otp-generator";
 import bcrypt from "bcryptjs";
+import { UserRole } from "@/enums/userRoles";
 
-const userSchema = new Schema<User>(
+const userSchema = new Schema<IUser>(
     {
         name: {
             type: String,
@@ -22,8 +23,9 @@ const userSchema = new Schema<User>(
         },
         role: {
             type: String,
+            enum: Object.values(UserRole),
+            default: UserRole.USER,
             trim: true,
-            default: "User",
         },
         image: { imageId: String, imageUrl: String },
         isEmailVerified: { type: Boolean, default: false },
@@ -33,13 +35,14 @@ const userSchema = new Schema<User>(
         otpData: {
             code: String,
             expiresAt: Date,
+            verificationToken: String,
         },
     },
     { timestamps: true },
 );
 
 //hashpassword
-userSchema.pre<User>("save", async function (next) {
+userSchema.pre<IUser>("save", async function (next) {
     if (!this.isModified("password")) {
         return next();
     }
@@ -64,10 +67,25 @@ userSchema.methods.generateOTP = async function (): Promise<string> {
     });
 
     const hashedOTP = await bcrypt.hash(otp, 10);
+    const verificationToken = jwt.sign(
+        { userId: this._id.toString() },
+        process.env.JWT_SECRET!,
+        {
+            expiresIn: process.env.OTP_EXPIRY,
+            audience: "email-verification",
+        },
+    );
+
     this.otpData = {
         code: hashedOTP,
         expiresAt: new Date(Date.now() + Number(process.env.OTP_EXPIRY)),
+        verificationToken,
     };
+
+    // this.otpData = {
+    //     code: hashedOTP,
+    //     expiresAt: new Date(Date.now() + Number(process.env.OTP_EXPIRY)),
+    // };
 
     return otp;
 };
@@ -86,4 +104,4 @@ userSchema.methods.generatePasswordResetToken = function (): string {
     return resetToken;
 };
 
-export default model<User>("User", userSchema);
+export default model<IUser>("User", userSchema);

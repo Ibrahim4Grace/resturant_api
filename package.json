@@ -67,6 +67,7 @@
         "@/config": "dist/config",
         "@/utils": "dist/utils",
         "@/types": "dist/types",
+        "@/enums": "dist/enums",
         "@/middlewares": "dist/middlewares"
     }
 }

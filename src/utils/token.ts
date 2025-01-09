@@ -1,34 +1,32 @@
 import jwt from "jsonwebtoken";
-import { Token, TokenPayload } from "@/types/index";
+import { JwtPayload } from "@/types/index";
+import { UserRole } from "@/enums/userRoles";
+import { Unauthorized } from "@/middlewares/index";
 
-export const createToken = (entity: TokenPayload): string => {
+export const createToken = (payload: {
+    userId: string;
+    role: UserRole;
+}): string => {
     if (!process.env.JWT_SECRET) {
-        throw new Error("JWT_SECRET is not defined in environment variables");
+        throw new Error("JWT_SECRET is not defined");
     }
 
-    return jwt.sign(
-        { id: entity._id, role: entity.role },
-        process.env.JWT_SECRET as jwt.Secret,
-        {
-            expiresIn: "1d",
-        },
-    );
+    return jwt.sign(payload, process.env.JWT_SECRET!, {
+        expiresIn: "1d",
+    });
 };
 
-export const verifyToken = async (token: string): Promise<Token> => {
-    if (!process.env.JWT_SECRET) {
-        throw new Error("JWT_SECRET is not defined in environment variables");
-    }
-
+export const verifyToken = (token: string): Promise<JwtPayload> => {
     return new Promise((resolve, reject) => {
-        jwt.verify(
-            token,
-            process.env.JWT_SECRET as jwt.Secret,
-            (err, payload) => {
-                if (err) return reject(err);
-                if (!payload) return reject(new Error("Empty payload"));
-                resolve(payload as Token);
-            },
-        );
+        if (!process.env.JWT_SECRET) {
+            return reject(new Error("JWT_SECRET is not defined"));
+        }
+
+        jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+            if (err || !decoded) {
+                return reject(new Unauthorized("Invalid token"));
+            }
+            resolve(decoded as JwtPayload);
+        });
     });
 };

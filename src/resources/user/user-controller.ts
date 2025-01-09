@@ -2,7 +2,9 @@ import { Router, Request, Response, NextFunction } from "express";
 import { Controller } from "@/types/index";
 import validate from "@/resources/user/user-validation";
 import { UserService } from "@/resources/user/user-service";
-import { authMiddleware } from "@/middlewares/index";
+import { authMiddleware, verifyToken } from "@/middlewares/index";
+import { UserRole } from "../../enums/userRoles";
+
 import {
     validateData,
     sendJsonResponse,
@@ -24,19 +26,25 @@ export default class UserController implements Controller {
     private initializeRoutes(): void {
         this.router.post(
             `${this.authPath}/register`,
-            validateData(validate.register),
+            validateData(validate.registerZod),
             asyncHandler(this.register),
+        );
+
+        this.router.post(
+            `${this.authPath}/verify-otp`,
+            validateData(validate.registeroOtpZod),
+            asyncHandler(this.verifyOTP),
         );
 
         this.router.post(
             `${this.authPath}/forgot`,
             validateData(validate.forgetPwd),
-            asyncHandler(this.handleForgotPassword),
+            asyncHandler(this.forgotPassword),
         );
         this.router.post(
             `${this.authPath}/password/verify-otp`,
             validateData(validate.verifyOtp),
-            asyncHandler(this.verifyOTP),
+            asyncHandler(this.resetPasswordOTP),
         );
         this.router.post(
             `${this.authPath}/password/reset`,
@@ -50,17 +58,17 @@ export default class UserController implements Controller {
         );
         this.router.get(
             `${this.path}`,
-            authMiddleware,
+            asyncHandler(authMiddleware([UserRole.ADMIN])),
             asyncHandler(this.getUsers),
         );
         this.router.get(
             `${this.path}/:id`,
-            authMiddleware,
+            // authMiddleware,
             asyncHandler(this.getUserById),
         );
         this.router.put(
             `${this.path}/:id`,
-            authMiddleware,
+            // authMiddleware,
             asyncHandler(this.updateUserById),
         );
     }
@@ -77,10 +85,47 @@ export default class UserController implements Controller {
             password,
             role,
         });
-        sendJsonResponse(res, 201, "Registration successful", result);
+        sendJsonResponse(
+            res,
+            201,
+            "Registration initiated. Please verify your email with the OTP sent.",
+            result,
+        );
     };
 
-    private handleForgotPassword = async (
+    private verifyOTP = async (
+        req: Request,
+        res: Response,
+        next: NextFunction,
+    ): Promise<void> => {
+        const { code } = req.body;
+        const authHeader = req.headers.authorization;
+
+        if (!authHeader || !authHeader.startsWith("Bearer ")) {
+            throw new BadRequest("Authorization token is required");
+        }
+
+        if (!code) {
+            throw new BadRequest("OTP code is required");
+        }
+
+        const token = authHeader.split(" ")[1];
+
+        const decoded = await verifyToken(token);
+
+        const user = await this.userService.verifyRegistrationOTP(
+            decoded.userId.toString(),
+            code,
+        );
+
+        sendJsonResponse(
+            res,
+            200,
+            "Email verified successfully. You can now log in.",
+        );
+    };
+
+    private forgotPassword = async (
         req: Request,
         res: Response,
         next: NextFunction,
@@ -97,7 +142,7 @@ export default class UserController implements Controller {
         );
     };
 
-    private verifyOTP = async (
+    private resetPasswordOTP = async (
         req: Request,
         res: Response,
         next: NextFunction,

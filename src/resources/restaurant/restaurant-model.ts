@@ -1,7 +1,7 @@
 import { Schema, model } from "mongoose";
-import Restaurant from "@/resources/restaurant/restaurant-interface";
+import IRestaurant from "@/resources/restaurant/restaurant-interface";
 
-const restaurantSchema = new Schema<Restaurant>(
+const restaurantSchema = new Schema<IRestaurant>(
     {
         name: {
             type: String,
@@ -27,4 +27,4 @@ const restaurantSchema = new Schema<Restaurant>(
     { timestamps: true },
 );
 
-export default model<Restaurant>("Restaurant", restaurantSchema);
+export default model<IRestaurant>("Restaurant", restaurantSchema);

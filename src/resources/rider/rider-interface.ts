@@ -1,21 +1,17 @@
 import { Document } from "mongoose";
 
-export default interface Order extends Document {
+export default interface IRider extends Document {
+    id: string;
     name: string;
+    email: string;
+    password: string;
+    role: string;
     phone: string;
     availability: string;
     currentOrder: string;
+    image: { imageId?: string; imageUrl?: string };
+    isEmailVerified: boolean;
+    googleId?: string;
     createdAt: Date;
     updatedAt: Date;
-
-    // Improved typing for toJSON
-    toJSON(): {
-        _id: string;
-        name: string;
-        phone: string;
-        availability: string;
-        currentOrder: string;
-        createdAt: Date;
-        updatedAt: Date;
-    };
 }

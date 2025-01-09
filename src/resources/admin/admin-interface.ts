@@ -1,20 +1,28 @@
 import { Document } from "mongoose";
 
-export interface Admin extends Document {
+export interface IAdmin extends Document {
     _id: string;
+    id: string;
     name: string;
     email: string;
     password: string;
     role: string;
-    image: String;
+    image: { imageId?: string; imageUrl?: string };
     isEmailVerified: boolean;
-    googleId: string;
+    googleId?: string;
     createdAt: Date;
     updatedAt: Date;
+    passwordResetToken?: string;
+    passwordResetExpires?: Date;
+    otpData?: OTPData;
 
-    // Changed to async for password comparison
     comparePassword(password: string): Promise<boolean>;
+    generateOTP(): Promise<string>;
+    generatePasswordResetToken(): string;
+}
 
-    // Added return type for token
-    generateToken(): string;
+export interface OTPData {
+    code: string;
+    expiresAt: Date;
+    verificationToken: string;
 }

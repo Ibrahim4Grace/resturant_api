@@ -10,7 +10,8 @@
             "@/utils/*": ["utils/*"],
             "@/middlewares/*": ["middlewares/*"],
             "@/config/*": ["config/*"],
-            "@/types/*": ["types/*"]
+            "@/types/*": ["types/*"],
+            "@/enums/*": ["enums/*"]
         },
         "outDir": "dist",
         "sourceMap": true,

@@ -1,12 +1,8 @@
 import { Document } from "mongoose";
 
-export interface OTPData {
-    code: string;
-    expiresAt: Date;
-}
-
-export interface User extends Document {
+export interface IUser extends Document {
     _id: string;
+    id: string;
     name: string;
     email: string;
     password: string;
@@ -23,6 +19,12 @@ export interface User extends Document {
     comparePassword(password: string): Promise<boolean>;
     generateOTP(): Promise<string>;
     generatePasswordResetToken(): string;
+}
+
+export interface OTPData {
+    code: string;
+    expiresAt: Date;
+    verificationToken: string;
 }
 
 // export interface IPasswordResetService {

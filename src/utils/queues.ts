@@ -58,7 +58,7 @@ export const addEmailToQueue = async (data: EmailData) => {
 };
 
 emailQueue.process(
-    2,
+    5,
     asyncHandler(async (job: Job) => {
         try {
             const emailOptions = job.data as EmailData;
@@ -82,15 +82,5 @@ const handleJobCompletion = (queue: Bull.Queue, type: string) => {
         );
     });
 };
-
-emailQueue.on("error", (error) => {
-    console.error("Redis connection error:", error);
-});
-
-// Verify Redis connection
-const redis = emailQueue.client;
-redis.on("error", (error) => {
-    console.error("Redis client error:", error);
-});
 
 handleJobCompletion(emailQueue, "Email");

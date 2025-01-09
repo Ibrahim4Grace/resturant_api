@@ -1,7 +1,7 @@
 import { Schema, model } from "mongoose";
-import Order from "@/resources/order/order-interface";
+import IOrder from "@/resources/order/order-interface";
 
-const orderSchema = new Schema<Order>(
+const orderSchema = new Schema<IOrder>(
     {
         status: {
             type: String,
@@ -40,4 +40,4 @@ const orderSchema = new Schema<Order>(
     { timestamps: true },
 );
 
-export default model<Order>("Order", orderSchema);
+export default model<IOrder>("Order", orderSchema);

@@ -1,7 +1,7 @@
 import { Schema, model } from "mongoose";
-import Rider from "@/resources/rider/rider-interface";
+import IRider from "@/resources/rider/rider-interface";
 
-const riderSchema = new Schema<Rider>(
+const riderSchema = new Schema<IRider>(
     {
         name: {
             type: String,
@@ -26,4 +26,4 @@ const riderSchema = new Schema<Rider>(
     { timestamps: true },
 );
 
-export default model<Rider>("Rider", riderSchema);
+export default model<IRider>("Rider", riderSchema);

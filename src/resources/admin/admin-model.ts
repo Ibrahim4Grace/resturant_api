@@ -1,8 +1,11 @@
 import { Schema, model } from "mongoose";
-import { Admin } from "@/resources/admin/admin-interface";
+import { IAdmin } from "@/resources/admin/admin-interface";
 import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import otpGenerator from "otp-generator";
 
-const adminSchema = new Schema<Admin>(
+
+const adminSchema = new Schema<IAdmin>(
     {
         name: {
             type: String,
@@ -32,7 +35,7 @@ const adminSchema = new Schema<Admin>(
 );
 
 //hashpassword
-adminSchema.pre<Admin>("save", async function (next) {
+adminSchema.pre<IAdmin>("save", async function (next) {
     if (!this.isModified("password")) {
         return next();
     }
@@ -49,9 +52,43 @@ adminSchema.methods.comparePassword = async function (
     return await bcrypt.compare(password, this.password);
 };
 
-// adminSchema.methods.generateToken = function (): string {
-//     // Your token generation logic
-//     return jwt.sign({ id: this._id }, process.env.JWT_SECRET!);
-// };
+adminSchema.methods.generateOTP = async function (): Promise<string> {
+    const otp = otpGenerator.generate(6, {
+        lowerCaseAlphabets: false,
+        upperCaseAlphabets: false,
+        specialChars: false,
+    });
 
-export default model<Admin>("Admin", adminSchema);
+    const hashedOTP = await bcrypt.hash(otp, 10);
+    const verificationToken = jwt.sign(
+        { userId: this._id.toString() },
+        process.env.JWT_SECRET!,
+        {
+            expiresIn: process.env.OTP_EXPIRY,
+            audience: "email-verification",
+        },
+    );
+
+    this.otpData = {
+        code: hashedOTP,
+        expiresAt: new Date(Date.now() + Number(process.env.OTP_EXPIRY)),
+        verificationToken,
+    };
+
+    return otp;
+};
+
+adminSchema.methods.generatePasswordResetToken = function (): string {
+    const resetToken = jwt.sign({ userId: this._id }, process.env.JWT_SECRET!, {
+        expiresIn: process.env.PASSWORD_RESET_TOKEN_EXPIRY,
+        audience: "password-reset",
+    });
+
+    this.passwordResetToken = resetToken;
+    this.passwordResetExpires = new Date(
+        Date.now() + Number(process.env.OTP_EXPIRY),
+    );
+
+    return resetToken;
+};
+export default model<IAdmin>("Admin", adminSchema);
