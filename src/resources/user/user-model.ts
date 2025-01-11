@@ -1,11 +1,9 @@
 import { Schema, model } from "mongoose";
 import { IUser } from "@/resources/user/user-interface";
 import jwt from "jsonwebtoken";
-import otpGenerator from "otp-generator";
 import bcrypt from "bcryptjs";
 import { UserRole } from "@/enums/userRoles";
 import { generateOTP } from "@/utils/index";
-import { isStringLiteralOrJsxExpression } from "typescript";
 
 const userSchema = new Schema<IUser>(
     {

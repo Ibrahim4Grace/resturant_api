@@ -2,7 +2,6 @@ import { Router, Request, Response, NextFunction } from "express";
 import { Controller } from "@/types/index";
 import validate from "@/resources/user/user-validation";
 import { UserService } from "@/resources/user/user-service";
-import { authMiddleware, verifyToken } from "@/middlewares/index";
 import { UserRole } from "../../enums/userRoles";
 
 import {
@@ -11,6 +10,8 @@ import {
     asyncHandler,
     ResourceNotFound,
     BadRequest,
+    authMiddleware,
+    verifyToken,
 } from "@/middlewares/index";
 
 export default class UserController implements Controller {

@@ -1,9 +1,9 @@
 import { Schema, model } from "mongoose";
 import { IAdmin } from "@/resources/admin/admin-interface";
-import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import otpGenerator from "otp-generator";
-
+import bcrypt from "bcryptjs";
+import { UserRole } from "@/enums/userRoles";
+import { generateOTP } from "@/utils/index";
 
 const adminSchema = new Schema<IAdmin>(
     {
@@ -23,13 +23,26 @@ const adminSchema = new Schema<IAdmin>(
         },
         role: {
             type: String,
+            enum: Object.values(UserRole),
+            default: UserRole.ADMIN,
             trim: true,
-            enum: ["restaurant-owner", "Admin"],
-            default: "Admin",
         },
         image: { imageId: String, imageUrl: String },
         isEmailVerified: { type: Boolean, default: false },
         googleId: { type: String, trim: true },
+        emailVerificationOTP: {
+            otp: String,
+            expiresAt: Date,
+            verificationToken: String,
+            attempts: { type: Number, default: 0 },
+        },
+        lastPasswordChange: Date,
+        passwordHistory: [
+            {
+                password: String,
+                changedAt: Date,
+            },
+        ],
     },
     { timestamps: true },
 );
@@ -52,43 +65,27 @@ adminSchema.methods.comparePassword = async function (
     return await bcrypt.compare(password, this.password);
 };
 
-adminSchema.methods.generateOTP = async function (): Promise<string> {
-    const otp = otpGenerator.generate(6, {
-        lowerCaseAlphabets: false,
-        upperCaseAlphabets: false,
-        specialChars: false,
-    });
+adminSchema.methods.generateEmailVerificationOTP = async function (): Promise<{
+    otp: string;
+    verificationToken: string;
+}> {
+    const { otp, hashedOTP } = await generateOTP();
 
-    const hashedOTP = await bcrypt.hash(otp, 10);
     const verificationToken = jwt.sign(
-        { userId: this._id.toString() },
+        { userId: this._id },
         process.env.JWT_SECRET!,
         {
             expiresIn: process.env.OTP_EXPIRY,
-            audience: "email-verification",
         },
     );
 
-    this.otpData = {
-        code: hashedOTP,
+    this.emailVerificationOTP = {
+        otp: hashedOTP,
         expiresAt: new Date(Date.now() + Number(process.env.OTP_EXPIRY)),
         verificationToken,
     };
 
-    return otp;
+    return { otp, verificationToken };
 };
 
-adminSchema.methods.generatePasswordResetToken = function (): string {
-    const resetToken = jwt.sign({ userId: this._id }, process.env.JWT_SECRET!, {
-        expiresIn: process.env.PASSWORD_RESET_TOKEN_EXPIRY,
-        audience: "password-reset",
-    });
-
-    this.passwordResetToken = resetToken;
-    this.passwordResetExpires = new Date(
-        Date.now() + Number(process.env.OTP_EXPIRY),
-    );
-
-    return resetToken;
-};
 export default model<IAdmin>("Admin", adminSchema);

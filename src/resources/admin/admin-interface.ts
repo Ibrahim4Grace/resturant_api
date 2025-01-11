@@ -14,15 +14,32 @@ export interface IAdmin extends Document {
     updatedAt: Date;
     passwordResetToken?: string;
     passwordResetExpires?: Date;
-    otpData?: OTPData;
+    lastPasswordChange?: Date;
+    emailVerificationOTP?: emailVerificationOTP;
+    passwordHistory?: IPasswordHistoryEntry[];
 
     comparePassword(password: string): Promise<boolean>;
-    generateOTP(): Promise<string>;
-    generatePasswordResetToken(): string;
+    generateEmailVerificationOTP(): Promise<{
+        otp: string;
+        verificationToken: string;
+    }>;
 }
 
-export interface OTPData {
-    code: string;
+export interface IPasswordHistoryEntry {
+    password: string;
+    changedAt: Date;
+}
+
+export interface RegisterAdminto {
+    name: string;
+    email: string;
+    password: string;
+    role?: string;
+}
+
+export interface emailVerificationOTP {
+    otp: String;
     expiresAt: Date;
-    verificationToken: string;
+    verificationToken: String;
+    verificationTokenExpires: Date;
 }

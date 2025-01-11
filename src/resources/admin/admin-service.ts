@@ -1,12 +1,13 @@
 import AdminModel from "@/resources/admin/admin-model";
-import { createToken, addEmailToQueue } from "@/utils/index";
-import { IAdmin } from "@/resources/admin/admin-interface";
+import { addEmailToQueue } from "@/utils/index";
+import { IAdmin, RegisterAdminto } from "@/resources/admin/admin-interface";
 import { UserRole } from "@/enums/userRoles";
+import bcrypt from "bcryptjs";
 import {
     sendOTPByEmail,
     welcomeEmail,
     PasswordResetEmail,
-} from "@/resources/user/user-email-template";
+} from "@/resources/admin/admin-email-template";
 import {
     asyncHandler,
     Conflict,
@@ -14,17 +15,16 @@ import {
     BadRequest,
     Forbidden,
     Unauthorized,
+    authMiddleware,
+    verifyToken,
 } from "@/middlewares/index";
 
 export class AdminService {
     private admin = AdminModel;
 
-    public async register(adminData: {
-        name: string;
-        email: string;
-        password: string;
-        role?: UserRole;
-    }): Promise<{ admin: Partial<IAdmin>; verificationToken: string }> {
+    public async register(
+        adminData: RegisterAdminto,
+    ): Promise<{ admin: Partial<IAdmin>; verificationToken: string }> {
         const existingAdmin = await this.admin.findOne({
             email: adminData.email,
         });
@@ -34,15 +34,18 @@ export class AdminService {
 
         const admin = await this.admin.create({
             ...adminData,
-            role: adminData.role || "admin",
+            role: adminData.role || UserRole.ADMIN,
+            isEmailVerified: false,
         });
-        const otp = await admin.generateOTP();
+
+        const verificationResult = await admin.generateEmailVerificationOTP();
+        const { otp, verificationToken } = verificationResult;
         await admin.save();
 
         const emailOptions = sendOTPByEmail(admin as IAdmin, otp);
         await addEmailToQueue(emailOptions);
 
-        const sanitizedUser: Partial<IAdmin> = {
+        const sanitizedAdmin: Partial<IAdmin> = {
             _id: admin._id,
             name: admin.name,
             email: admin.email,
@@ -53,66 +56,126 @@ export class AdminService {
         };
 
         return {
-            admin: sanitizedUser,
-            verificationToken: admin.otpData?.verificationToken || "",
+            admin: sanitizedAdmin,
+            verificationToken: verificationToken,
         };
     }
-    public async login(credentials: {
-        email: string;
-        password: string;
-    }): Promise<{ admin: IAdmin; token: string }> {
-        const admin = await this.admin.findOne({ email: credentials.email });
-        if (!admin) {
-            throw new ResourceNotFound("Invalid email or password");
-        }
 
-        const isValid = await admin.comparePassword(credentials.password);
-        if (!isValid) {
-            throw new Error("Invalid email or password");
-        }
-
-        const token = createToken({
-            userId: admin._id.toString(),
-            role: admin.role as UserRole,
+    public async verifyRegistrationOTP(
+        userId: string,
+        otp: string,
+    ): Promise<IAdmin> {
+        const admin = await this.admin.findOne({
+            _id: userId,
+            isEmailVerified: false,
+            "emailVerificationOTP.expiresAt": { $gt: new Date() },
         });
 
-        return { admin, token };
-    }
+        if (!admin) {
+            throw new BadRequest("Invalid or expired verification session");
+        }
 
-    /**
-     * Get all admin
-     */
-    public async getAdmins(): Promise<IAdmin[]> {
-        const admins = await this.admin
-            .find({ deleted: false })
-            .select("-password") // Exclude password from results
-            .sort({ createdAt: -1 });
-        return admins;
-    }
+        if (!admin?.emailVerificationOTP?.otp) {
+            throw new BadRequest("No OTP found for this admin");
+        }
 
-    /**
-     * Get admin by id
-     */
-    public async getAdminById(id: string): Promise<IAdmin | null> {
-        const admin = await this.admin
-            .findOne({ _id: id, deleted: false })
-            .select("-password");
-        return admin;
-    }
+        if (new Date() > admin.emailVerificationOTP.expiresAt) {
+            throw new BadRequest("OTP has expired");
+        }
 
-    /**
-     * Submit data for an admin
-     */
-    public async updateAdminById(
-        id: string,
-        data: Partial<IAdmin>,
-    ): Promise<IAdmin | null> {
-        const admin = await this.admin.findOneAndUpdate(
-            { _id: id, deleted: false }, // Match admin by ID and not deleted
-            { $set: data }, // Update with new data
-            { new: true }, // Return the updated document
+        const isValid = await bcrypt.compare(
+            otp,
+            admin.emailVerificationOTP.otp.toString(),
         );
+        if (!isValid) {
+            throw new BadRequest("Invalid OTP");
+        }
+
+        admin.emailVerificationOTP = undefined;
+        admin.isEmailVerified = true;
+        await admin.save();
+
+        const emailOptions = welcomeEmail(admin as IAdmin);
+        await addEmailToQueue(emailOptions);
 
         return admin;
+    }
+
+    public async forgotPassword(email: string): Promise<string> {
+        const admin = await this.admin.findOne({
+            email: email.toLowerCase().trim(),
+        });
+        if (!admin) {
+            throw new ResourceNotFound("Admin not found");
+        }
+
+        const verificationResult = await admin.generateEmailVerificationOTP();
+        const { otp, verificationToken } = verificationResult;
+        await admin.save();
+
+        const emailOptions = sendOTPByEmail(admin as IAdmin, otp);
+        await addEmailToQueue(emailOptions);
+
+        return verificationToken;
+    }
+
+    public async verifyResetPasswordOTP(
+        verificationToken: string,
+        otp: string,
+    ): Promise<IAdmin> {
+        const admin = await this.admin.findOne({
+            "emailVerificationOTP.verificationToken": verificationToken,
+            "emailVerificationOTP.expiresAt": { $gt: new Date() },
+        });
+
+        if (!admin) {
+            throw new BadRequest("Invalid or expired reset token");
+        }
+
+        if (!admin.emailVerificationOTP?.otp) {
+            throw new BadRequest("No OTP found for this admin");
+        }
+
+        if (new Date() > admin.emailVerificationOTP.expiresAt) {
+            throw new BadRequest("OTP has expired");
+        }
+
+        const isValid = await bcrypt.compare(
+            otp,
+            admin.emailVerificationOTP.otp.toString(),
+        );
+        if (!isValid) {
+            throw new BadRequest("Invalid OTP");
+        }
+
+        return admin;
+    }
+
+    public async resetPassword(
+        verificationToken: string,
+        newPassword: string,
+    ): Promise<void> {
+        const admin = await this.admin.findOne({
+            "emailVerificationOTP.verificationToken": verificationToken,
+            "emailVerificationOTP.expiresAt": { $gt: new Date() },
+        });
+
+        if (!admin) {
+            throw new BadRequest("Invalid or expired reset token");
+        }
+
+        // Add the old password to history before updating
+        admin.passwordHistory = admin.passwordHistory ?? [];
+        admin.passwordHistory.push({
+            password: admin.password,
+            changedAt: new Date(),
+        });
+
+        admin.password = newPassword;
+        admin.emailVerificationOTP = undefined;
+        await admin.save();
+
+        const emailOptions = PasswordResetEmail(admin as IAdmin);
+        await addEmailToQueue(emailOptions);
     }
 }

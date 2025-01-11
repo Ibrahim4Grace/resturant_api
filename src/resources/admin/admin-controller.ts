@@ -2,7 +2,6 @@ import { Router, Request, Response, NextFunction } from "express";
 import { Controller } from "@/types/index";
 import validate from "@/resources/admin/admin-validation";
 import { AdminService } from "@/resources/admin/admin-service";
-import { authMiddleware, checkRole } from "@/middlewares/index";
 import {
     validateData,
     sendJsonResponse,
@@ -12,11 +11,13 @@ import {
     BadRequest,
     Forbidden,
     Unauthorized,
+    authMiddleware,
+    verifyToken,
 } from "@/middlewares/index";
 
 export default class AdminController implements Controller {
+    public authPath = "/auth/admins";
     public path = "/admins";
-    public paths = "/auth/admins";
     public router = Router();
     private adminService = new AdminService();
 
@@ -26,32 +27,31 @@ export default class AdminController implements Controller {
 
     private initializeRoutes(): void {
         this.router.post(
-            `${this.paths}/register`,
+            `${this.authPath}/register`,
             validateData(validate.register),
             asyncHandler(this.register),
         );
+
         this.router.post(
-            `${this.paths}/login`,
-            validateData(validate.login),
-            asyncHandler(this.login),
+            `${this.authPath}/verify-otp`,
+            validateData(validate.verifyOtp),
+            asyncHandler(this.registrationOTP),
         );
-        this.router.get(
-            `${this.path}/admins`,
-            // authMiddleware,
-            checkRole(["admin"]),
-            asyncHandler(this.getAdmins),
+
+        this.router.post(
+            `${this.authPath}/forgot`,
+            validateData(validate.forgetPwd),
+            asyncHandler(this.forgotPassword),
         );
-        this.router.get(
-            `${this.path}/admins/:id`,
-            // authMiddleware,
-            checkRole(["admin"]),
-            asyncHandler(this.getAdminById),
+        this.router.post(
+            `${this.authPath}/password/verify-otp`,
+            validateData(validate.verifyOtp),
+            asyncHandler(this.resetPasswordOTP),
         );
-        this.router.put(
-            `${this.path}/admins/:id`,
-            // authMiddleware,
-            checkRole(["admin"]),
-            asyncHandler(this.updateAdminById),
+        this.router.post(
+            `${this.authPath}/password/reset`,
+            validateData(validate.resetPassword),
+            asyncHandler(this.resetPassword),
         );
     }
 
@@ -75,61 +75,98 @@ export default class AdminController implements Controller {
         );
     };
 
-    private login = async (
+    private registrationOTP = async (
         req: Request,
         res: Response,
         next: NextFunction,
     ): Promise<void> => {
-        const { email, password } = req.body;
-        const result = await this.adminService.login({
-            email,
-            password,
-        });
-        sendJsonResponse(res, 200, "Login successful", result);
-    };
+        const { otp } = req.body;
+        const authHeader = req.headers.authorization;
 
-    private getAdmins = async (
-        req: Request,
-        res: Response,
-        next: NextFunction,
-    ): Promise<void> => {
-        const admins = await this.adminService.getAdmins();
-        sendJsonResponse(res, 200, "Admins retrieved successfully", admins);
-    };
-
-    private getAdminById = async (
-        req: Request,
-        res: Response,
-        next: NextFunction,
-    ): Promise<void> => {
-        const { id } = req.params;
-        const admin = await this.adminService.getAdminById(id);
-
-        if (!admin) {
-            throw new ResourceNotFound("Admin not found");
+        if (!authHeader || !authHeader.startsWith("Bearer ")) {
+            throw new BadRequest("Authorization token is required");
         }
 
-        sendJsonResponse(res, 200, "Admin retrieved successfully", admin);
-    };
-
-    private updateAdminById = async (
-        req: Request,
-        res: Response,
-        next: NextFunction,
-    ): Promise<void> => {
-        const { id } = req.params;
-        const data = req.body;
-        const updatedAdmin = await this.adminService.updateAdminById(id, data);
-
-        if (!updatedAdmin) {
-            throw new ResourceNotFound("Admin not found or update failed");
+        if (!otp) {
+            throw new BadRequest("OTP code is required");
         }
+
+        const token = authHeader.split(" ")[1];
+
+        const decoded = await verifyToken(token);
+
+        const user = await this.adminService.verifyRegistrationOTP(
+            decoded.userId.toString(),
+            otp,
+        );
 
         sendJsonResponse(
             res,
             200,
-            "Admin data updated successfully",
-            updatedAdmin,
+            "Email verified successfully. You can now log in.",
         );
+    };
+
+    private forgotPassword = async (
+        req: Request,
+        res: Response,
+        next: NextFunction,
+    ): Promise<void> => {
+        console.log("Received forgot password request:", req.body);
+
+        const { email } = req.body;
+        const resetToken = await this.adminService.forgotPassword(email);
+        sendJsonResponse(
+            res,
+            200,
+            "Reset token generated and OTP sent to your email.",
+            resetToken,
+        );
+    };
+
+    private resetPasswordOTP = async (
+        req: Request,
+        res: Response,
+        next: NextFunction,
+    ): Promise<void> => {
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith("Bearer ")) {
+            throw new BadRequest("Authorization token is required");
+        }
+
+        const resetToken = authHeader.split(" ")[1];
+        const { otp } = req.body;
+
+        if (!otp) {
+            throw new BadRequest("OTP is required");
+        }
+
+        await this.adminService.verifyResetPasswordOTP(resetToken, otp);
+        sendJsonResponse(
+            res,
+            200,
+            "OTP verified successfully. You can now reset your password.",
+        );
+    };
+
+    private resetPassword = async (
+        req: Request,
+        res: Response,
+        next: NextFunction,
+    ): Promise<void> => {
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith("Bearer ")) {
+            throw new BadRequest("Authorization token is required");
+        }
+
+        const resetToken = authHeader.split(" ")[1];
+        const { newPassword } = req.body;
+
+        if (!newPassword) {
+            throw new BadRequest("New password is required");
+        }
+
+        await this.adminService.resetPassword(resetToken, newPassword);
+        sendJsonResponse(res, 200, "Password reset successfully.");
     };
 }
