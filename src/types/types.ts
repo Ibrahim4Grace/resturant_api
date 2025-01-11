@@ -12,7 +12,7 @@ export type AllowedRoles = UserRole[] | "any";
 export interface JwtPayload {
     userId: string;
     role: UserRole;
-    aud?: string;
+    // aud?: string;
 }
 
 export interface EmailTemplate {

@@ -10,7 +10,7 @@ function validateEnv(): void {
         JWT_SECRET: str(),
         JWT_EXPIRE: str(),
         OTP_EXPIRY: num(),
-        PASSWORD_RESET_TOKEN_EXPIRY: num(),
+        JWT_TOKEN_EXPIRY: num(),
         MAILER_SERVICE: str(),
         NODEMAILER_EMAIL: str(),
         NODEMAILER_PASSWORD: str(),

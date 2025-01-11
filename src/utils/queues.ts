@@ -6,8 +6,8 @@ const retries: number = 2;
 const delay: number = 1000 * 30;
 
 const redisConfig = {
-    host: process.env.REDIS_HOST,
-    port: Number(process.env.REDIS_PORT),
+    host: process.env.REDIS_HOST || "localhost",
+    port: parseInt(process.env.REDIS_PORT || "6379"),
 };
 
 function asyncHandler(fn: (job: Job) => Promise<void>) {

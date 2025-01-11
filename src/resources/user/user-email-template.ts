@@ -45,10 +45,8 @@ export const PasswordResetEmail = (user: {
         to: user.email,
         subject: "Password Reset Confirmation",
         html: `
-            <p>Hello ${user.name || "User"},</p>
+            <p>Hello ${user.name},</p>
             <p>Your password has been successfully reset. If you did not perform this action, please contact our support team immediately.</p>
-
-            <p>Best regards,<br>
-            The Korex Team</p>`,
+            <p>Best regards,<br>The Chef-kay restaurant Team</p>`,
     };
 };

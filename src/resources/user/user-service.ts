@@ -1,6 +1,6 @@
 import UserModel from "@/resources/user/user-model";
 import { createToken, addEmailToQueue } from "@/utils/index";
-import { IUser } from "@/resources/user/user-interface";
+import { IUser, RegisterUserto } from "@/resources/user/user-interface";
 import bcrypt from "bcryptjs";
 import { UserRole } from "@/enums/userRoles";
 import {
@@ -19,12 +19,9 @@ import {
 export class UserService {
     private user = UserModel;
 
-    public async register(userData: {
-        name: string;
-        email: string;
-        password: string;
-        role?: string;
-    }): Promise<{ user: Partial<IUser>; verificationToken: string }> {
+    public async register(
+        userData: RegisterUserto,
+    ): Promise<{ user: Partial<IUser>; verificationToken: string }> {
         const existingUser = await this.user.findOne({ email: userData.email });
         if (existingUser) {
             throw new Conflict("Email already registered!");
@@ -32,11 +29,12 @@ export class UserService {
 
         const user = await this.user.create({
             ...userData,
-            role: userData.role || "user",
+            role: userData.role || UserRole.USER,
             isEmailVerified: false,
         });
 
-        const otp = await user.generateOTP();
+        const verificationResult = await user.generateEmailVerificationOTP();
+        const { otp, verificationToken } = verificationResult;
         await user.save();
 
         const emailOptions = sendOTPByEmail(user as IUser, otp);
@@ -54,35 +52,41 @@ export class UserService {
 
         return {
             user: sanitizedUser,
-            verificationToken: user.otpData?.verificationToken || "",
+            verificationToken: verificationToken,
         };
     }
 
     public async verifyRegistrationOTP(
         userId: string,
-        code: string,
+        otp: string,
     ): Promise<IUser> {
         const user = await this.user.findOne({
             _id: userId,
             isEmailVerified: false,
-            "otpData.verificationToken": { $exists: true },
-            "otpData.expiresAt": { $gt: new Date() },
+            "emailVerificationOTP.expiresAt": { $gt: new Date() },
         });
 
         if (!user) {
             throw new BadRequest("Invalid or expired verification session");
         }
 
-        if (!user?.otpData?.code) {
+        if (!user?.emailVerificationOTP?.otp) {
             throw new BadRequest("No OTP found for this user");
         }
 
-        const isValid = await bcrypt.compare(code, user.otpData.code);
+        if (new Date() > user.emailVerificationOTP.expiresAt) {
+            throw new BadRequest("OTP has expired");
+        }
+
+        const isValid = await bcrypt.compare(
+            otp,
+            user.emailVerificationOTP.otp.toString(),
+        );
         if (!isValid) {
             throw new BadRequest("Invalid OTP");
         }
 
-        user.otpData = undefined;
+        user.emailVerificationOTP = undefined;
         user.isEmailVerified = true;
         await user.save();
 
@@ -92,7 +96,7 @@ export class UserService {
         return user;
     }
 
-    public async handleForgotPassword(email: string): Promise<string> {
+    public async forgotPassword(email: string): Promise<string> {
         const user = await this.user.findOne({
             email: email.toLowerCase().trim(),
         });
@@ -100,71 +104,74 @@ export class UserService {
             throw new ResourceNotFound("User not found");
         }
 
-        const otp = await user.generateOTP();
-        const resetToken = user.generatePasswordResetToken();
+        const verificationResult = await user.generateEmailVerificationOTP();
+        const { otp, verificationToken } = verificationResult;
         await user.save();
 
         const emailOptions = sendOTPByEmail(user as IUser, otp);
-
         await addEmailToQueue(emailOptions);
 
-        return resetToken;
+        return verificationToken;
     }
 
-    public async verifyOTP(resetToken: string, otp: string): Promise<IUser> {
+    public async verifyResetPasswordOTP(
+        verificationToken: string,
+        otp: string,
+    ): Promise<IUser> {
         const user = await this.user.findOne({
-            passwordResetToken: resetToken,
-            passwordResetExpires: { $gt: new Date() },
+            "emailVerificationOTP.verificationToken": verificationToken,
+            "emailVerificationOTP.expiresAt": { $gt: new Date() },
         });
 
         if (!user) {
             throw new BadRequest("Invalid or expired reset token");
         }
 
-        if (!user?.otpData?.code) {
+        if (!user.emailVerificationOTP?.otp) {
             throw new BadRequest("No OTP found for this user");
         }
 
-        if (new Date() > user.otpData.expiresAt) {
+        if (new Date() > user.emailVerificationOTP.expiresAt) {
             throw new BadRequest("OTP has expired");
         }
 
-        const isValid = await bcrypt.compare(otp, user.otpData.code);
+        const isValid = await bcrypt.compare(
+            otp,
+            user.emailVerificationOTP.otp.toString(),
+        );
         if (!isValid) {
             throw new BadRequest("Invalid OTP");
         }
-
-        // Clear OTP and reset token data, mark email as verified
-        user.otpData = undefined;
-        user.passwordResetToken = undefined;
-        user.passwordResetExpires = undefined;
-        user.isEmailVerified = true;
-        await user.save();
 
         return user;
     }
 
     public async resetPassword(
-        resetToken: string,
+        verificationToken: string,
         newPassword: string,
     ): Promise<void> {
         const user = await this.user.findOne({
-            passwordResetToken: resetToken,
-            passwordResetExpires: { $gt: new Date() },
+            "emailVerificationOTP.verificationToken": verificationToken,
+            "emailVerificationOTP.expiresAt": { $gt: new Date() },
         });
 
         if (!user) {
             throw new BadRequest("Invalid or expired reset token");
         }
 
-        user.password = newPassword;
-        user.passwordResetToken = undefined;
-        user.passwordResetExpires = undefined;
-        user.otpData = undefined;
+        // Add the old password to history before updating
+        user.passwordHistory = user.passwordHistory ?? [];
+        user.passwordHistory.push({
+            password: user.password,
+            changedAt: new Date(),
+        });
 
+        user.password = newPassword;
+        user.emailVerificationOTP = undefined;
         await user.save();
 
-        await PasswordResetEmail(user as IUser);
+        const emailOptions = PasswordResetEmail(user as IUser);
+        await addEmailToQueue(emailOptions);
     }
 
     public async login(credentials: {

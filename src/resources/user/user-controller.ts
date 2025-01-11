@@ -26,14 +26,14 @@ export default class UserController implements Controller {
     private initializeRoutes(): void {
         this.router.post(
             `${this.authPath}/register`,
-            validateData(validate.registerZod),
+            validateData(validate.register),
             asyncHandler(this.register),
         );
 
         this.router.post(
             `${this.authPath}/verify-otp`,
-            validateData(validate.registeroOtpZod),
-            asyncHandler(this.verifyOTP),
+            validateData(validate.verifyOtp),
+            asyncHandler(this.registrationOTP),
         );
 
         this.router.post(
@@ -93,19 +93,19 @@ export default class UserController implements Controller {
         );
     };
 
-    private verifyOTP = async (
+    private registrationOTP = async (
         req: Request,
         res: Response,
         next: NextFunction,
     ): Promise<void> => {
-        const { code } = req.body;
+        const { otp } = req.body;
         const authHeader = req.headers.authorization;
 
         if (!authHeader || !authHeader.startsWith("Bearer ")) {
             throw new BadRequest("Authorization token is required");
         }
 
-        if (!code) {
+        if (!otp) {
             throw new BadRequest("OTP code is required");
         }
 
@@ -115,7 +115,7 @@ export default class UserController implements Controller {
 
         const user = await this.userService.verifyRegistrationOTP(
             decoded.userId.toString(),
-            code,
+            otp,
         );
 
         sendJsonResponse(
@@ -133,7 +133,7 @@ export default class UserController implements Controller {
         console.log("Received forgot password request:", req.body);
 
         const { email } = req.body;
-        const resetToken = await this.userService.handleForgotPassword(email);
+        const resetToken = await this.userService.forgotPassword(email);
         sendJsonResponse(
             res,
             200,
@@ -147,24 +147,24 @@ export default class UserController implements Controller {
         res: Response,
         next: NextFunction,
     ): Promise<void> => {
-        const { resetToken, otp } = req.body;
-
-        if (!resetToken || !otp) {
-            throw new BadRequest("Reset token and OTP are required");
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith("Bearer ")) {
+            throw new BadRequest("Authorization token is required");
         }
 
-        const isValid = await this.userService.verifyOTP(resetToken, otp);
+        const resetToken = authHeader.split(" ")[1];
+        const { otp } = req.body;
 
-        if (isValid) {
-            sendJsonResponse(
-                res,
-                200,
-                "OTP verified successfully.",
-                resetToken,
-            );
-        } else {
-            throw new BadRequest("Invalid OTP.");
+        if (!otp) {
+            throw new BadRequest("OTP is required");
         }
+
+        await this.userService.verifyResetPasswordOTP(resetToken, otp);
+        sendJsonResponse(
+            res,
+            200,
+            "OTP verified successfully. You can now reset your password.",
+        );
     };
 
     private resetPassword = async (
@@ -172,10 +172,16 @@ export default class UserController implements Controller {
         res: Response,
         next: NextFunction,
     ): Promise<void> => {
-        const { resetToken, newPassword } = req.body;
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith("Bearer ")) {
+            throw new BadRequest("Authorization token is required");
+        }
 
-        if (!resetToken || !newPassword) {
-            throw new BadRequest("Reset token and new password are required");
+        const resetToken = authHeader.split(" ")[1];
+        const { newPassword } = req.body;
+
+        if (!newPassword) {
+            throw new BadRequest("New password is required");
         }
 
         await this.userService.resetPassword(resetToken, newPassword);

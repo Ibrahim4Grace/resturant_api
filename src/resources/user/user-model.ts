@@ -1,9 +1,11 @@
 import { Schema, model } from "mongoose";
-import { IUser, OTPData } from "@/resources/user/user-interface";
+import { IUser } from "@/resources/user/user-interface";
 import jwt from "jsonwebtoken";
 import otpGenerator from "otp-generator";
 import bcrypt from "bcryptjs";
 import { UserRole } from "@/enums/userRoles";
+import { generateOTP } from "@/utils/index";
+import { isStringLiteralOrJsxExpression } from "typescript";
 
 const userSchema = new Schema<IUser>(
     {
@@ -30,13 +32,19 @@ const userSchema = new Schema<IUser>(
         image: { imageId: String, imageUrl: String },
         isEmailVerified: { type: Boolean, default: false },
         googleId: { type: String, trim: true },
-        passwordResetToken: String,
-        passwordResetExpires: Date,
-        otpData: {
-            code: String,
+        emailVerificationOTP: {
+            otp: String,
             expiresAt: Date,
             verificationToken: String,
+            attempts: { type: Number, default: 0 },
         },
+        lastPasswordChange: Date,
+        passwordHistory: [
+            {
+                password: String,
+                changedAt: Date,
+            },
+        ],
     },
     { timestamps: true },
 );
@@ -59,49 +67,27 @@ userSchema.methods.comparePassword = async function (
     return await bcrypt.compare(password, this.password);
 };
 
-userSchema.methods.generateOTP = async function (): Promise<string> {
-    const otp = otpGenerator.generate(6, {
-        lowerCaseAlphabets: false,
-        upperCaseAlphabets: false,
-        specialChars: false,
-    });
+userSchema.methods.generateEmailVerificationOTP = async function (): Promise<{
+    otp: string;
+    verificationToken: string;
+}> {
+    const { otp, hashedOTP } = await generateOTP();
 
-    const hashedOTP = await bcrypt.hash(otp, 10);
     const verificationToken = jwt.sign(
-        { userId: this._id.toString() },
+        { userId: this._id },
         process.env.JWT_SECRET!,
         {
             expiresIn: process.env.OTP_EXPIRY,
-            audience: "email-verification",
         },
     );
 
-    this.otpData = {
-        code: hashedOTP,
+    this.emailVerificationOTP = {
+        otp: hashedOTP,
         expiresAt: new Date(Date.now() + Number(process.env.OTP_EXPIRY)),
         verificationToken,
     };
 
-    // this.otpData = {
-    //     code: hashedOTP,
-    //     expiresAt: new Date(Date.now() + Number(process.env.OTP_EXPIRY)),
-    // };
-
-    return otp;
-};
-
-userSchema.methods.generatePasswordResetToken = function (): string {
-    const resetToken = jwt.sign({ userId: this._id }, process.env.JWT_SECRET!, {
-        expiresIn: process.env.PASSWORD_RESET_TOKEN_EXPIRY,
-        audience: "password-reset",
-    });
-
-    this.passwordResetToken = resetToken;
-    this.passwordResetExpires = new Date(
-        Date.now() + Number(process.env.OTP_EXPIRY),
-    );
-
-    return resetToken;
+    return { otp, verificationToken };
 };
 
 export default model<IUser>("User", userSchema);
