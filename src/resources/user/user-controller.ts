@@ -131,8 +131,6 @@ export default class UserController implements Controller {
         res: Response,
         next: NextFunction,
     ): Promise<void> => {
-        console.log("Received forgot password request:", req.body);
-
         const { email } = req.body;
         const resetToken = await this.userService.forgotPassword(email);
         sendJsonResponse(
