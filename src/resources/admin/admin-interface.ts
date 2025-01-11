@@ -12,8 +12,6 @@ export interface IAdmin extends Document {
     googleId?: string;
     createdAt: Date;
     updatedAt: Date;
-    passwordResetToken?: string;
-    passwordResetExpires?: Date;
     lastPasswordChange?: Date;
     emailVerificationOTP?: emailVerificationOTP;
     passwordHistory?: IPasswordHistoryEntry[];
