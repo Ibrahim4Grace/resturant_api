@@ -1,5 +1,6 @@
 import swaggerJsdoc from "swagger-jsdoc";
 import { version } from "../../package.json";
+import { allAuthDocs } from "../docs/index";
 
 const swaggerOptions: swaggerJsdoc.Options = {
     definition: {
@@ -12,7 +13,7 @@ const swaggerOptions: swaggerJsdoc.Options = {
         },
         servers: [
             {
-                url: `http://localhost:${process.env.PORT || 3000}/`,
+                url: `http://localhost:${process.env.PORT}/`,
                 description: "Local server",
             },
             {
@@ -21,10 +22,6 @@ const swaggerOptions: swaggerJsdoc.Options = {
             },
         ],
         tags: [
-            {
-                name: "default",
-                description: "A list of all default routes",
-            },
             {
                 name: "Authentication",
                 description: "A list of routes for Authentication",
@@ -44,16 +41,11 @@ const swaggerOptions: swaggerJsdoc.Options = {
                 bearerAuth: [],
             },
         ],
+        paths: {
+            ...allAuthDocs.paths,
+        },
     },
-    apis: [
-        "./src/resources/user*.ts",
-        "./src/resources/admin*.ts",
-        "./src/resources/rider*.ts",
-        "./src/resources/menuItem*.ts",
-        "./src/resources/order*.ts",
-        "./src/docs/*.ts",
-    ],
+    apis: [],
 };
 
-// Generate API Specification
 export const specs = swaggerJsdoc(swaggerOptions);
