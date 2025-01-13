@@ -2,6 +2,7 @@ import { Router, Request, Response, NextFunction } from "express";
 import { Controller } from "@/types/index";
 import validate from "@/resources/rider/rider-validation";
 import { RiderService } from "@/resources/rider/rider-service";
+import { TokenService } from "@/utils/index";
 import {
     validateData,
     sendJsonResponse,
@@ -12,7 +13,6 @@ import {
     Forbidden,
     Unauthorized,
     authMiddleware,
-    verifyToken,
 } from "@/middlewares/index";
 
 export default class RiderController implements Controller {
@@ -93,7 +93,7 @@ export default class RiderController implements Controller {
 
         const token = authHeader.split(" ")[1];
 
-        const decoded = await verifyToken(token);
+        const decoded = await TokenService.verifyEmailToken(token);
 
         const user = await this.riderService.verifyRegistrationOTP(
             decoded.userId.toString(),

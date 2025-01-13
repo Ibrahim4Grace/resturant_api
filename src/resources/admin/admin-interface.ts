@@ -1,4 +1,5 @@
 import { Document } from "mongoose";
+import { UserRole } from "@/types/index";
 
 export interface IAdmin extends Document {
     _id: string;
@@ -6,7 +7,7 @@ export interface IAdmin extends Document {
     name: string;
     email: string;
     password: string;
-    role: string;
+    roles: UserRole[];
     image: { imageId?: string; imageUrl?: string };
     isEmailVerified: boolean;
     googleId?: string;
@@ -32,12 +33,11 @@ export interface RegisterAdminto {
     name: string;
     email: string;
     password: string;
-    role?: string;
+    roles?: string;
 }
 
 export interface emailVerificationOTP {
     otp: String;
     expiresAt: Date;
     verificationToken: String;
-    verificationTokenExpires: Date;
 }

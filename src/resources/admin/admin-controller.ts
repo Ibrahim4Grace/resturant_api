@@ -2,6 +2,7 @@ import { Router, Request, Response, NextFunction } from "express";
 import { Controller } from "@/types/index";
 import validate from "@/resources/admin/admin-validation";
 import { AdminService } from "@/resources/admin/admin-service";
+import { TokenService } from "@/utils/index";
 import {
     validateData,
     sendJsonResponse,
@@ -12,7 +13,6 @@ import {
     Forbidden,
     Unauthorized,
     authMiddleware,
-    verifyToken,
 } from "@/middlewares/index";
 
 export default class AdminController implements Controller {
@@ -65,7 +65,6 @@ export default class AdminController implements Controller {
             name,
             email,
             password,
-            role,
         });
         sendJsonResponse(
             res,
@@ -93,7 +92,7 @@ export default class AdminController implements Controller {
 
         const token = authHeader.split(" ")[1];
 
-        const decoded = await verifyToken(token);
+        const decoded = await TokenService.verifyEmailToken(token);
 
         const user = await this.adminService.verifyRegistrationOTP(
             decoded.userId.toString(),

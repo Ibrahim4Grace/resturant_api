@@ -1,15 +1,14 @@
 import { NextFunction, Request, Response } from "express";
-import jwt from "jsonwebtoken";
 import Admin from "@/resources/admin/admin-model";
 import User from "@/resources/user/user-model";
 import Rider from "@/resources/rider/rider-model";
 import Restaurant from "@/resources/restaurant/restaurant-model";
+import { TokenService } from "@/utils/index";
 import { log } from "@/utils/index";
 import { ServerError, Unauthorized } from "./error";
-import { UserRole } from "@/enums/userRoles";
-import { JwtPayload, AllowedRoles, ValidUser } from "@/types/index";
+import { UserRole } from "@/types/index";
+import { AuthJwtPayload, AllowedRoles, ValidUser } from "@/types/index";
 
-// Helper functions
 export const extractToken = (req: Request): string | null => {
     const authHeader = req.headers.authorization;
     if (!authHeader?.startsWith("Bearer ")) {
@@ -18,64 +17,64 @@ export const extractToken = (req: Request): string | null => {
     return authHeader.split(" ")[1];
 };
 
-export const verifyToken = (token: string): Promise<JwtPayload> => {
-    return new Promise((resolve, reject) => {
-        jwt.verify(token, process.env.JWT_SECRET!, (err, decoded) => {
-            if (err || !decoded) {
-                reject(new Unauthorized("Invalid token"));
-            }
-            resolve(decoded as JwtPayload);
-        });
-    });
-};
-
 export const validateUser = async (userId: string): Promise<ValidUser> => {
     let user: ValidUser | null = null;
 
-    user = await User.findOne({ id: userId });
-    if (user) return user;
+    // Check each model and map to ValidUser interface
+    const mapToValidUser = (doc: any): ValidUser => ({
+        id: doc._id.toString(),
+        email: doc.email,
+        roles: doc.roles,
+        name: doc.name,
+    });
 
-    user = await Admin.findOne({ id: userId });
-    if (user) return user;
+    // Check each user type
+    user = await User.findById(userId);
+    if (user) return mapToValidUser(user);
 
-    user = await Rider.findOne({ id: userId });
-    if (user) return user;
+    user = await Admin.findById(userId);
+    if (user) return mapToValidUser(user);
 
-    user = await Restaurant.findOne({ id: userId });
-    if (user) return user;
+    user = await Rider.findById(userId);
+    if (user) return mapToValidUser(user);
+
+    user = await Restaurant.findById(userId);
+    if (user) return mapToValidUser(user);
 
     throw new Unauthorized("User not found");
 };
 
-const isRoleAuthorized = (
-    userRole: UserRole,
+export const isRoleAuthorized = (
+    userRoles: UserRole[],
     allowedRoles: AllowedRoles,
 ): boolean => {
     if (allowedRoles === "any") return true;
-    return allowedRoles.includes(userRole);
+    return userRoles.some((role) => allowedRoles.includes(role));
 };
 
 export const authMiddleware = (allowedRoles: AllowedRoles = "any") => {
     return async (req: Request, res: Response, next: NextFunction) => {
         try {
-            // Token extraction
             const token = extractToken(req);
             if (!token) {
                 throw new Unauthorized("No token provided");
             }
 
-            const decoded = await verifyToken(token);
-
+            const decoded = await TokenService.verifyAuthToken(token);
             const user = await validateUser(decoded.userId);
 
-            if (!isRoleAuthorized(user.role as UserRole, allowedRoles)) {
+            if (
+                allowedRoles !== "any" &&
+                !isRoleAuthorized(user.roles, allowedRoles)
+            ) {
                 throw new Unauthorized("Insufficient permissions");
             }
 
+            // Set user in request using AuthUser interface
             req.user = {
-                userId: user.id,
+                id: user.id,
                 email: user.email,
-                role: user.role,
+                roles: user.roles,
                 name: user.name,
             };
 

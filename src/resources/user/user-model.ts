@@ -1,9 +1,8 @@
 import { Schema, model } from "mongoose";
 import { IUser } from "@/resources/user/user-interface";
-import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
-import { UserRole } from "@/enums/userRoles";
 import { generateOTP } from "@/utils/index";
+import { TokenService } from "@/utils/index";
 
 const userSchema = new Schema<IUser>(
     {
@@ -21,12 +20,27 @@ const userSchema = new Schema<IUser>(
             type: String,
             required: true,
         },
-        role: {
-            type: String,
-            enum: Object.values(UserRole),
-            default: UserRole.USER,
-            trim: true,
+        roles: {
+            type: [String],
+            default: ["user"],
         },
+        address: {
+            street: String,
+            city: String,
+            state: String,
+            coordinates: {
+                latitude: Number,
+                longitude: Number,
+            },
+        },
+        paymentMethods: [
+            {
+                type: String, // 'credit_card', 'debit_card', etc.
+                last4: String,
+                expiryDate: Date,
+                isDefault: Boolean,
+            },
+        ],
         image: { imageId: String, imageUrl: String },
         isEmailVerified: { type: Boolean, default: false },
         googleId: { type: String, trim: true },
@@ -34,7 +48,6 @@ const userSchema = new Schema<IUser>(
             otp: String,
             expiresAt: Date,
             verificationToken: String,
-            attempts: { type: Number, default: 0 },
         },
         lastPasswordChange: Date,
         passwordHistory: [
@@ -71,13 +84,10 @@ userSchema.methods.generateEmailVerificationOTP = async function (): Promise<{
 }> {
     const { otp, hashedOTP } = await generateOTP();
 
-    const verificationToken = jwt.sign(
-        { userId: this._id },
-        process.env.JWT_SECRET!,
-        {
-            expiresIn: process.env.OTP_EXPIRY,
-        },
-    );
+    const verificationToken = TokenService.createEmailVerificationToken({
+        userId: this._id,
+        email: this.email,
+    });
 
     this.emailVerificationOTP = {
         otp: hashedOTP,

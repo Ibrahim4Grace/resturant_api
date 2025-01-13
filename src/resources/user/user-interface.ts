@@ -1,4 +1,5 @@
 import { Document } from "mongoose";
+import { UserRole } from "@/types/index";
 
 export interface IUser extends Document {
     _id: string;
@@ -6,7 +7,9 @@ export interface IUser extends Document {
     name: string;
     email: string;
     password: string;
-    role: string;
+    roles: UserRole[];
+    address: address;
+    paymentMethods?: paymentMethods;
     image: { imageId?: string; imageUrl?: string };
     isEmailVerified: boolean;
     googleId?: string;
@@ -23,6 +26,24 @@ export interface IUser extends Document {
     }>;
 }
 
+export interface address {
+    street?: string;
+    city?: string;
+    state?: string;
+    coordinates?: {
+        latitude?: number;
+        longitude?: number;
+    };
+}
+
+export interface paymentMethods {
+    type: string;
+    last4: string;
+    expiryDate: Date;
+    isDefault: Boolean;
+}
+[];
+
 export interface IPasswordHistoryEntry {
     password: string;
     changedAt: Date;
@@ -32,12 +53,11 @@ export interface RegisterUserto {
     name: string;
     email: string;
     password: string;
-    role?: string;
+    roles?: UserRole[];
 }
 
 export interface emailVerificationOTP {
     otp: String;
     expiresAt: Date;
     verificationToken: String;
-    verificationTokenExpires: Date;
 }

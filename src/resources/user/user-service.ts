@@ -1,8 +1,8 @@
 import UserModel from "@/resources/user/user-model";
-import { createToken, addEmailToQueue } from "@/utils/index";
-import { IUser, RegisterUserto } from "@/resources/user/user-interface";
+import { TokenService, addEmailToQueue } from "@/utils/index";
 import bcrypt from "bcryptjs";
-import { UserRole } from "@/enums/userRoles";
+import { IUser, RegisterUserto } from "@/resources/user/user-interface";
+import { UserRoles } from "@/types/index";
 import {
     sendOTPByEmail,
     welcomeEmail,
@@ -29,7 +29,6 @@ export class UserService {
 
         const user = await this.user.create({
             ...userData,
-            role: userData.role || UserRole.USER,
             isEmailVerified: false,
         });
 
@@ -44,7 +43,6 @@ export class UserService {
             _id: user._id,
             name: user.name,
             email: user.email,
-            role: user.role,
             isEmailVerified: user.isEmailVerified,
             createdAt: user.createdAt,
             updatedAt: user.updatedAt,
@@ -183,44 +181,52 @@ export class UserService {
             throw new ResourceNotFound("Invalid email or password");
         }
 
-        const isValid = await user.comparePassword(credentials.password);
-        if (!isValid) {
-            throw new Error("Invalid email or password");
+        if (!user.isEmailVerified) {
+            throw new Forbidden("Verify your email before sign in.");
         }
 
-        const token = createToken({
+        const isValid = await user.comparePassword(credentials.password);
+        if (!isValid) {
+            throw new Unauthorized("Invalid email or password");
+        }
+
+        if (!user.roles.includes(UserRoles.User)) {
+            throw new Forbidden("You do not have the 'User' role.");
+        }
+
+        const token = TokenService.createAuthToken({
             userId: user._id.toString(),
-            role: user.role as UserRole, // Ensure role is cast to UserRole
+            roles: user.roles,
         });
 
-        return { user, token: token };
+        return { user, token };
     }
 
-    public async getUsers(): Promise<IUser[]> {
-        const users = await this.user
-            .find({ deleted: false })
-            .select("-password")
-            .sort({ createdAt: -1 });
-        return users;
-    }
+    // public async getUsers(): Promise<IUser[]> {
+    //     const users = await this.user
+    //         .find({ deleted: false })
+    //         .select("-password")
+    //         .sort({ createdAt: -1 });
+    //     return users;
+    // }
 
-    public async getUserById(id: string): Promise<IUser | null> {
-        const user = await this.user
-            .findOne({ _id: id, deleted: false })
-            .select("-password");
-        return user;
-    }
+    // public async getUserById(id: string): Promise<IUser | null> {
+    //     const user = await this.user
+    //         .findOne({ _id: id, deleted: false })
+    //         .select("-password");
+    //     return user;
+    // }
 
-    public async updateUserById(
-        id: string,
-        data: Partial<IUser>,
-    ): Promise<IUser | null> {
-        const user = await this.user.findOneAndUpdate(
-            { _id: id, deleted: false },
-            { $set: data },
-            { new: true },
-        );
+    // public async updateUserById(
+    //     id: string,
+    //     data: Partial<IUser>,
+    // ): Promise<IUser | null> {
+    //     const user = await this.user.findOneAndUpdate(
+    //         { _id: id, deleted: false },
+    //         { $set: data },
+    //         { new: true },
+    //     );
 
-        return user;
-    }
+    //     return user;
+    // }
 }

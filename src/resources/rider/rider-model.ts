@@ -1,8 +1,7 @@
 import { Schema, model } from "mongoose";
 import { IRider } from "@/resources/rider/rider-interface";
-import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
-import { UserRole } from "@/enums/userRoles";
+import { TokenService } from "@/utils/index";
 import { generateOTP } from "@/utils/index";
 
 const riderSchema = new Schema<IRider>(
@@ -21,11 +20,33 @@ const riderSchema = new Schema<IRider>(
             type: String,
             required: true,
         },
-        role: {
-            type: String,
-            enum: Object.values(UserRole),
-            default: UserRole.RIDER,
-            trim: true,
+        roles: {
+            type: [String],
+            default: ["rider"],
+        },
+        vehicleType: String,
+        vehicleNumber: String,
+        licenseNumber: String,
+        documents: [
+            {
+                type: String, // 'license', 'insurance', 'identity'
+                url: String,
+                verificationStatus: String,
+            },
+        ],
+        currentLocation: {
+            coordinates: {
+                latitude: Number,
+                longitude: Number,
+            },
+            lastUpdated: Date,
+        },
+        status: String, // 'available', 'busy', 'offline'
+        rating: Number,
+        bankInfo: {
+            accountNumber: String,
+            bankName: String,
+            accountHolder: String,
         },
         image: { imageId: String, imageUrl: String },
         isEmailVerified: { type: Boolean, default: false },
@@ -69,13 +90,10 @@ riderSchema.methods.generateEmailVerificationOTP = async function (): Promise<{
 }> {
     const { otp, hashedOTP } = await generateOTP();
 
-    const verificationToken = jwt.sign(
-        { userId: this._id },
-        process.env.JWT_SECRET!,
-        {
-            expiresIn: process.env.OTP_EXPIRY,
-        },
-    );
+    const verificationToken = TokenService.createEmailVerificationToken({
+        userId: this._id,
+        email: this.email,
+    });
 
     this.emailVerificationOTP = {
         otp: hashedOTP,

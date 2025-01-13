@@ -1,8 +1,7 @@
 import { Schema, model } from "mongoose";
 import { IAdmin } from "@/resources/admin/admin-interface";
-import jwt from "jsonwebtoken";
+import { TokenService } from "@/utils/index";
 import bcrypt from "bcryptjs";
-import { UserRole } from "@/enums/userRoles";
 import { generateOTP } from "@/utils/index";
 
 const adminSchema = new Schema<IAdmin>(
@@ -21,11 +20,9 @@ const adminSchema = new Schema<IAdmin>(
             type: String,
             required: true,
         },
-        role: {
-            type: String,
-            enum: Object.values(UserRole),
-            default: UserRole.ADMIN,
-            trim: true,
+        roles: {
+            type: [String],
+            default: ["admin"],
         },
         image: { imageId: String, imageUrl: String },
         isEmailVerified: { type: Boolean, default: false },
@@ -71,13 +68,10 @@ adminSchema.methods.generateEmailVerificationOTP = async function (): Promise<{
 }> {
     const { otp, hashedOTP } = await generateOTP();
 
-    const verificationToken = jwt.sign(
-        { userId: this._id },
-        process.env.JWT_SECRET!,
-        {
-            expiresIn: process.env.OTP_EXPIRY,
-        },
-    );
+    const verificationToken = TokenService.createEmailVerificationToken({
+        userId: this._id,
+        email: this.email,
+    });
 
     this.emailVerificationOTP = {
         otp: hashedOTP,

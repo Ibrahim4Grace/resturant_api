@@ -1,7 +1,7 @@
 import AdminModel from "@/resources/admin/admin-model";
 import { addEmailToQueue } from "@/utils/index";
 import { IAdmin, RegisterAdminto } from "@/resources/admin/admin-interface";
-import { UserRole } from "@/enums/userRoles";
+import { UserRoles } from "@/types/index";
 import bcrypt from "bcryptjs";
 import {
     sendOTPByEmail,
@@ -16,7 +16,6 @@ import {
     Forbidden,
     Unauthorized,
     authMiddleware,
-    verifyToken,
 } from "@/middlewares/index";
 
 export class AdminService {
@@ -34,7 +33,6 @@ export class AdminService {
 
         const admin = await this.admin.create({
             ...adminData,
-            role: adminData.role || UserRole.ADMIN,
             isEmailVerified: false,
         });
 
@@ -49,7 +47,6 @@ export class AdminService {
             _id: admin._id,
             name: admin.name,
             email: admin.email,
-            role: admin.role,
             isEmailVerified: admin.isEmailVerified,
             createdAt: admin.createdAt,
             updatedAt: admin.updatedAt,

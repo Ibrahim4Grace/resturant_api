@@ -2,8 +2,8 @@ import { Router, Request, Response, NextFunction } from "express";
 import { Controller } from "@/types/index";
 import validate from "@/resources/user/user-validation";
 import { UserService } from "@/resources/user/user-service";
-import { UserRole } from "../../enums/userRoles";
-
+import { UserRoles } from "@/types/index";
+import { TokenService } from "@/utils/index";
 import {
     validateData,
     sendJsonResponse,
@@ -11,7 +11,6 @@ import {
     ResourceNotFound,
     BadRequest,
     authMiddleware,
-    verifyToken,
 } from "@/middlewares/index";
 
 export default class UserController implements Controller {
@@ -57,21 +56,21 @@ export default class UserController implements Controller {
             validateData(validate.login),
             asyncHandler(this.login),
         );
-        this.router.get(
-            `${this.path}`,
-            asyncHandler(authMiddleware([UserRole.ADMIN])),
-            asyncHandler(this.getUsers),
-        );
-        this.router.get(
-            `${this.path}/:id`,
-            // authMiddleware,
-            asyncHandler(this.getUserById),
-        );
-        this.router.put(
-            `${this.path}/:id`,
-            // authMiddleware,
-            asyncHandler(this.updateUserById),
-        );
+        // this.router.get(
+        //     `${this.path}`,
+        //     asyncHandler(authMiddleware([UserRoles.User])),
+        //     asyncHandler(this.getUsers),
+        // );
+        // this.router.get(
+        //     `${this.path}/:id`,
+        //     // authMiddleware,
+        //     asyncHandler(this.getUserById),
+        // );
+        // this.router.put(
+        //     `${this.path}/:id`,
+        //     // authMiddleware,
+        //     asyncHandler(this.updateUserById),
+        // );
     }
 
     private register = async (
@@ -79,12 +78,11 @@ export default class UserController implements Controller {
         res: Response,
         next: NextFunction,
     ): Promise<void> => {
-        const { name, email, password, role } = req.body;
+        const { name, email, password } = req.body;
         const result = await this.userService.register({
             name,
             email,
             password,
-            role,
         });
         sendJsonResponse(
             res,
@@ -112,7 +110,7 @@ export default class UserController implements Controller {
 
         const token = authHeader.split(" ")[1];
 
-        const decoded = await verifyToken(token);
+        const decoded = await TokenService.verifyEmailToken(token);
 
         const user = await this.userService.verifyRegistrationOTP(
             decoded.userId.toString(),
@@ -200,48 +198,48 @@ export default class UserController implements Controller {
         sendJsonResponse(res, 200, "Login successful", result);
     };
 
-    private getUsers = async (
-        req: Request,
-        res: Response,
-        next: NextFunction,
-    ): Promise<void> => {
-        const users = await this.userService.getUsers();
-        sendJsonResponse(res, 200, "Users retrieved successfully", users);
-    };
+    // private getUsers = async (
+    //     req: Request,
+    //     res: Response,
+    //     next: NextFunction,
+    // ): Promise<void> => {
+    //     const users = await this.userService.getUsers();
+    //     sendJsonResponse(res, 200, "Users retrieved successfully", users);
+    // };
 
-    private getUserById = async (
-        req: Request,
-        res: Response,
-        next: NextFunction,
-    ): Promise<void> => {
-        const { id } = req.params;
-        const user = await this.userService.getUserById(id);
+    // private getUserById = async (
+    //     req: Request,
+    //     res: Response,
+    //     next: NextFunction,
+    // ): Promise<void> => {
+    //     const { id } = req.params;
+    //     const user = await this.userService.getUserById(id);
 
-        if (!user) {
-            throw new ResourceNotFound("User not found");
-        }
+    //     if (!user) {
+    //         throw new ResourceNotFound("User not found");
+    //     }
 
-        sendJsonResponse(res, 200, "User retrieved successfully", user);
-    };
+    //     sendJsonResponse(res, 200, "User retrieved successfully", user);
+    // };
 
-    private updateUserById = async (
-        req: Request,
-        res: Response,
-        next: NextFunction,
-    ): Promise<void> => {
-        const { id } = req.params;
-        const data = req.body;
-        const updatedUser = await this.userService.updateUserById(id, data);
+    // private updateUserById = async (
+    //     req: Request,
+    //     res: Response,
+    //     next: NextFunction,
+    // ): Promise<void> => {
+    //     const { id } = req.params;
+    //     const data = req.body;
+    //     const updatedUser = await this.userService.updateUserById(id, data);
 
-        if (!updatedUser) {
-            throw new ResourceNotFound("User not found or update failed");
-        }
+    //     if (!updatedUser) {
+    //         throw new ResourceNotFound("User not found or update failed");
+    //     }
 
-        sendJsonResponse(
-            res,
-            200,
-            "User data updated successfully",
-            updatedUser,
-        );
-    };
+    //     sendJsonResponse(
+    //         res,
+    //         200,
+    //         "User data updated successfully",
+    //         updatedUser,
+    //     );
+    // };
 }

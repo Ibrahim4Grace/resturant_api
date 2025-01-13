@@ -1,7 +1,7 @@
 import RiderModel from "@/resources/rider/rider-model";
 import { addEmailToQueue } from "@/utils/index";
 import { IRider, RegisterRiderto } from "@/resources/rider/rider-interface";
-import { UserRole } from "@/enums/userRoles";
+import { UserRoles } from "@/types/index";
 import bcrypt from "bcryptjs";
 import {
     sendOTPByEmail,
@@ -16,7 +16,6 @@ import {
     Forbidden,
     Unauthorized,
     authMiddleware,
-    verifyToken,
 } from "@/middlewares/index";
 
 export class RiderService {
@@ -34,7 +33,6 @@ export class RiderService {
 
         const rider = await this.rider.create({
             ...riderData,
-            role: riderData.role || UserRole.RIDER,
             isEmailVerified: false,
         });
 
@@ -49,7 +47,6 @@ export class RiderService {
             _id: rider._id,
             name: rider.name,
             email: rider.email,
-            role: rider.role,
             isEmailVerified: rider.isEmailVerified,
             createdAt: rider.createdAt,
             updatedAt: rider.updatedAt,
