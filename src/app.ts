@@ -1,14 +1,14 @@
-import express, { Application } from "express";
-import mongoose from "mongoose";
-import compression from "compression";
-import cors from "cors";
-import { corsOptions, specs, ServerAdapter } from "@/config/index";
-import swaggerUi from "swagger-ui-express";
-import morgan from "morgan";
-import { log } from "@/utils/index";
-import { Controller } from "@/types/index";
-import { errorHandler, routeNotFound } from "@/middlewares/index";
-import helmet from "helmet";
+import express, { Application } from 'express';
+import mongoose from 'mongoose';
+import compression from 'compression';
+import cors from 'cors';
+import { corsOptions, specs, ServerAdapter } from '@/config/index';
+import swaggerUi from 'swagger-ui-express';
+import morgan from 'morgan';
+import { log } from '@/utils/index';
+import { Controller } from '@/types/index';
+import { errorHandler, routeNotFound } from '@/middlewares/index';
+import helmet from 'helmet';
 
 class App {
     public express: Application;
@@ -29,30 +29,28 @@ class App {
     private initializeMiddlewares(): void {
         this.express.use(helmet());
         this.express.use(cors(corsOptions));
-        this.express.use(morgan("dev"));
-        this.express.use(express.json({ limit: "15mb" }));
-        this.express.use(
-            express.urlencoded({ limit: "15mb", extended: false }),
-        );
+        this.express.use(morgan('dev'));
+        this.express.use(express.json({ limit: '15mb' }));
+        this.express.use(express.urlencoded({ limit: '15mb', extended: true }));
         this.express.use(compression());
-        this.express.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs));
+        this.express.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
     }
 
     private initializeControllers(controllers: Controller[]): void {
         controllers.forEach((controller: Controller) => {
-            this.express.use("/api/v1", controller.router);
+            this.express.use('/api/v1', controller.router);
         });
     }
 
     private initializeQueueRoutes(): void {
-        this.express.use("/admin/queues", ServerAdapter.getRouter());
+        this.express.use('/admin/queues', ServerAdapter.getRouter());
     }
 
     private initializeDefaultRoute(): void {
-        this.express.get("/", (req, res) => {
+        this.express.get('/', (req, res) => {
             res.send({
                 message:
-                    "Welcome to resturant API. Use /api/v1 for all API routes.",
+                    'Welcome to resturant API. Use /api/v1 for all API routes.',
             });
         });
     }
@@ -66,13 +64,13 @@ class App {
         const { MONGODB_URI } = process.env;
 
         if (!MONGODB_URI) {
-            throw new Error("MongoDB URI is missing!");
+            throw new Error('MongoDB URI is missing!');
         }
 
         mongoose
             .connect(MONGODB_URI)
-            .then(() => log.info("Database connected successfully"))
-            .catch((err) => console.error("Database connection failed:", err));
+            .then(() => log.info('Database connected successfully'))
+            .catch((err) => console.error('Database connection failed:', err));
     }
 
     public listen(): void {
