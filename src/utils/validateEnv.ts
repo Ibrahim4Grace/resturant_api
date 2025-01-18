@@ -18,6 +18,13 @@ function validateEnv(): void {
         CORS_WHITELIST: str(),
         // REDIS_HOST: str(),
         // REDIS_PORT: num(),
+        CLOUDINARY_CLOUD_NAME: str(),
+        CLOUDINARY_API_NAME: str(),
+        CLOUDINARY_SECRET_NAME: str(),
+        PAYSTACK_SECRET_KEY: str(),
+        PAYSTACK_BASE_URL: str(),
+        SUPPORT_EMAIL: str(),
+        SUPPORT_PHONE: str(),
     });
 }
 

@@ -5,7 +5,7 @@ export const sendOTPByEmail = (
     otp: string,
 ): EmailData => {
     const otpExpiryMillis = Number(process.env.OTP_EXPIRY);
-    const otpExpiryHour = Math.floor(otpExpiryMillis / (60 * 1000));
+    const otpExpiryHour = otpExpiryMillis / (60 * 60 * 1000);
     return {
         from: process.env.nodemailerEmail as string,
         to: rider.email,

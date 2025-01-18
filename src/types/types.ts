@@ -1,14 +1,14 @@
-import { IUser } from "@/resources/user/user-interface";
-import { IRestaurant } from "@/resources/restaurant/restaurant-interface";
-import { IRider } from "@/resources/rider/rider-interface";
-import { IAdmin } from "@/resources/admin/admin-interface";
+import { IUser } from '@/resources/user/user-interface';
+import { IRestaurant } from '@/resources/restaurant/interface';
+import { IRider } from '@/resources/rider/rider-interface';
+import { IAdmin } from '@/resources/admin/admin-interface';
 
 export const UserRoles = {
-    User: "user",
-    Admin: "admin",
-    RestaurantOwner: "restaurant_owner",
-    RestaurantWorkers: "restaurant_workers",
-    Rider: "rider",
+    User: 'user',
+    Admin: 'admin',
+    RestaurantOwner: 'restaurant_owner',
+    RestaurantWorkers: 'restaurant_workers',
+    Rider: 'rider',
 } as const;
 
 export type UserRole = (typeof UserRoles)[keyof typeof UserRoles];
@@ -35,6 +35,37 @@ export interface EmailData {
     html: string;
 }
 
+export interface LoginCredentials {
+    email: string;
+    password: string;
+    roles?: UserRole;
+}
+
+export type AllowedRoles = UserRole[] | 'any';
+
+export interface AuthUser {
+    id: string;
+    email: string;
+    roles: UserRole[];
+    name: string;
+}
+
+declare global {
+    namespace Express {
+        interface Request {
+            user?: AuthUser;
+            currentUser?: IUser;
+        }
+    }
+}
+
+export interface ValidUser {
+    id: string;
+    email: string;
+    roles: UserRole[];
+    name: string;
+}
+
 // export interface MulterFile {
 //     fieldname: string;
 //     originalname: string;
@@ -48,33 +79,3 @@ export interface EmailData {
 //     // eslint-disable-next-line @typescript-eslint/no-explicit-any
 //     stream: any;
 // }
-
-export interface LoginCredentials {
-    email: string;
-    password: string;
-    roles?: UserRole;
-}
-
-export type AllowedRoles = UserRole[] | "any";
-
-export interface AuthUser {
-    id: string;
-    email: string;
-    roles: UserRole[];
-    name: string;
-}
-
-declare global {
-    namespace Express {
-        interface Request {
-            user?: AuthUser;
-        }
-    }
-}
-
-export interface ValidUser {
-    id: string;
-    email: string;
-    roles: UserRole[];
-    name: string;
-}

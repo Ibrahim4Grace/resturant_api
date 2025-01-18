@@ -3,7 +3,7 @@ import { z } from "zod";
 const regex =
     /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$/;
 
-const register = z.object({
+const registerSchema = z.object({
     name: z.string().min(1, "Name is required").max(30),
     email: z.string().email().trim().min(1, "Email is required"),
     password: z
@@ -14,15 +14,15 @@ const register = z.object({
         ),
 });
 
-const forgetPwd = z.object({
+const forgetPwdSchema = z.object({
     email: z.string().email().trim().min(1, "Email is required"),
 });
 
-const verifyOtp = z.object({
+const verifyOtpSchema = z.object({
     otp: z.string().min(1, "Otp is required").max(6),
 });
 
-const resetPassword = z.object({
+const resetPasswordSchema = z.object({
     newPassword: z
         .string()
         .regex(
@@ -31,7 +31,7 @@ const resetPassword = z.object({
         ),
 });
 
-const login = z.object({
+const loginSchema = z.object({
     email: z.string().email().trim().min(1, "Email is required"),
     password: z
         .string()
@@ -41,10 +41,53 @@ const login = z.object({
         ),
 });
 
+const addressSchema = z
+    .object({
+        street: z.string().min(1).max(100).optional(),
+        city: z.string().min(1).max(50).optional(),
+        state: z.string().min(1).max(50).optional(),
+    })
+    .optional();
+
+const paymentMethodSchema = z
+    .object({
+        type: z.string().optional(),
+        last4: z.string().length(4).optional(),
+        expiryDate: z.date().optional(),
+        isDefault: z.boolean().optional(),
+    })
+    .optional();
+
+const imageSchema = z
+    .object({
+        imageId: z.string().optional(),
+        imageUrl: z.string().url().optional(),
+    })
+    .optional();
+
+const updateUserSchema = z
+    .object({
+        name: z.string().min(1).max(30).optional(),
+        email: z.string().email().optional(),
+        address: addressSchema,
+        paymentMethods: z.array(paymentMethodSchema).optional(),
+        image: imageSchema,
+        isEmailVerified: z.boolean().optional(),
+    })
+    .strict();
+
+const addressesSchema = z.object({
+    street: z.string().min(1, "Street is required").max(100),
+    city: z.string().min(1, "City is required").max(50),
+    state: z.string().min(1, "State is required").max(50),
+});
+
 export default {
-    register,
-    forgetPwd,
-    verifyOtp,
-    resetPassword,
-    login,
+    registerSchema,
+    forgetPwdSchema,
+    verifyOtpSchema,
+    resetPasswordSchema,
+    loginSchema,
+    updateUserSchema,
+    addressesSchema,
 };

@@ -1,11 +1,12 @@
 import { EmailData } from "@/types/index";
+import { IUser, Address } from "@/resources/user/user-interface";
 
 export const sendOTPByEmail = (
     user: { name: string; email: string },
     otp: string,
 ): EmailData => {
     const otpExpiryMillis = Number(process.env.OTP_EXPIRY);
-    const otpExpiryHour = Math.floor(otpExpiryMillis / (60 * 1000));
+    const otpExpiryHour = otpExpiryMillis / (60 * 60 * 1000);
     return {
         from: process.env.nodemailerEmail as string,
         to: user.email,
@@ -46,6 +47,21 @@ export const PasswordResetEmail = (user: {
         html: `
             <p>Hello ${user.name},</p>
             <p>Your password has been successfully reset. If you did not perform this action, please contact our support team immediately.</p>
+            <p>Best regards,<br>The Chef-kay restaurant Team</p>`,
+    };
+};
+
+export const newAddressAdded = (
+    user: IUser,
+    addressData: Address,
+): EmailData => {
+    return {
+        from: process.env.nodemailerEmail as string,
+        to: user.email,
+        subject: "New address added to your account!",
+        html: `
+            <p>Hello ${user.name},</p>
+            <p>Your new address at ${addressData.street}, ${addressData.city}, ${addressData.state} has been successfully added..</p>
             <p>Best regards,<br>The Chef-kay restaurant Team</p>`,
     };
 };

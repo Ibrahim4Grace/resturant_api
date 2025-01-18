@@ -1,8 +1,8 @@
-import { Schema, model } from "mongoose";
-import { IUser } from "@/resources/user/user-interface";
-import bcrypt from "bcryptjs";
-import { generateOTP } from "@/utils/index";
-import { TokenService } from "@/utils/index";
+import { Schema, model } from 'mongoose';
+import { IUser } from '@/resources/user/user-interface';
+import bcrypt from 'bcryptjs';
+import { generateOTP } from '@/utils/index';
+import { TokenService } from '@/utils/index';
 
 const userSchema = new Schema<IUser>(
     {
@@ -13,7 +13,6 @@ const userSchema = new Schema<IUser>(
         email: {
             type: String,
             required: true,
-            unique: true,
             trim: true,
         },
         password: {
@@ -22,17 +21,15 @@ const userSchema = new Schema<IUser>(
         },
         roles: {
             type: [String],
-            default: ["user"],
+            default: ['user'],
         },
-        address: {
-            street: String,
-            city: String,
-            state: String,
-            coordinates: {
-                latitude: Number,
-                longitude: Number,
+        addresses: [
+            {
+                street: { type: String, required: true },
+                city: { type: String, required: true },
+                state: { type: String, required: true },
             },
-        },
+        ],
         paymentMethods: [
             {
                 type: String, // 'credit_card', 'debit_card', etc.
@@ -44,6 +41,8 @@ const userSchema = new Schema<IUser>(
         image: { imageId: String, imageUrl: String },
         isEmailVerified: { type: Boolean, default: false },
         googleId: { type: String, trim: true },
+        isLocked: { type: Boolean, default: false },
+        failedLoginAttempts: { type: Number, default: 0 },
         emailVerificationOTP: {
             otp: String,
             expiresAt: Date,
@@ -61,8 +60,8 @@ const userSchema = new Schema<IUser>(
 );
 
 //hashpassword
-userSchema.pre<IUser>("save", async function (next) {
-    if (!this.isModified("password")) {
+userSchema.pre<IUser>('save', async function (next) {
+    if (!this.isModified('password')) {
         return next();
     }
 
@@ -98,4 +97,4 @@ userSchema.methods.generateEmailVerificationOTP = async function (): Promise<{
     return { otp, verificationToken };
 };
 
-export default model<IUser>("User", userSchema);
+export default model<IUser>('User', userSchema);

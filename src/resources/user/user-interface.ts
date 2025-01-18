@@ -7,8 +7,10 @@ export interface IUser extends Document {
     name: string;
     email: string;
     password: string;
+    isLocked: boolean;
+    failedLoginAttempts: number;
     roles: UserRole[];
-    address: address;
+    addresses?: Address[];
     paymentMethods?: paymentMethods;
     image: { imageId?: string; imageUrl?: string };
     isEmailVerified: boolean;
@@ -26,14 +28,11 @@ export interface IUser extends Document {
     }>;
 }
 
-export interface address {
+export interface Address {
+    _id?: string;
     street?: string;
     city?: string;
     state?: string;
-    coordinates?: {
-        latitude?: number;
-        longitude?: number;
-    };
 }
 
 export interface paymentMethods {

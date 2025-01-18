@@ -1,12 +1,17 @@
 import UserModel from "@/resources/user/user-model";
 import { TokenService, addEmailToQueue } from "@/utils/index";
 import bcrypt from "bcryptjs";
-import { IUser, RegisterUserto } from "@/resources/user/user-interface";
-import { UserRoles } from "@/types/index";
+import { LoginCredentials } from "@/types/index";
+import {
+    IUser,
+    RegisterUserto,
+    Address,
+} from "@/resources/user/user-interface";
 import {
     sendOTPByEmail,
     welcomeEmail,
     PasswordResetEmail,
+    newAddressAdded,
 } from "@/resources/user/user-email-template";
 import {
     Conflict,
@@ -159,23 +164,42 @@ export class UserService {
 
         // Add the old password to history before updating
         user.passwordHistory = user.passwordHistory ?? [];
+
+        const isPasswordUsedBefore = user.passwordHistory.some((entry) =>
+            bcrypt.compareSync(newPassword, entry.password),
+        );
+
+        if (isPasswordUsedBefore) {
+            throw new BadRequest(
+                "This password has been used before. Please choose a new password.",
+            );
+        }
+
         user.passwordHistory.push({
             password: user.password,
             changedAt: new Date(),
         });
 
+        const PASSWORD_HISTORY_LIMIT = 5;
+        if (user.passwordHistory.length > PASSWORD_HISTORY_LIMIT) {
+            user.passwordHistory = user.passwordHistory.slice(
+                -PASSWORD_HISTORY_LIMIT,
+            );
+        }
+
         user.password = newPassword;
         user.emailVerificationOTP = undefined;
+        user.failedLoginAttempts = 0;
+        user.isLocked = false;
         await user.save();
 
         const emailOptions = PasswordResetEmail(user as IUser);
         await addEmailToQueue(emailOptions);
     }
 
-    public async login(credentials: {
-        email: string;
-        password: string;
-    }): Promise<{ user: IUser; token: string }> {
+    public async login(
+        credentials: LoginCredentials,
+    ): Promise<{ user: IUser; token: string }> {
         const user = await this.user.findOne({ email: credentials.email });
         if (!user) {
             throw new ResourceNotFound("Invalid email or password");
@@ -187,11 +211,27 @@ export class UserService {
 
         const isValid = await user.comparePassword(credentials.password);
         if (!isValid) {
+            user.failedLoginAttempts += 1;
+            if (user.failedLoginAttempts >= 3) {
+                user.isLocked = true;
+                await user.save();
+                throw new Forbidden(
+                    "Your account has been locked due to multiple failed login attempts. Please reset your password.",
+                );
+            }
+            await user.save();
             throw new Unauthorized("Invalid email or password");
         }
 
-        if (!user.roles.includes(UserRoles.User)) {
-            throw new Forbidden("You do not have the 'User' role.");
+        user.failedLoginAttempts = 0;
+        await user.save();
+
+        // If no specific role is provided, default to 'user' role
+        const requestedRole = credentials.roles || "user";
+        if (!user.roles.includes(requestedRole)) {
+            throw new Forbidden(
+                `You do not have permission to sign in as ${requestedRole}`,
+            );
         }
 
         const token = TokenService.createAuthToken({
@@ -202,31 +242,97 @@ export class UserService {
         return { user, token };
     }
 
-    // public async getUsers(): Promise<IUser[]> {
-    //     const users = await this.user
-    //         .find({ deleted: false })
-    //         .select("-password")
-    //         .sort({ createdAt: -1 });
-    //     return users;
-    // }
+    public async getUserById(userId: string): Promise<IUser> {
+        const user = await this.user
+            .findById(userId)
+            .select("-password -failedLoginAttempts -isLocked");
 
-    // public async getUserById(id: string): Promise<IUser | null> {
-    //     const user = await this.user
-    //         .findOne({ _id: id, deleted: false })
-    //         .select("-password");
-    //     return user;
-    // }
+        if (!user) {
+            throw new ResourceNotFound("User not found");
+        }
 
-    // public async updateUserById(
-    //     id: string,
-    //     data: Partial<IUser>,
-    // ): Promise<IUser | null> {
-    //     const user = await this.user.findOneAndUpdate(
-    //         { _id: id, deleted: false },
-    //         { $set: data },
-    //         { new: true },
-    //     );
+        return user;
+    }
 
-    //     return user;
+    public async updateUserById(
+        id: string,
+        data: Partial<IUser>,
+    ): Promise<IUser | null> {
+        const user = await this.user.findOneAndUpdate(
+            { _id: id },
+            { $set: data },
+            { new: true },
+        );
+
+        return user;
+    }
+
+    public async addNewAddress(
+        userId: string,
+        addressData: Address,
+    ): Promise<IUser> {
+        const user = await this.user.findById(userId);
+        if (!user) {
+            throw new ResourceNotFound("User not found");
+        }
+
+        user.addresses = user.addresses || [];
+        const isDuplicate = user.addresses.some(
+            (address) =>
+                address.street === addressData.street &&
+                address.city === addressData.city &&
+                address.state === addressData.state,
+        );
+
+        if (isDuplicate) {
+            throw new Conflict(
+                "Duplicate address: This address already exists.",
+            );
+        }
+
+        const emailOptions = newAddressAdded(user as IUser, addressData);
+        await addEmailToQueue(emailOptions);
+
+        user.addresses.push(addressData);
+        await user.save();
+        return user;
+    }
+
+    public async getUserAddress(userId: string): Promise<Address[]> {
+        const user = await this.user
+            .findById(userId)
+            .select("addresses")
+            .lean();
+
+        if (!user) {
+            throw new ResourceNotFound("User not found");
+        }
+
+        return user.addresses || [];
+    }
+
+    public async deleteAddress(
+        userId: string,
+        addressId: string,
+    ): Promise<void> {
+        const user = await this.user.findById(userId);
+        if (!user) {
+            throw new ResourceNotFound("User not found");
+        }
+
+        const result = await this.user.findOneAndUpdate(
+            { _id: userId, "addresses._id": addressId },
+            { $pull: { addresses: { _id: addressId } } },
+            { new: true },
+        );
+
+        if (!result) {
+            throw new ResourceNotFound("Address not found");
+        }
+    }
+
+    // public async getUserOrders(userId: string): Promise<IOrder[]> {
+    //     const orders = await this.orderModel.find({ userId });
+    //     return orders;
     // }
 }
