@@ -7,15 +7,14 @@ export const UserRoles = {
     User: 'user',
     Admin: 'admin',
     RestaurantOwner: 'restaurant_owner',
-    RestaurantWorkers: 'restaurant_workers',
     Rider: 'rider',
-} as const;
+};
 
 export type UserRole = (typeof UserRoles)[keyof typeof UserRoles];
 
 export interface AuthJwtPayload {
     userId: string;
-    roles: UserRole[];
+    role: UserRole[];
 }
 
 export interface EmailVerificationPayload {
@@ -38,7 +37,7 @@ export interface EmailData {
 export interface LoginCredentials {
     email: string;
     password: string;
-    roles?: UserRole;
+    role?: UserRole;
 }
 
 export type AllowedRoles = UserRole[] | 'any';
@@ -46,7 +45,7 @@ export type AllowedRoles = UserRole[] | 'any';
 export interface AuthUser {
     id: string;
     email: string;
-    roles: UserRole[];
+    role: UserRole | UserRole[];
     name: string;
 }
 
@@ -62,7 +61,7 @@ declare global {
 export interface ValidUser {
     id: string;
     email: string;
-    roles: UserRole[];
+    role: UserRole | UserRole[];
     name: string;
 }
 

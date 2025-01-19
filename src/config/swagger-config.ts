@@ -1,38 +1,38 @@
-import swaggerJsdoc from "swagger-jsdoc";
-import { version } from "../../package.json";
-import { allAuthDocs } from "../docs/index";
+import swaggerJsdoc from 'swagger-jsdoc';
+import { version } from '../../package.json';
+import {
+    allRiderDocs,
+    allAdminDocs,
+    allUserDocs,
+    allRestaurantDocs,
+} from '../docs/index';
 
 const swaggerOptions: swaggerJsdoc.Options = {
     definition: {
-        openapi: "3.1.0",
+        openapi: '3.1.0',
         info: {
-            title: "Korex-restaurant Express API with Swagger",
+            title: 'Korex-restaurant Express API with Swagger',
             version: version,
             description:
-                "OpenAPI documentation for the Korex-restaurant project",
+                'OpenAPI documentation for the Korex-restaurant project',
         },
         servers: [
             {
                 url: `http://localhost:${process.env.PORT}/`,
-                description: "Local server",
+                description: 'Local server',
             },
             {
-                url: "https://korex-restaurant.vercel.app/",
-                description: "Live server",
+                url: 'https://korex-restaurant.vercel.app/',
+                description: 'Live server',
             },
         ],
-        tags: [
-            {
-                name: "Authentication",
-                description: "A list of routes for Authentication",
-            },
-        ],
+
         components: {
             securitySchemes: {
                 bearerAuth: {
-                    type: "http",
-                    scheme: "bearer",
-                    bearerFormat: "JWT",
+                    type: 'http',
+                    scheme: 'bearer',
+                    bearerFormat: 'JWT',
                 },
             },
         },
@@ -42,7 +42,10 @@ const swaggerOptions: swaggerJsdoc.Options = {
             },
         ],
         paths: {
-            ...allAuthDocs.paths,
+            ...allAdminDocs.paths,
+            ...allUserDocs.paths,
+            ...allRestaurantDocs.paths,
+            ...allRiderDocs.paths,
         },
     },
     apis: [],

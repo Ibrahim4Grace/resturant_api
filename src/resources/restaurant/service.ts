@@ -90,7 +90,7 @@ export class RestaurantService {
         const restaurant = await this.restaurant.create({
             ...restaurantData,
             businessLicense,
-            status: 'inactive',
+            status: 'pending',
             isEmailVerified: false,
         });
 
@@ -242,6 +242,12 @@ export class RestaurantService {
             throw new Forbidden('Verify your email before sign in.');
         }
 
+        if (restaurant.status !== 'active') {
+            throw new Forbidden(
+                'Your account is not active. Please contact support or wait for approval.',
+            );
+        }
+
         const isValid = await restaurant.comparePassword(credentials.password);
         if (!isValid) {
             restaurant.failedLoginAttempts += 1;
@@ -259,9 +265,9 @@ export class RestaurantService {
         restaurant.failedLoginAttempts = 0;
         await restaurant.save();
 
-        // If no specific role is provided, default to 'user' role
-        const requestedRole = credentials.roles || 'restaurant_owner';
-        if (!restaurant.roles.includes(requestedRole)) {
+        // If no specific role is provided, default to 'restaurant' role
+        const requestedRole = credentials.role || 'restaurant_owner';
+        if (!restaurant.role.includes(requestedRole)) {
             throw new Forbidden(
                 `You do not have permission to sign in as ${requestedRole}`,
             );
@@ -269,7 +275,7 @@ export class RestaurantService {
 
         const token = TokenService.createAuthToken({
             userId: restaurant._id.toString(),
-            roles: restaurant.roles,
+            role: restaurant.role,
         });
 
         return { restaurant, token };
@@ -279,7 +285,6 @@ export class RestaurantService {
         restaurantData: RegisterRestaurantto,
         file?: Express.Multer.File,
     ): Promise<RegistrationResponse> {
-        // Validate unique constraints
         await Promise.all([
             this.checkDuplicateEmail(restaurantData.email),
             this.checkDuplicateAddress(restaurantData.address),
@@ -297,10 +302,11 @@ export class RestaurantService {
         const restaurant = await this.restaurant.create({
             ...restaurantData,
             businessLicense,
-            status: 'inactive',
-            isEmailVerified: false,
+            status: 'pending',
+            isEmailVerified: restaurantData.isEmailVerified,
         });
         await restaurant.save();
+        console.log('Created Restaurant:', restaurant);
 
         const emailOptions = pendingVerificationEmail(
             restaurant as IRestaurant,

@@ -1,25 +1,26 @@
-import UserModel from "@/resources/user/user-model";
-import { TokenService, addEmailToQueue } from "@/utils/index";
-import bcrypt from "bcryptjs";
-import { LoginCredentials } from "@/types/index";
+import UserModel from '@/resources/user/user-model';
+import { TokenService, addEmailToQueue } from '@/utils/index';
+import bcrypt from 'bcryptjs';
+import { LoginCredentials } from '@/types/index';
 import {
     IUser,
     RegisterUserto,
     Address,
-} from "@/resources/user/user-interface";
+    loginResponse,
+} from '@/resources/user/user-interface';
 import {
     sendOTPByEmail,
     welcomeEmail,
     PasswordResetEmail,
     newAddressAdded,
-} from "@/resources/user/user-email-template";
+} from '@/resources/user/user-email-template';
 import {
     Conflict,
     ResourceNotFound,
     BadRequest,
     Forbidden,
     Unauthorized,
-} from "@/middlewares/index";
+} from '@/middlewares/index';
 
 export class UserService {
     private user = UserModel;
@@ -29,7 +30,7 @@ export class UserService {
     ): Promise<{ user: Partial<IUser>; verificationToken: string }> {
         const existingUser = await this.user.findOne({ email: userData.email });
         if (existingUser) {
-            throw new Conflict("Email already registered!");
+            throw new Conflict('Email already registered!');
         }
 
         const user = await this.user.create({
@@ -66,19 +67,19 @@ export class UserService {
         const user = await this.user.findOne({
             _id: userId,
             isEmailVerified: false,
-            "emailVerificationOTP.expiresAt": { $gt: new Date() },
+            'emailVerificationOTP.expiresAt': { $gt: new Date() },
         });
 
         if (!user) {
-            throw new BadRequest("Invalid or expired verification session");
+            throw new BadRequest('Invalid or expired verification session');
         }
 
         if (!user?.emailVerificationOTP?.otp) {
-            throw new BadRequest("No OTP found for this user");
+            throw new BadRequest('No OTP found for this user');
         }
 
         if (new Date() > user.emailVerificationOTP.expiresAt) {
-            throw new BadRequest("OTP has expired");
+            throw new BadRequest('OTP has expired');
         }
 
         const isValid = await bcrypt.compare(
@@ -86,7 +87,7 @@ export class UserService {
             user.emailVerificationOTP.otp.toString(),
         );
         if (!isValid) {
-            throw new BadRequest("Invalid OTP");
+            throw new BadRequest('Invalid OTP');
         }
 
         user.emailVerificationOTP = undefined;
@@ -104,7 +105,7 @@ export class UserService {
             email: email.toLowerCase().trim(),
         });
         if (!user) {
-            throw new ResourceNotFound("User not found");
+            throw new ResourceNotFound('User not found');
         }
 
         const verificationResult = await user.generateEmailVerificationOTP();
@@ -122,20 +123,20 @@ export class UserService {
         otp: string,
     ): Promise<IUser> {
         const user = await this.user.findOne({
-            "emailVerificationOTP.verificationToken": verificationToken,
-            "emailVerificationOTP.expiresAt": { $gt: new Date() },
+            'emailVerificationOTP.verificationToken': verificationToken,
+            'emailVerificationOTP.expiresAt': { $gt: new Date() },
         });
 
         if (!user) {
-            throw new BadRequest("Invalid or expired reset token");
+            throw new BadRequest('Invalid or expired reset token');
         }
 
         if (!user.emailVerificationOTP?.otp) {
-            throw new BadRequest("No OTP found for this user");
+            throw new BadRequest('No OTP found for this user');
         }
 
         if (new Date() > user.emailVerificationOTP.expiresAt) {
-            throw new BadRequest("OTP has expired");
+            throw new BadRequest('OTP has expired');
         }
 
         const isValid = await bcrypt.compare(
@@ -143,7 +144,7 @@ export class UserService {
             user.emailVerificationOTP.otp.toString(),
         );
         if (!isValid) {
-            throw new BadRequest("Invalid OTP");
+            throw new BadRequest('Invalid OTP');
         }
 
         return user;
@@ -154,12 +155,12 @@ export class UserService {
         newPassword: string,
     ): Promise<void> {
         const user = await this.user.findOne({
-            "emailVerificationOTP.verificationToken": verificationToken,
-            "emailVerificationOTP.expiresAt": { $gt: new Date() },
+            'emailVerificationOTP.verificationToken': verificationToken,
+            'emailVerificationOTP.expiresAt': { $gt: new Date() },
         });
 
         if (!user) {
-            throw new BadRequest("Invalid or expired reset token");
+            throw new BadRequest('Invalid or expired reset token');
         }
 
         // Add the old password to history before updating
@@ -171,7 +172,7 @@ export class UserService {
 
         if (isPasswordUsedBefore) {
             throw new BadRequest(
-                "This password has been used before. Please choose a new password.",
+                'This password has been used before. Please choose a new password.',
             );
         }
 
@@ -197,16 +198,14 @@ export class UserService {
         await addEmailToQueue(emailOptions);
     }
 
-    public async login(
-        credentials: LoginCredentials,
-    ): Promise<{ user: IUser; token: string }> {
+    public async login(credentials: LoginCredentials): Promise<loginResponse> {
         const user = await this.user.findOne({ email: credentials.email });
         if (!user) {
-            throw new ResourceNotFound("Invalid email or password");
+            throw new ResourceNotFound('Invalid email or password');
         }
 
         if (!user.isEmailVerified) {
-            throw new Forbidden("Verify your email before sign in.");
+            throw new Forbidden('Verify your email before sign in.');
         }
 
         const isValid = await user.comparePassword(credentials.password);
@@ -216,19 +215,19 @@ export class UserService {
                 user.isLocked = true;
                 await user.save();
                 throw new Forbidden(
-                    "Your account has been locked due to multiple failed login attempts. Please reset your password.",
+                    'Your account has been locked due to multiple failed login attempts. Please reset your password.',
                 );
             }
             await user.save();
-            throw new Unauthorized("Invalid email or password");
+            throw new Unauthorized('Invalid email or password');
         }
 
         user.failedLoginAttempts = 0;
         await user.save();
 
         // If no specific role is provided, default to 'user' role
-        const requestedRole = credentials.roles || "user";
-        if (!user.roles.includes(requestedRole)) {
+        const requestedRole = credentials.role || 'user';
+        if (!user.role.includes(requestedRole)) {
             throw new Forbidden(
                 `You do not have permission to sign in as ${requestedRole}`,
             );
@@ -236,7 +235,7 @@ export class UserService {
 
         const token = TokenService.createAuthToken({
             userId: user._id.toString(),
-            roles: user.roles,
+            role: user.role,
         });
 
         return { user, token };
@@ -245,10 +244,10 @@ export class UserService {
     public async getUserById(userId: string): Promise<IUser> {
         const user = await this.user
             .findById(userId)
-            .select("-password -failedLoginAttempts -isLocked");
+            .select('-password -failedLoginAttempts -isLocked');
 
         if (!user) {
-            throw new ResourceNotFound("User not found");
+            throw new ResourceNotFound('User not found');
         }
 
         return user;
@@ -273,7 +272,7 @@ export class UserService {
     ): Promise<IUser> {
         const user = await this.user.findById(userId);
         if (!user) {
-            throw new ResourceNotFound("User not found");
+            throw new ResourceNotFound('User not found');
         }
 
         user.addresses = user.addresses || [];
@@ -286,7 +285,7 @@ export class UserService {
 
         if (isDuplicate) {
             throw new Conflict(
-                "Duplicate address: This address already exists.",
+                'Duplicate address: This address already exists.',
             );
         }
 
@@ -301,11 +300,11 @@ export class UserService {
     public async getUserAddress(userId: string): Promise<Address[]> {
         const user = await this.user
             .findById(userId)
-            .select("addresses")
+            .select('addresses')
             .lean();
 
         if (!user) {
-            throw new ResourceNotFound("User not found");
+            throw new ResourceNotFound('User not found');
         }
 
         return user.addresses || [];
@@ -317,17 +316,17 @@ export class UserService {
     ): Promise<void> {
         const user = await this.user.findById(userId);
         if (!user) {
-            throw new ResourceNotFound("User not found");
+            throw new ResourceNotFound('User not found');
         }
 
         const result = await this.user.findOneAndUpdate(
-            { _id: userId, "addresses._id": addressId },
+            { _id: userId, 'addresses._id': addressId },
             { $pull: { addresses: { _id: addressId } } },
             { new: true },
         );
 
         if (!result) {
-            throw new ResourceNotFound("Address not found");
+            throw new ResourceNotFound('Address not found');
         }
     }
 

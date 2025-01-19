@@ -30,7 +30,7 @@ const restaurantSchema = new Schema<IRestaurant>(
         ],
         deliveryRadius: Number,
         rating: Number,
-        status: String, // 'active', 'inactive', 'suspended'
+        status: String, // 'active', 'pending', 'suspended'
         bankInfo: {
             accountNumber: String,
             bankName: String,
@@ -40,9 +40,10 @@ const restaurantSchema = new Schema<IRestaurant>(
             type: String,
             required: true,
         },
-        roles: {
-            type: [String],
-            default: ['restaurant_owner'],
+        ownerId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+        role: {
+            type: String,
+            default: 'restaurant_owner',
         },
         businessLicense: { imageId: String, imageUrl: String },
         isEmailVerified: { type: Boolean, default: false },

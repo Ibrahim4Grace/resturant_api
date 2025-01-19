@@ -1,8 +1,8 @@
-import { Schema, model } from "mongoose";
-import { IAdmin } from "@/resources/admin/admin-interface";
-import { TokenService } from "@/utils/index";
-import bcrypt from "bcryptjs";
-import { generateOTP } from "@/utils/index";
+import { Schema, model } from 'mongoose';
+import { IAdmin } from '@/resources/admin/admin-interface';
+import { TokenService } from '@/utils/index';
+import bcrypt from 'bcryptjs';
+import { generateOTP } from '@/utils/index';
 
 const adminSchema = new Schema<IAdmin>(
     {
@@ -20,13 +20,15 @@ const adminSchema = new Schema<IAdmin>(
             type: String,
             required: true,
         },
-        roles: {
-            type: [String],
-            default: ["admin"],
+        role: {
+            type: String,
+            default: 'admin',
         },
         image: { imageId: String, imageUrl: String },
         isEmailVerified: { type: Boolean, default: false },
         googleId: { type: String, trim: true },
+        isLocked: { type: Boolean, default: false },
+        failedLoginAttempts: { type: Number, default: 0 },
         emailVerificationOTP: {
             otp: String,
             expiresAt: Date,
@@ -45,8 +47,8 @@ const adminSchema = new Schema<IAdmin>(
 );
 
 //hashpassword
-adminSchema.pre<IAdmin>("save", async function (next) {
-    if (!this.isModified("password")) {
+adminSchema.pre<IAdmin>('save', async function (next) {
+    if (!this.isModified('password')) {
         return next();
     }
 
@@ -82,4 +84,4 @@ adminSchema.methods.generateEmailVerificationOTP = async function (): Promise<{
     return { otp, verificationToken };
 };
 
-export default model<IAdmin>("Admin", adminSchema);
+export default model<IAdmin>('Admin', adminSchema);

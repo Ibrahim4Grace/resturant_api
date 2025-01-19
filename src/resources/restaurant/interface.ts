@@ -1,4 +1,4 @@
-import { Document } from 'mongoose';
+import { Types, Document } from 'mongoose';
 import { UserRole } from '@/types/index';
 
 export interface IRestaurant extends Document {
@@ -11,7 +11,8 @@ export interface IRestaurant extends Document {
     operatingHours?: operatingHours;
     deliveryRadius: number;
     rating?: number;
-    status: 'active' | 'inactive' | 'suspended';
+    ownerId: Types.ObjectId;
+    status: 'active' | 'pending' | 'suspended';
     bankInfo?: {
         accountNumber?: string;
         bankName?: string;
@@ -20,7 +21,7 @@ export interface IRestaurant extends Document {
     password: string;
     isLocked: boolean;
     failedLoginAttempts: number;
-    roles: UserRole[];
+    role: UserRole;
     businessLicense: { imageId?: string; imageUrl?: string };
     isEmailVerified: boolean;
     googleId?: string;
@@ -57,9 +58,9 @@ export interface operatingHours {
 [];
 
 export interface Address {
-    street?: string;
-    city?: string;
-    state?: string;
+    street: string;
+    city: string;
+    state: string;
 }
 
 export interface RegisterRestaurantto {
@@ -68,6 +69,8 @@ export interface RegisterRestaurantto {
     businessLicense: string;
     password: string;
     address: Address;
+    ownerId?: string;
+    isEmailVerified?: boolean;
 }
 
 export interface UploadedImage {

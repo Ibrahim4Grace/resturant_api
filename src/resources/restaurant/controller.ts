@@ -66,10 +66,10 @@ export default class RestaurantController implements Controller {
         );
         this.router.post(
             `${this.path}/register`,
-            authMiddleware(['restaurant_owner']),
-            getCurrentUser(RestaurantModel),
-            validateData(validate.registerSchema),
-            asyncHandler(this.createRestaurant),
+            authMiddleware(),
+            upload.single('images'),
+            validateData(validate.createSchema),
+            this.createRestaurant,
         );
     }
 
@@ -204,17 +204,25 @@ export default class RestaurantController implements Controller {
 
     public createRestaurant = asyncHandler(
         async (req: Request, res: Response): Promise<void> => {
-            const userId = req.currentUser?._id;
-            const { name, email, password, street, city, state } = req.body;
+            console.log('Request body:', req.body);
+            console.log('Request user:', req.user);
+            const user = req.user;
+            if (!user) {
+                throw new Unauthorized('User not authenticated');
+            }
+            const userId = user.id;
+            const { name, password, street, city, state } = req.body;
 
             const address: Address = { street, city, state };
 
             const registrationData: RegisterRestaurantto = {
                 name,
-                email,
+                email: user.email,
                 password,
+                ownerId: userId,
                 address,
                 businessLicense: '',
+                isEmailVerified: true,
             };
 
             console.log('Registration data:', registrationData);
@@ -231,4 +239,6 @@ export default class RestaurantController implements Controller {
             );
         },
     );
+
+    // EMAIL VERIFIED NOT WORKING
 }

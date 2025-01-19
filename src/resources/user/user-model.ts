@@ -19,9 +19,9 @@ const userSchema = new Schema<IUser>(
             type: String,
             required: true,
         },
-        roles: {
-            type: [String],
-            default: ['user'],
+        role: {
+            type: String,
+            default: 'user',
         },
         addresses: [
             {

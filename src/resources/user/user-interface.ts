@@ -1,5 +1,5 @@
-import { Document } from "mongoose";
-import { UserRole } from "@/types/index";
+import { Document } from 'mongoose';
+import { UserRole } from '@/types/index';
 
 export interface IUser extends Document {
     _id: string;
@@ -9,7 +9,7 @@ export interface IUser extends Document {
     password: string;
     isLocked: boolean;
     failedLoginAttempts: number;
-    roles: UserRole[];
+    role: UserRole;
     addresses?: Address[];
     paymentMethods?: paymentMethods;
     image: { imageId?: string; imageUrl?: string };
@@ -52,11 +52,16 @@ export interface RegisterUserto {
     name: string;
     email: string;
     password: string;
-    roles?: UserRole[];
+    role?: UserRole[];
 }
 
 export interface emailVerificationOTP {
     otp: String;
     expiresAt: Date;
     verificationToken: String;
+}
+
+export interface loginResponse {
+    user: Partial<IUser>;
+    token: string;
 }

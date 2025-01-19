@@ -1,23 +1,23 @@
-import { NextFunction, Request, Response } from "express";
-import Admin from "@/resources/admin/admin-model";
-import User from "@/resources/user/user-model";
-import Rider from "@/resources/rider/rider-model";
-import Restaurant from "@/resources/restaurant/model";
-import { TokenService, log } from "@/utils/index";
-import { AllowedRoles, ValidUser, UserRole } from "@/types/index";
+import { NextFunction, Request, Response } from 'express';
+import Admin from '@/resources/admin/admin-model';
+import User from '@/resources/user/user-model';
+import Rider from '@/resources/rider/rider-model';
+import Restaurant from '@/resources/restaurant/model';
+import { TokenService, log } from '@/utils/index';
+import { AllowedRoles, ValidUser, UserRole } from '@/types/index';
 import {
     asyncHandler,
     ResourceNotFound,
     ServerError,
     Unauthorized,
-} from "@/middlewares/index";
+} from '@/middlewares/index';
 
 export const extractToken = (req: Request): string | null => {
     const authHeader = req.headers.authorization;
-    if (!authHeader?.startsWith("Bearer ")) {
+    if (!authHeader?.startsWith('Bearer ')) {
         return null;
     }
-    return authHeader.split(" ")[1];
+    return authHeader.split(' ')[1];
 };
 
 export const validateUser = async (userId: string): Promise<ValidUser> => {
@@ -27,7 +27,7 @@ export const validateUser = async (userId: string): Promise<ValidUser> => {
     const mapToValidUser = (doc: any): ValidUser => ({
         id: doc._id.toString(),
         email: doc.email,
-        roles: doc.roles,
+        role: doc.role,
         name: doc.name,
     });
 
@@ -44,57 +44,67 @@ export const validateUser = async (userId: string): Promise<ValidUser> => {
     user = await Restaurant.findById(userId);
     if (user) return mapToValidUser(user);
 
-    throw new Unauthorized("User not found");
+    throw new Unauthorized('User not found');
 };
 
 export const isRoleAuthorized = (
-    userRoles: UserRole[],
+    userRole: UserRole | UserRole[],
     allowedRoles: AllowedRoles,
 ): boolean => {
-    if (allowedRoles === "any") return true;
+    if (allowedRoles === 'any') return true;
+
+    // Convert userRole to array if it's a single role
+    const userRoles = Array.isArray(userRole) ? userRole : [userRole];
     return userRoles.some((role) => allowedRoles.includes(role));
 };
 
-export const authMiddleware = (allowedRoles: AllowedRoles = "any") => {
+export const authMiddleware = (allowedRoles: AllowedRoles = 'any') => {
     return asyncHandler(
         async (req: Request, res: Response, next: NextFunction) => {
             try {
                 const token = extractToken(req);
                 if (!token) {
-                    throw new Unauthorized("No token provided");
+                    throw new Unauthorized('No token provided');
                 }
 
                 const decoded = await TokenService.verifyAuthToken(token);
+                console.log('decoded.userId', decoded.userId);
                 const user = await validateUser(decoded.userId);
-                // console.log("decoded.userId", decoded.userId);
+
+                console.log('Validated user:', user);
 
                 if (
-                    allowedRoles !== "any" &&
-                    !isRoleAuthorized(user.roles, allowedRoles)
+                    allowedRoles !== 'any' &&
+                    !isRoleAuthorized(user.role, allowedRoles)
                 ) {
+                    console.log('Role check failed:', {
+                        userRole: user.role,
+                        allowedRoles,
+                    });
                     throw new Unauthorized(
-                        "You do not have permissions to visit this page.",
+                        'You do not have permissions to visit this page.',
                     );
                 }
 
                 req.user = {
                     id: user.id,
                     email: user.email,
-                    roles: user.roles,
+                    role: user.role,
                     name: user.name,
                 };
+                console.log('Set req.user to:', req.user);
 
                 next();
             } catch (error) {
-                log.error("Authentication error:", error);
+                log.error('Authentication error:', error);
                 if (error instanceof Unauthorized) {
                     return res.status(401).json({
-                        status_code: "401",
+                        status_code: '401',
                         success: false,
                         message: error.message,
                     });
                 }
-                throw new ServerError("INTERNAL_SERVER_ERROR");
+                throw new ServerError('INTERNAL_SERVER_ERROR');
             }
         },
     );
@@ -105,13 +115,13 @@ export const getCurrentUser = (model: any) =>
         const userId = req.user?.id;
         // console.log("User ID from req.user:", userId);
         if (!userId) {
-            throw new Unauthorized("User not authenticated");
+            throw new Unauthorized('User not authenticated');
         }
 
         const currentUser = await model.findById(userId);
         // console.log("Found current user:", currentUser);
         if (!currentUser) {
-            throw new ResourceNotFound("User not found");
+            throw new ResourceNotFound('User not found');
         }
 
         req.currentUser = currentUser;
