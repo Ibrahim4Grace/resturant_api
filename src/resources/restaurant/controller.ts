@@ -24,7 +24,7 @@ import {
 
 export default class RestaurantController implements Controller {
     public authPath = '/auth/restaurants';
-    public path = '/restaurants';
+    public path = '/restaurant';
     public router = Router();
     private restaurantService = new RestaurantService();
 
@@ -71,11 +71,26 @@ export default class RestaurantController implements Controller {
             validateData(validate.createSchema),
             this.createRestaurant,
         );
+        this.router.get(
+            `${this.path}`,
+            authMiddleware(),
+            authMiddleware(['restaurant_owner']),
+            getCurrentUser(RestaurantModel),
+            this.getRestaurant,
+        );
+        this.router.put(
+            `${this.path}`,
+            authMiddleware(['restaurant_owner']),
+            getCurrentUser(RestaurantModel),
+            validateData(validate.updateSchema),
+            this.updateRestaurant,
+        );
     }
 
     public register = asyncHandler(
         async (req: Request, res: Response): Promise<void> => {
-            const { name, email, password, street, city, state } = req.body;
+            const { name, email, password, phone, street, city, state } =
+                req.body;
 
             const address: Address = { street, city, state };
 
@@ -84,10 +99,10 @@ export default class RestaurantController implements Controller {
                 email,
                 password,
                 address,
+                phone,
                 businessLicense: '',
             };
 
-            console.log('Registration data:', registrationData);
             const result = await this.restaurantService.register(
                 registrationData,
                 req.file,
@@ -204,29 +219,27 @@ export default class RestaurantController implements Controller {
 
     public createRestaurant = asyncHandler(
         async (req: Request, res: Response): Promise<void> => {
-            console.log('Request body:', req.body);
-            console.log('Request user:', req.user);
             const user = req.user;
             if (!user) {
                 throw new Unauthorized('User not authenticated');
             }
-            const userId = user.id;
-            const { name, password, street, city, state } = req.body;
+            const restaurantId = user.id;
+            const { name, password, phone, street, city, state } = req.body;
 
             const address: Address = { street, city, state };
 
             const registrationData: RegisterRestaurantto = {
                 name,
                 email: user.email,
+                phone,
                 password,
-                ownerId: userId,
+                ownerId: restaurantId,
                 address,
                 businessLicense: '',
                 isEmailVerified: true,
             };
 
-            console.log('Registration data:', registrationData);
-            const result = await this.restaurantService.register(
+            const result = await this.restaurantService.createRestaurant(
                 registrationData,
                 req.file,
             );
@@ -240,5 +253,49 @@ export default class RestaurantController implements Controller {
         },
     );
 
-    // EMAIL VERIFIED NOT WORKING
+    private getRestaurant = asyncHandler(
+        async (req: Request, res: Response): Promise<void> => {
+            const restaurantId = req.currentUser?._id;
+            if (!restaurantId) {
+                throw new ResourceNotFound('Restaurant not found');
+            }
+            const restaurant =
+                await this.restaurantService.getRestaurant(restaurantId);
+
+            sendJsonResponse(
+                res,
+                200,
+                'Restaurant retrieved successfully',
+                restaurant,
+            );
+        },
+    );
+
+    private updateRestaurant = asyncHandler(
+        async (req: Request, res: Response): Promise<void> => {
+            const restaurantId = req.currentUser?._id;
+            if (!restaurantId) {
+                throw new ResourceNotFound('Restaurant not found');
+            }
+            const updateData = req.body;
+            const updatedRestaurant =
+                await this.restaurantService.updateRestaurant(
+                    restaurantId,
+                    updateData,
+                );
+
+            if (!updatedRestaurant) {
+                throw new ResourceNotFound(
+                    'Restaurant not found or update failed',
+                );
+            }
+
+            sendJsonResponse(
+                res,
+                200,
+                'Restaurant data updated successfully',
+                updatedRestaurant,
+            );
+        },
+    );
 }

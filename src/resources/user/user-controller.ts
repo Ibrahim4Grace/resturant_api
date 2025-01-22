@@ -1,11 +1,10 @@
-import { Router, Request, Response, NextFunction } from "express";
-import { Controller } from "@/types/index";
-import validate from "@/resources/user/user-validation";
-import { UserService } from "@/resources/user/user-service";
-import UserModel from "@/resources/user/user-model";
-import { UserRoles } from "@/types/index";
-import { TokenService } from "@/utils/index";
-import { Types } from "mongoose";
+import { Router, Request, Response, NextFunction } from 'express';
+import { Controller } from '@/types/index';
+import validate from '@/resources/user/user-validation';
+import { UserService } from '@/resources/user/user-service';
+import UserModel from '@/resources/user/user-model';
+import { RegisterUserto, Address } from '@/resources/user/user-interface';
+import { TokenService } from '@/utils/index';
 import {
     validateData,
     sendJsonResponse,
@@ -14,11 +13,11 @@ import {
     BadRequest,
     authMiddleware,
     getCurrentUser,
-} from "@/middlewares/index";
+} from '@/middlewares/index';
 
 export default class UserController implements Controller {
-    public authPath = "/auth/users";
-    public path = "/users";
+    public authPath = '/auth/users';
+    public path = '/user';
     public router = Router();
     private userService = new UserService();
 
@@ -59,33 +58,33 @@ export default class UserController implements Controller {
         );
         this.router.get(
             `${this.path}/address`,
-            authMiddleware(["user"]),
+            authMiddleware(['user']),
             getCurrentUser(UserModel),
             this.getUserAddress,
         );
         this.router.get(
-            `${this.path}/:id`,
-            authMiddleware(["user"]),
+            `${this.path}`,
+            authMiddleware(['user']),
             getCurrentUser(UserModel),
-            this.getUserById,
+            this.getUser,
         );
         this.router.put(
-            `${this.path}/:id`,
-            authMiddleware(["user"]),
+            `${this.path}`,
+            authMiddleware(['user']),
             getCurrentUser(UserModel),
             validateData(validate.updateUserSchema),
-            this.updateUserById,
+            this.updateUser,
         );
         this.router.post(
             `${this.path}/address`,
-            authMiddleware(["user"]),
+            authMiddleware(['user']),
             getCurrentUser(UserModel),
             validateData(validate.addressesSchema),
             this.addNewAddress,
         );
         this.router.delete(
             `${this.path}/address/:id`,
-            authMiddleware(["user"]),
+            authMiddleware(['user']),
             getCurrentUser(UserModel),
             this.deleteAddress,
         );
@@ -99,16 +98,24 @@ export default class UserController implements Controller {
 
     private register = asyncHandler(
         async (req: Request, res: Response): Promise<void> => {
-            const { name, email, password } = req.body;
-            const result = await this.userService.register({
+            const { name, email, password, phone, street, city, state } =
+                req.body;
+
+            const addresses: Address = { street, city, state };
+
+            const registrationData: RegisterUserto = {
                 name,
                 email,
                 password,
-            });
+                phone,
+                addresses,
+            };
+
+            const result = await this.userService.register(registrationData);
             sendJsonResponse(
                 res,
                 201,
-                "Registration initiated. Please verify your email with the OTP sent.",
+                'Registration initiated. Please verify your email with the OTP sent.',
                 result,
             );
         },
@@ -119,15 +126,15 @@ export default class UserController implements Controller {
             const { otp } = req.body;
             const authHeader = req.headers.authorization;
 
-            if (!authHeader || !authHeader.startsWith("Bearer ")) {
-                throw new BadRequest("Authorization token is required");
+            if (!authHeader || !authHeader.startsWith('Bearer ')) {
+                throw new BadRequest('Authorization token is required');
             }
 
             if (!otp) {
-                throw new BadRequest("OTP code is required");
+                throw new BadRequest('OTP code is required');
             }
 
-            const token = authHeader.split(" ")[1];
+            const token = authHeader.split(' ')[1];
 
             const decoded = await TokenService.verifyEmailToken(token);
 
@@ -139,7 +146,7 @@ export default class UserController implements Controller {
             sendJsonResponse(
                 res,
                 200,
-                "Email verified successfully. You can now log in.",
+                'Email verified successfully. You can now log in.',
             );
         },
     );
@@ -155,7 +162,7 @@ export default class UserController implements Controller {
             sendJsonResponse(
                 res,
                 200,
-                "Reset token generated and OTP sent to your email.",
+                'Reset token generated and OTP sent to your email.',
                 resetToken,
             );
         },
@@ -164,22 +171,22 @@ export default class UserController implements Controller {
     private resetPasswordOTP = asyncHandler(
         async (req: Request, res: Response): Promise<void> => {
             const authHeader = req.headers.authorization;
-            if (!authHeader || !authHeader.startsWith("Bearer ")) {
-                throw new BadRequest("Authorization token is required");
+            if (!authHeader || !authHeader.startsWith('Bearer ')) {
+                throw new BadRequest('Authorization token is required');
             }
 
-            const resetToken = authHeader.split(" ")[1];
+            const resetToken = authHeader.split(' ')[1];
             const { otp } = req.body;
 
             if (!otp) {
-                throw new BadRequest("OTP is required");
+                throw new BadRequest('OTP is required');
             }
 
             await this.userService.verifyResetPasswordOTP(resetToken, otp);
             sendJsonResponse(
                 res,
                 200,
-                "OTP verified successfully. You can now reset your password.",
+                'OTP verified successfully. You can now reset your password.',
             );
         },
     );
@@ -187,19 +194,19 @@ export default class UserController implements Controller {
     private resetPassword = asyncHandler(
         async (req: Request, res: Response): Promise<void> => {
             const authHeader = req.headers.authorization;
-            if (!authHeader || !authHeader.startsWith("Bearer ")) {
-                throw new BadRequest("Authorization token is required");
+            if (!authHeader || !authHeader.startsWith('Bearer ')) {
+                throw new BadRequest('Authorization token is required');
             }
 
-            const resetToken = authHeader.split(" ")[1];
+            const resetToken = authHeader.split(' ')[1];
             const { newPassword } = req.body;
 
             if (!newPassword) {
-                throw new BadRequest("New password is required");
+                throw new BadRequest('New password is required');
             }
 
             await this.userService.resetPassword(resetToken, newPassword);
-            sendJsonResponse(res, 200, "Password reset successfully.");
+            sendJsonResponse(res, 200, 'Password reset successfully.');
         },
     );
 
@@ -210,33 +217,42 @@ export default class UserController implements Controller {
                 email,
                 password,
             });
-            sendJsonResponse(res, 200, "Login successful", result);
+            sendJsonResponse(res, 200, 'Login successful', result);
         },
     );
 
-    private getUserById = asyncHandler(
+    private getUser = asyncHandler(
         async (req: Request, res: Response): Promise<void> => {
-            const userId = req.params.id;
+            const userId = req.currentUser?._id;
+            if (!userId) {
+                throw new ResourceNotFound('User not found');
+            }
             const user = await this.userService.getUserById(userId);
 
-            sendJsonResponse(res, 200, "User retrieved successfully", user);
+            sendJsonResponse(res, 200, 'User retrieved successfully', user);
         },
     );
 
-    private updateUserById = asyncHandler(
+    private updateUser = asyncHandler(
         async (req: Request, res: Response): Promise<void> => {
-            const { id } = req.params;
-            const data = req.body;
-            const updatedUser = await this.userService.updateUserById(id, data);
+            const userId = req.currentUser?._id;
+            if (!userId) {
+                throw new ResourceNotFound('User not found');
+            }
+            const updateData = req.body;
+            const updatedUser = await this.userService.updateUserById(
+                userId,
+                updateData,
+            );
 
             if (!updatedUser) {
-                throw new ResourceNotFound("User not found or update failed");
+                throw new ResourceNotFound('User not found or update failed');
             }
 
             sendJsonResponse(
                 res,
                 200,
-                "User data updated successfully",
+                'User data updated successfully',
                 updatedUser,
             );
         },
@@ -245,7 +261,7 @@ export default class UserController implements Controller {
     private addNewAddress = asyncHandler(
         async (req: Request, res: Response): Promise<void> => {
             const userId = req.currentUser?._id;
-            if (!userId) throw new ResourceNotFound("User not found");
+            if (!userId) throw new ResourceNotFound('User not found');
 
             const { street, city, state } = req.body;
 
@@ -255,7 +271,7 @@ export default class UserController implements Controller {
                 state,
             });
 
-            sendJsonResponse(res, 201, "Address added successfully", {
+            sendJsonResponse(res, 201, 'Address added successfully', {
                 addressAdded,
             });
         },
@@ -264,14 +280,14 @@ export default class UserController implements Controller {
     private getUserAddress = asyncHandler(
         async (req: Request, res: Response): Promise<void> => {
             const userId = req.currentUser?._id;
-            if (!userId) throw new ResourceNotFound("User not found");
+            if (!userId) throw new ResourceNotFound('User not found');
 
             const addresses = await this.userService.getUserAddress(userId);
 
             sendJsonResponse(
                 res,
                 200,
-                "Addresses retrieved successfully",
+                'Addresses retrieved successfully',
                 addresses,
             );
         },
@@ -280,11 +296,11 @@ export default class UserController implements Controller {
     private deleteAddress = asyncHandler(
         async (req: Request, res: Response): Promise<void> => {
             const userId = req.currentUser?._id;
-            if (!userId) throw new ResourceNotFound("User not found");
+            if (!userId) throw new ResourceNotFound('User not found');
 
             const addressId = req.params.id;
             await this.userService.deleteAddress(userId, addressId);
-            sendJsonResponse(res, 200, "Address deleted successfully");
+            sendJsonResponse(res, 200, 'Address deleted successfully');
         },
     );
 

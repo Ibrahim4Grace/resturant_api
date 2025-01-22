@@ -11,6 +11,7 @@ export interface IRestaurant extends Document {
     operatingHours?: operatingHours;
     deliveryRadius: number;
     rating?: number;
+    phone?: string;
     ownerId: Types.ObjectId;
     status: 'active' | 'pending' | 'suspended';
     bankInfo?: {
@@ -67,6 +68,7 @@ export interface RegisterRestaurantto {
     name: string;
     email: string;
     businessLicense: string;
+    phone: string;
     password: string;
     address: Address;
     ownerId?: string;
@@ -80,4 +82,9 @@ export interface UploadedImage {
 export interface RegistrationResponse {
     restaurant: Partial<IRestaurant>;
     verificationToken?: string;
+}
+
+export interface RestaurantCreationResponse {
+    restaurant: Partial<IRestaurant>;
+    token: string;
 }

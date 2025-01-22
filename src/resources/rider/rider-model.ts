@@ -1,8 +1,8 @@
-import { Schema, model } from "mongoose";
-import { IRider } from "@/resources/rider/rider-interface";
-import bcrypt from "bcryptjs";
-import { TokenService } from "@/utils/index";
-import { generateOTP } from "@/utils/index";
+import { Schema, model } from 'mongoose';
+import { IRider } from '@/resources/rider/rider-interface';
+import bcrypt from 'bcryptjs';
+import { TokenService } from '@/utils/index';
+import { generateOTP } from '@/utils/index';
 
 const riderSchema = new Schema<IRider>(
     {
@@ -22,7 +22,16 @@ const riderSchema = new Schema<IRider>(
         },
         roles: {
             type: [String],
-            default: ["rider"],
+            default: ['rider'],
+        },
+        address: {
+            street: { type: String, required: true },
+            city: { type: String, required: true },
+            state: { type: String, required: true },
+        },
+        phone: {
+            type: String,
+            required: true,
         },
         vehicleType: String,
         vehicleNumber: String,
@@ -68,8 +77,8 @@ const riderSchema = new Schema<IRider>(
     { timestamps: true },
 );
 
-riderSchema.pre<IRider>("save", async function (next) {
-    if (!this.isModified("password")) {
+riderSchema.pre<IRider>('save', async function (next) {
+    if (!this.isModified('password')) {
         return next();
     }
 
@@ -104,4 +113,4 @@ riderSchema.methods.generateEmailVerificationOTP = async function (): Promise<{
     return { otp, verificationToken };
 };
 
-export default model<IRider>("Rider", riderSchema);
+export default model<IRider>('Rider', riderSchema);

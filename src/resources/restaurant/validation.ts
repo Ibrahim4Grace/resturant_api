@@ -9,6 +9,7 @@ const registerSchema = z.object({
     street: z.string().min(1, 'Street is required'),
     city: z.string().min(1, 'City is required'),
     state: z.string().min(1, 'State is required'),
+    phone: z.string().min(1, 'Phone number is required'),
     password: z
         .string()
         .regex(
@@ -24,6 +25,7 @@ const createSchema = z.object({
     street: z.string().min(1, 'Street is required'),
     city: z.string().min(1, 'City is required'),
     state: z.string().min(1, 'State is required'),
+    phone: z.string().min(1, 'Phone number is required'),
     password: z
         .string()
         .regex(
@@ -32,6 +34,23 @@ const createSchema = z.object({
         ),
     images: z.any(),
 });
+
+// Create update schema with additional fields specific to restaurant updates and omit password
+const updateSchema = createSchema
+    .omit({ password: true })
+    .extend({
+        cuisine: z.array(z.string()),
+        operatingHours: z.array(
+            z.object({
+                day: z.string(),
+                open: z.string(),
+                close: z.string(),
+            }),
+        ),
+    })
+    .partial();
+// const updateSchema = createSchema.omit({ password: true }).partial();
+
 const forgetPwdSchema = z.object({
     email: z.string().email().trim().min(1, 'Email is required'),
 });
@@ -66,4 +85,5 @@ export default {
     resetPasswordSchema,
     loginSchema,
     createSchema,
+    updateSchema,
 };

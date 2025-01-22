@@ -347,6 +347,152 @@ export const authAdminDocs = {
 
 export const adminDocs = {
     paths: {
+        '/api/v1/admins': {
+            get: {
+                summary: 'Retrieve all admins',
+                tags: ['Admin - Admins'],
+                security: [{ BearerAuth: [] }],
+                responses: {
+                    200: {
+                        description: 'Admins retrieved successfully.',
+                        content: {
+                            'application/json': {
+                                schema: {
+                                    type: 'object',
+                                    properties: {
+                                        status: {
+                                            type: 'number',
+                                            example: 200,
+                                        },
+                                        message: {
+                                            type: 'string',
+                                            example:
+                                                'Admins retrieve successful',
+                                        },
+                                        data: {
+                                            type: 'array',
+                                            items: {
+                                                type: 'object',
+                                                properties: {
+                                                    name: {
+                                                        type: 'string',
+                                                        example: 'John Doe',
+                                                    },
+                                                    email: {
+                                                        type: 'string',
+                                                        example:
+                                                            'john.doe@example.com',
+                                                    },
+                                                },
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    500: { description: 'Server error' },
+                },
+            },
+        },
+        '/api/v1/admins/admin/{id}': {
+            get: {
+                summary: 'Retrieve a admin by ID',
+                tags: ['Admin - Admins'],
+                security: [{ BearerAuth: [] }],
+                parameters: [
+                    {
+                        name: 'id',
+                        in: 'path',
+                        required: true,
+                        schema: {
+                            type: 'string',
+                            example: '64b1234567890abc12345678',
+                        },
+                    },
+                ],
+                responses: {
+                    200: {
+                        description: 'Admin retrieved successfully by ID.',
+                        content: {
+                            'application/json': {
+                                schema: {
+                                    type: 'object',
+                                    properties: {
+                                        status: {
+                                            type: 'number',
+                                            example: 200,
+                                        },
+                                        message: {
+                                            type: 'string',
+                                            example:
+                                                'Admin retrieve by ID successful',
+                                        },
+                                        data: {
+                                            type: 'object',
+                                            properties: {
+                                                name: {
+                                                    type: 'string',
+                                                    example: 'John Doe',
+                                                },
+                                                email: {
+                                                    type: 'string',
+                                                    example:
+                                                        'john.doe@example.com',
+                                                },
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    404: { description: 'Admin not found' },
+                    500: { description: 'Server error' },
+                },
+            },
+            delete: {
+                summary: 'Delete a rider by ID',
+                tags: ['Admin - Admins'],
+                security: [{ BearerAuth: [] }],
+                parameters: [
+                    {
+                        name: 'id',
+                        in: 'path',
+                        required: true,
+                        schema: {
+                            type: 'string',
+                            example: '64b1234567890abc12345678',
+                        },
+                    },
+                ],
+                responses: {
+                    200: {
+                        description: 'Admin deleted successfully.',
+                        content: {
+                            'application/json': {
+                                schema: {
+                                    type: 'object',
+                                    properties: {
+                                        status: {
+                                            type: 'number',
+                                            example: 200,
+                                        },
+                                        message: {
+                                            type: 'string',
+                                            example:
+                                                'Admin deleted successfully',
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    404: { description: 'Admin not found' },
+                    500: { description: 'Server error' },
+                },
+            },
+        },
         '/api/v1/admins/users': {
             get: {
                 summary: 'Retrieve all users',
@@ -399,7 +545,7 @@ export const adminDocs = {
                 },
             },
         },
-        '/api/v1/admins/users/{id}': {
+        '/api/v1/admins/user/{id}': {
             get: {
                 summary: 'Retrieve a user by ID',
                 tags: ['Admin - Users'],
@@ -554,7 +700,7 @@ export const adminDocs = {
                 },
             },
         },
-        '/api/v1/admins/restaurants/{id}': {
+        '/api/v1/admins/restaurant/{id}': {
             get: {
                 summary: 'Retrieve a restaurant by ID',
                 tags: ['Admin - Restaurants'],
@@ -710,7 +856,7 @@ export const adminDocs = {
                 },
             },
         },
-        '/api/v1/admins/riders/{id}': {
+        '/api/v1/admins/rider/{id}': {
             get: {
                 summary: 'Retrieve a rider by ID',
                 tags: ['Admin - Riders'],
@@ -808,6 +954,152 @@ export const adminDocs = {
                         },
                     },
                     404: { description: 'Rider not found' },
+                    500: { description: 'Server error' },
+                },
+            },
+        },
+        '/api/v1/admins/orders': {
+            get: {
+                summary: 'Retrieve all orders',
+                tags: ['Admin - Orders'],
+                security: [{ BearerAuth: [] }],
+                responses: {
+                    200: {
+                        description: 'orders retrieved successfully.',
+                        content: {
+                            'application/json': {
+                                schema: {
+                                    type: 'object',
+                                    properties: {
+                                        status: {
+                                            type: 'number',
+                                            example: 200,
+                                        },
+                                        message: {
+                                            type: 'string',
+                                            example:
+                                                'orders retrieve successful',
+                                        },
+                                        data: {
+                                            type: 'array',
+                                            items: {
+                                                type: 'object',
+                                                properties: {
+                                                    name: {
+                                                        type: 'string',
+                                                        example: 'John Doe',
+                                                    },
+                                                    email: {
+                                                        type: 'string',
+                                                        example:
+                                                            'john.doe@example.com',
+                                                    },
+                                                },
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    500: { description: 'Server error' },
+                },
+            },
+        },
+        '/api/v1/admins/order/{id}': {
+            get: {
+                summary: 'Retrieve a order by ID',
+                tags: ['Admin - Orders'],
+                security: [{ BearerAuth: [] }],
+                parameters: [
+                    {
+                        name: 'id',
+                        in: 'path',
+                        required: true,
+                        schema: {
+                            type: 'string',
+                            example: '64b1234567890abc12345678',
+                        },
+                    },
+                ],
+                responses: {
+                    200: {
+                        description: 'Order retrieved successfully by ID.',
+                        content: {
+                            'application/json': {
+                                schema: {
+                                    type: 'object',
+                                    properties: {
+                                        status: {
+                                            type: 'number',
+                                            example: 200,
+                                        },
+                                        message: {
+                                            type: 'string',
+                                            example:
+                                                'orders retrieve by ID successful',
+                                        },
+                                        data: {
+                                            type: 'object',
+                                            properties: {
+                                                name: {
+                                                    type: 'string',
+                                                    example: 'John Doe',
+                                                },
+                                                email: {
+                                                    type: 'string',
+                                                    example:
+                                                        'john.doe@example.com',
+                                                },
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    404: { description: 'orders not found' },
+                    500: { description: 'Server error' },
+                },
+            },
+            delete: {
+                summary: 'Delete a order by ID',
+                tags: ['Admin - Orders'],
+                security: [{ BearerAuth: [] }],
+                parameters: [
+                    {
+                        name: 'id',
+                        in: 'path',
+                        required: true,
+                        schema: {
+                            type: 'string',
+                            example: '64b1234567890abc12345678',
+                        },
+                    },
+                ],
+                responses: {
+                    200: {
+                        description: 'order deleted successfully.',
+                        content: {
+                            'application/json': {
+                                schema: {
+                                    type: 'object',
+                                    properties: {
+                                        status: {
+                                            type: 'number',
+                                            example: 200,
+                                        },
+                                        message: {
+                                            type: 'string',
+                                            example:
+                                                'order deleted successfully',
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    404: { description: 'order not found' },
                     500: { description: 'Server error' },
                 },
             },

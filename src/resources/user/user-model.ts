@@ -38,6 +38,11 @@ const userSchema = new Schema<IUser>(
                 isDefault: Boolean,
             },
         ],
+        phone: {
+            type: String,
+            required: true,
+        },
+        status: String, // 'active', 'suspended'
         image: { imageId: String, imageUrl: String },
         isEmailVerified: { type: Boolean, default: false },
         googleId: { type: String, trim: true },

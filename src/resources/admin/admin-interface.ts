@@ -10,6 +10,8 @@ export interface IAdmin extends Document {
     role: UserRole;
     image: { imageId?: string; imageUrl?: string };
     isLocked: boolean;
+    phone: string;
+    address: Address;
     failedLoginAttempts: number;
     isEmailVerified: boolean;
     googleId?: string;
@@ -24,6 +26,12 @@ export interface IAdmin extends Document {
         otp: string;
         verificationToken: string;
     }>;
+}
+
+export interface Address {
+    street: string;
+    city: string;
+    state: string;
 }
 
 export interface IPasswordHistoryEntry {

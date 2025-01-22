@@ -24,6 +24,14 @@ const adminSchema = new Schema<IAdmin>(
             type: String,
             default: 'admin',
         },
+        phone: {
+            type: String,
+        },
+        address: {
+            street: String,
+            city: String,
+            state: String,
+        },
         image: { imageId: String, imageUrl: String },
         isEmailVerified: { type: Boolean, default: false },
         googleId: { type: String, trim: true },

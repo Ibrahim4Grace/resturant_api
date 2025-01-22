@@ -6,6 +6,7 @@ import {
     IUser,
     RegisterUserto,
     Address,
+    RegistrationResponse,
     loginResponse,
 } from '@/resources/user/user-interface';
 import {
@@ -21,17 +22,44 @@ import {
     Forbidden,
     Unauthorized,
 } from '@/middlewares/index';
+import userModel from '@/resources/user/user-model';
 
 export class UserService {
     private user = UserModel;
 
-    public async register(
-        userData: RegisterUserto,
-    ): Promise<{ user: Partial<IUser>; verificationToken: string }> {
-        const existingUser = await this.user.findOne({ email: userData.email });
+    private async checkDuplicateEmail(email: string): Promise<void> {
+        const existingUser = await this.user.findOne({ email });
         if (existingUser) {
             throw new Conflict('Email already registered!');
         }
+    }
+    private async checkDuplicatePhone(phone: string): Promise<void> {
+        const existingUser = await this.user.findOne({ phone });
+        if (existingUser) {
+            throw new Conflict('Phone Number already registered!');
+        }
+    }
+
+    private sanitizeUser(user: IUser): Partial<IUser> {
+        return {
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+            addresses: user.addresses,
+            phone: user.phone,
+            isEmailVerified: user.isEmailVerified,
+            createdAt: user.createdAt,
+            updatedAt: user.updatedAt,
+        };
+    }
+
+    public async register(
+        userData: RegisterUserto,
+    ): Promise<RegistrationResponse> {
+        await Promise.all([
+            this.checkDuplicateEmail(userData.email),
+            this.checkDuplicatePhone(userData.phone),
+        ]);
 
         const user = await this.user.create({
             ...userData,
@@ -45,17 +73,8 @@ export class UserService {
         const emailOptions = sendOTPByEmail(user as IUser, otp);
         await addEmailToQueue(emailOptions);
 
-        const sanitizedUser: Partial<IUser> = {
-            _id: user._id,
-            name: user.name,
-            email: user.email,
-            isEmailVerified: user.isEmailVerified,
-            createdAt: user.createdAt,
-            updatedAt: user.updatedAt,
-        };
-
         return {
-            user: sanitizedUser,
+            user: this.sanitizeUser(user),
             verificationToken: verificationToken,
         };
     }
@@ -244,7 +263,10 @@ export class UserService {
     public async getUserById(userId: string): Promise<IUser> {
         const user = await this.user
             .findById(userId)
-            .select('-password -failedLoginAttempts -isLocked');
+            .select(
+                '-password -failedLoginAttempts -isLocked -passwordHistory -__v -isEmailVerified',
+            )
+            .lean();
 
         if (!user) {
             throw new ResourceNotFound('User not found');
@@ -254,11 +276,11 @@ export class UserService {
     }
 
     public async updateUserById(
-        id: string,
+        userId: string,
         data: Partial<IUser>,
     ): Promise<IUser | null> {
         const user = await this.user.findOneAndUpdate(
-            { _id: id },
+            { _id: userId },
             { $set: data },
             { new: true },
         );

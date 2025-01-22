@@ -11,6 +11,8 @@ export interface IUser extends Document {
     failedLoginAttempts: number;
     role: UserRole;
     addresses?: Address[];
+    phone?: string;
+    status?: 'active' | 'suspended';
     paymentMethods?: paymentMethods;
     image: { imageId?: string; imageUrl?: string };
     isEmailVerified: boolean;
@@ -29,7 +31,6 @@ export interface IUser extends Document {
 }
 
 export interface Address {
-    _id?: string;
     street?: string;
     city?: string;
     state?: string;
@@ -53,12 +54,19 @@ export interface RegisterUserto {
     email: string;
     password: string;
     role?: UserRole[];
+    phone: string;
+    addresses: Address;
 }
 
 export interface emailVerificationOTP {
     otp: String;
     expiresAt: Date;
     verificationToken: String;
+}
+
+export interface RegistrationResponse {
+    user: Partial<IUser>;
+    verificationToken: string;
 }
 
 export interface loginResponse {

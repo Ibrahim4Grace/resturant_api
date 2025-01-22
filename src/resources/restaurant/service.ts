@@ -8,6 +8,7 @@ import {
     Address,
     UploadedImage,
     RegistrationResponse,
+    RestaurantCreationResponse,
 } from '@/resources/restaurant/interface';
 import { UserRoles, LoginCredentials } from '@/types/index';
 import {
@@ -39,6 +40,13 @@ export class RestaurantService {
         }
     }
 
+    private async checkDuplicatePhone(phone: string): Promise<void> {
+        const existingRestaurant = await this.restaurant.findOne({ phone });
+        if (existingRestaurant) {
+            throw new Conflict('Phone number already registered!');
+        }
+    }
+
     private async checkDuplicateAddress(address: Address): Promise<void> {
         if (!address) return;
 
@@ -60,7 +68,12 @@ export class RestaurantService {
             _id: restaurant._id,
             name: restaurant.name,
             email: restaurant.email,
-            isEmailVerified: restaurant.isEmailVerified,
+            phone: restaurant.phone,
+            address: restaurant.address,
+            cuisine: restaurant.cuisine,
+            status: restaurant.status,
+            businessLicense: restaurant.businessLicense,
+            operatingHours: restaurant.operatingHours,
             createdAt: restaurant.createdAt,
             updatedAt: restaurant.updatedAt,
         };
@@ -73,10 +86,10 @@ export class RestaurantService {
         // Validate unique constraints
         await Promise.all([
             this.checkDuplicateEmail(restaurantData.email),
+            this.checkDuplicatePhone(restaurantData.phone),
             this.checkDuplicateAddress(restaurantData.address),
         ]);
 
-        // Handle image uploads if present
         let businessLicense: UploadedImage | undefined;
         if (file) {
             const uploadResult = await this.cloudinaryService.uploadImage(file);
@@ -86,7 +99,6 @@ export class RestaurantService {
             };
         }
 
-        // Create restaurant
         const restaurant = await this.restaurant.create({
             ...restaurantData,
             businessLicense,
@@ -284,7 +296,7 @@ export class RestaurantService {
     public async createRestaurant(
         restaurantData: RegisterRestaurantto,
         file?: Express.Multer.File,
-    ): Promise<RegistrationResponse> {
+    ): Promise<RestaurantCreationResponse> {
         await Promise.all([
             this.checkDuplicateEmail(restaurantData.email),
             this.checkDuplicateAddress(restaurantData.address),
@@ -303,18 +315,54 @@ export class RestaurantService {
             ...restaurantData,
             businessLicense,
             status: 'pending',
-            isEmailVerified: restaurantData.isEmailVerified,
+            isEmailVerified: true,
         });
-        await restaurant.save();
-        console.log('Created Restaurant:', restaurant);
 
         const emailOptions = pendingVerificationEmail(
             restaurant as IRestaurant,
         );
         await addEmailToQueue(emailOptions);
 
+        const restaurantToken = TokenService.createAuthToken({
+            userId: restaurant._id.toString(),
+            role: restaurant.role,
+        });
+
         return {
             restaurant: this.sanitizeRestaurant(restaurant),
+            token: restaurantToken,
         };
+    }
+
+    public async getRestaurant(restaurantId: string): Promise<IRestaurant> {
+        const restaurant = await this.restaurant
+            .findById(restaurantId)
+            .select(
+                '-password -failedLoginAttempts -isLocked -passwordHistory -__v -isEmailVerified -emailVerificationOTP',
+            )
+            .lean();
+
+        if (!restaurant) {
+            throw new ResourceNotFound('Restaurant not found');
+        }
+
+        return restaurant;
+    }
+
+    public async updateRestaurant(
+        restaurantId: string,
+        data: Partial<IRestaurant>,
+    ): Promise<Partial<IRestaurant> | null> {
+        const restaurant = await this.restaurant.findOneAndUpdate(
+            { _id: restaurantId },
+            { $set: data },
+            { new: true },
+        );
+
+        if (!restaurant) {
+            return null;
+        }
+
+        return this.sanitizeRestaurant(restaurant);
     }
 }

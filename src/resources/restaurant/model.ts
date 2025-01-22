@@ -40,10 +40,14 @@ const restaurantSchema = new Schema<IRestaurant>(
             type: String,
             required: true,
         },
-        ownerId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+        ownerId: { type: Schema.Types.ObjectId, ref: 'User' },
         role: {
             type: String,
             default: 'restaurant_owner',
+        },
+        phone: {
+            type: String,
+            required: true,
         },
         businessLicense: { imageId: String, imageUrl: String },
         isEmailVerified: { type: Boolean, default: false },

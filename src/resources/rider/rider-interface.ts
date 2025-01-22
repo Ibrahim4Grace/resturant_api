@@ -1,5 +1,5 @@
-import { Document } from "mongoose";
-import { UserRole } from "@/types/index";
+import { Document } from 'mongoose';
+import { UserRole } from '@/types/index';
 
 export interface IRider extends Document {
     _id: string;
@@ -8,13 +8,15 @@ export interface IRider extends Document {
     email: string;
     password: string;
     roles: UserRole[];
+    address?: Address;
+    phone: string;
     vehicleType?: string;
     vehicleNumber?: string;
     licenseNumber?: string;
     documents: documents[];
     currentLocation: Location;
     image?: ImageInfo;
-    status?: string; // 'available', 'busy', 'offline'
+    status?: 'available' | 'busy' | 'offline';
     rating?: number;
     bankInfo?: BankInfo;
     isEmailVerified: boolean;
@@ -32,6 +34,11 @@ export interface IRider extends Document {
     }>;
 }
 
+export interface Address {
+    street?: string;
+    city?: string;
+    state?: string;
+}
 export interface ImageInfo {
     imageId: string;
     imageUrl: string;

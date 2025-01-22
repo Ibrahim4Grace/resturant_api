@@ -61,20 +61,38 @@ export default class AdminController implements Controller {
             this.login,
         );
         this.router.get(
+            `${this.path}`,
+            authMiddleware(['admin']),
+            getCurrentUser(AdminModel),
+            this.getAdmins,
+        );
+        this.router.get(
+            `${this.path}/admin/:id`,
+            authMiddleware(['admin']),
+            getCurrentUser(AdminModel),
+            this.getAdminsById,
+        );
+        this.router.delete(
+            `${this.path}/admin/:id`,
+            authMiddleware(['super_admin']),
+            getCurrentUser(AdminModel),
+            this.deleteAdminById,
+        );
+        this.router.get(
             `${this.path}/users`,
             authMiddleware(['admin']),
             getCurrentUser(AdminModel),
             this.getUsers,
         );
         this.router.get(
-            `${this.path}/users/:id`,
+            `${this.path}/user/:id`,
             authMiddleware(['admin']),
             getCurrentUser(AdminModel),
             this.getUsersById,
         );
         this.router.delete(
-            `${this.path}/users/:id`,
-            authMiddleware(['admin']),
+            `${this.path}/user/:id`,
+            authMiddleware(['super_admin']),
             getCurrentUser(AdminModel),
             this.deleteUserById,
         );
@@ -86,18 +104,17 @@ export default class AdminController implements Controller {
             this.getRestaurants,
         );
         this.router.get(
-            `${this.path}/restaurants/:id`,
+            `${this.path}/restaurant/:id`,
             authMiddleware(['admin']),
             getCurrentUser(AdminModel),
             this.getRestaurantsById,
         );
         this.router.delete(
-            `${this.path}/restaurants/:id`,
-            authMiddleware(['admin']),
+            `${this.path}/restaurant/:id`,
+            authMiddleware(['super_admin']),
             getCurrentUser(AdminModel),
             this.deleteRestaurantById,
         );
-
         this.router.get(
             `${this.path}/riders`,
             authMiddleware(['admin']),
@@ -105,16 +122,35 @@ export default class AdminController implements Controller {
             this.getRiders,
         );
         this.router.get(
-            `${this.path}/riders/:id`,
+            `${this.path}/rider/:id`,
             authMiddleware(['admin']),
             getCurrentUser(AdminModel),
             this.getRidersById,
         );
         this.router.delete(
-            `${this.path}/riders/:id`,
-            authMiddleware(['admin']),
+            `${this.path}/rider/:id`,
+            authMiddleware(['super_admin']),
             getCurrentUser(AdminModel),
             this.deleteRiderById,
+        );
+
+        this.router.get(
+            `${this.path}/orders`,
+            authMiddleware(['admin']),
+            getCurrentUser(AdminModel),
+            this.getOrders,
+        );
+        this.router.get(
+            `${this.path}/order/:id`,
+            authMiddleware(['admin']),
+            getCurrentUser(AdminModel),
+            this.getOrdersById,
+        );
+        this.router.delete(
+            `${this.path}/order/:id`,
+            authMiddleware(['super_admin']),
+            getCurrentUser(AdminModel),
+            this.deleteOrderById,
         );
     }
 
@@ -231,13 +267,37 @@ export default class AdminController implements Controller {
         },
     );
 
+    private getAdmins = asyncHandler(
+        async (req: Request, res: Response): Promise<void> => {
+            const admins = await this.adminService.fetchAllAdmins();
+
+            sendJsonResponse(res, 200, 'Admins retrive succesful', admins);
+        },
+    );
+
+    private getAdminsById = asyncHandler(
+        async (req: Request, res: Response): Promise<void> => {
+            const { id } = req.params;
+            const admin = await this.adminService.fetchAdminsById(id);
+
+            sendJsonResponse(res, 200, 'Admin retrive by id succesful', admin);
+        },
+    );
+
+    public deleteAdminById = asyncHandler(
+        async (req: Request, res: Response): Promise<void> => {
+            const { id } = req.params;
+            const deletedAdmin = await this.adminService.deletedAdmin(id);
+
+            sendJsonResponse(res, 200, 'Admin deleted successfully');
+        },
+    );
+
     private getUsers = asyncHandler(
         async (req: Request, res: Response): Promise<void> => {
             const users = await this.adminService.fetchAllUsers();
 
-            sendJsonResponse(res, 200, 'Users retrive succesful', {
-                data: users,
-            });
+            sendJsonResponse(res, 200, 'Users retrive succesful', users);
         },
     );
 
@@ -246,9 +306,7 @@ export default class AdminController implements Controller {
             const { id } = req.params;
             const user = await this.adminService.fetchUserById(id);
 
-            sendJsonResponse(res, 200, 'Users retrive by id succesful', {
-                data: user,
-            });
+            sendJsonResponse(res, 200, 'Users retrive by id succesful', user);
         },
     );
 
@@ -265,9 +323,12 @@ export default class AdminController implements Controller {
         async (req: Request, res: Response): Promise<void> => {
             const restaurants = await this.adminService.fetchAllRestaurants();
 
-            sendJsonResponse(res, 200, 'Restaurants retrive succesful', {
-                data: restaurants,
-            });
+            sendJsonResponse(
+                res,
+                200,
+                'Restaurants retrive succesful',
+                restaurants,
+            );
         },
     );
 
@@ -276,9 +337,12 @@ export default class AdminController implements Controller {
             const { id } = req.params;
             const restaurant = await this.adminService.fetchRestaurantById(id);
 
-            sendJsonResponse(res, 200, 'Restaurant retrive by id succesful', {
-                data: restaurant,
-            });
+            sendJsonResponse(
+                res,
+                200,
+                'Restaurant retrive by id succesful',
+                restaurant,
+            );
         },
     );
 
@@ -296,9 +360,7 @@ export default class AdminController implements Controller {
         async (req: Request, res: Response): Promise<void> => {
             const riders = await this.adminService.fetchAllRiders();
 
-            sendJsonResponse(res, 200, 'Riders retrive succesful', {
-                data: riders,
-            });
+            sendJsonResponse(res, 200, 'Riders retrive succesful', riders);
         },
     );
 
@@ -307,9 +369,7 @@ export default class AdminController implements Controller {
             const { id } = req.params;
             const rider = await this.adminService.fetchRiderById(id);
 
-            sendJsonResponse(res, 200, 'Riders retrive by id succesful', {
-                data: rider,
-            });
+            sendJsonResponse(res, 200, 'Riders retrive by id succesful', rider);
         },
     );
 
@@ -319,6 +379,32 @@ export default class AdminController implements Controller {
             const deletedRider = await this.adminService.deleteRider(id);
 
             sendJsonResponse(res, 200, 'Rider deleted successfully');
+        },
+    );
+
+    private getOrders = asyncHandler(
+        async (req: Request, res: Response): Promise<void> => {
+            const orders = await this.adminService.fetchAllOrders();
+
+            sendJsonResponse(res, 200, 'Orders retrive succesful', orders);
+        },
+    );
+
+    private getOrdersById = asyncHandler(
+        async (req: Request, res: Response): Promise<void> => {
+            const { id } = req.params;
+            const order = await this.adminService.fetchOrdersById(id);
+
+            sendJsonResponse(res, 200, 'Orders retrive by id succesful', order);
+        },
+    );
+
+    public deleteOrderById = asyncHandler(
+        async (req: Request, res: Response): Promise<void> => {
+            const { id } = req.params;
+            const deletedOrder = await this.adminService.deleteOrder(id);
+
+            sendJsonResponse(res, 200, 'Order deleted successfully');
         },
     );
 }

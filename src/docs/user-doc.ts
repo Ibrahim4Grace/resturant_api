@@ -23,6 +23,22 @@ export const authUserDocs = {
                                         type: 'string',
                                         example: 'strongpassword123',
                                     },
+                                    phone: {
+                                        type: 'number',
+                                        example: '08097654321',
+                                    },
+                                    street: {
+                                        type: 'string',
+                                        example: '123 mary ave',
+                                    },
+                                    city: {
+                                        type: 'string',
+                                        example: 'Ikeja',
+                                    },
+                                    state: {
+                                        type: 'string',
+                                        example: 'LA',
+                                    },
                                 },
                             },
                         },
@@ -342,13 +358,189 @@ export const authUserDocs = {
                 },
             },
         },
+        '/api/v1/user': {
+            get: {
+                summary: 'Retrieve current user profile',
+                tags: ['User - Profile'],
+                security: [{ BearerAuth: [] }],
+                responses: {
+                    '200': {
+                        description: 'User profile retrieved successfully.',
+                        content: {
+                            'application/json': {
+                                schema: {
+                                    type: 'object',
+                                    properties: {
+                                        status: {
+                                            type: 'number',
+                                            example: 200,
+                                        },
+                                        message: {
+                                            type: 'string',
+                                            example:
+                                                'User profile retrieved successfully.',
+                                        },
+                                        data: {
+                                            type: 'object',
+                                            properties: {
+                                                name: {
+                                                    type: 'string',
+                                                    example: 'John Doe',
+                                                },
+                                                email: {
+                                                    type: 'string',
+                                                    example:
+                                                        'john.doe@example.com',
+                                                },
+                                                isEmailVerified: {
+                                                    type: 'boolean',
+                                                    example: true,
+                                                },
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    '401': {
+                        description:
+                            'Unauthorized. Bearer token is missing or invalid.',
+                    },
+                    '500': {
+                        description: 'Server error',
+                    },
+                },
+            },
+            put: {
+                summary: 'Update current user profile',
+                tags: ['User - Profile'],
+                security: [
+                    {
+                        BearerAuth: [],
+                    },
+                ],
+                requestBody: {
+                    required: true,
+                    content: {
+                        'application/json': {
+                            schema: {
+                                type: 'object',
+                                properties: {
+                                    name: {
+                                        type: 'string',
+                                        example: 'Jane Doe',
+                                    },
+                                    email: {
+                                        type: 'string',
+                                        example: 'jane.doe@example.com',
+                                    },
+                                    phone: {
+                                        type: 'string',
+                                        example: '+1234567890',
+                                    },
+                                    addresses: {
+                                        type: 'object',
+                                        properties: {
+                                            street: {
+                                                type: 'string',
+                                                example: '123 Main St',
+                                            },
+                                            city: {
+                                                type: 'string',
+                                                example: 'New York',
+                                            },
+                                            state: {
+                                                type: 'string',
+                                                example: 'NY',
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+                responses: {
+                    '200': {
+                        description: 'User profile updated successfully.',
+                        content: {
+                            'application/json': {
+                                schema: {
+                                    type: 'object',
+                                    properties: {
+                                        status: {
+                                            type: 'number',
+                                            example: 200,
+                                        },
+                                        message: {
+                                            type: 'string',
+                                            example:
+                                                'User profile updated successfully.',
+                                        },
+                                        data: {
+                                            type: 'object',
+                                            properties: {
+                                                name: {
+                                                    type: 'string',
+                                                    example: 'Jane Doe',
+                                                },
+                                                email: {
+                                                    type: 'string',
+                                                    example:
+                                                        'jane.doe@example.com',
+                                                },
+                                                phone: {
+                                                    type: 'string',
+                                                    example: '+1234567890',
+                                                },
+                                                addresses: {
+                                                    type: 'object',
+                                                    properties: {
+                                                        street: {
+                                                            type: 'string',
+                                                            example:
+                                                                '123 Main St',
+                                                        },
+                                                        city: {
+                                                            type: 'string',
+                                                            example: 'New York',
+                                                        },
+                                                        state: {
+                                                            type: 'string',
+                                                            example: 'NY',
+                                                        },
+                                                    },
+                                                },
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    '400': {
+                        description:
+                            'Bad request. Validation failed for one or more fields.',
+                    },
+                    '401': {
+                        description:
+                            'Unauthorized. Bearer token is missing or invalid.',
+                    },
+                    '404': {
+                        description: 'User not found.',
+                    },
+                    '500': {
+                        description: 'Server error',
+                    },
+                },
+            },
+        },
     },
 };
-
 
 export const allUserDocs = {
     paths: {
         ...authUserDocs.paths,
-      
     },
 };

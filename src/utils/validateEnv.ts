@@ -1,9 +1,9 @@
-import { cleanEnv, str, port, num } from "envalid";
+import { cleanEnv, str, port, num } from 'envalid';
 
 function validateEnv(): void {
     cleanEnv(process.env, {
         NODE_ENV: str({
-            choices: ["development", "production"],
+            choices: ['development', 'production'],
         }),
         PORT: port({ default: 5000 }),
         MONGODB_URI: str(),
@@ -16,8 +16,10 @@ function validateEnv(): void {
         NODEMAILER_EMAIL: str(),
         NODEMAILER_PASSWORD: str(),
         CORS_WHITELIST: str(),
-        // REDIS_HOST: str(),
-        // REDIS_PORT: num(),
+        REDIS_HOST: str(),
+        REDIS_PORT: num(),
+        REDIS_PASSWORD: str(),
+        REDIS_URL: str(),
         CLOUDINARY_CLOUD_NAME: str(),
         CLOUDINARY_API_NAME: str(),
         CLOUDINARY_SECRET_NAME: str(),
