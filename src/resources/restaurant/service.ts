@@ -1,7 +1,7 @@
 import RestaurantModel from '@/resources/restaurant/model';
-import { TokenService, addEmailToQueue } from '@/utils/index';
 import { CloudinaryService } from '@/config/index';
 import bcrypt from 'bcryptjs';
+import { LoginCredentials } from '@/types/index';
 import {
     IRestaurant,
     RegisterRestaurantto,
@@ -9,21 +9,25 @@ import {
     UploadedImage,
     RegistrationResponse,
     RestaurantCreationResponse,
+    ISanitizedRestaurant,
 } from '@/resources/restaurant/interface';
-import { UserRoles, LoginCredentials } from '@/types/index';
 import {
     sendOTPByEmail,
     pendingVerificationEmail,
     PasswordResetEmail,
 } from '@/resources/restaurant/email-template';
 import {
-    asyncHandler,
+    TokenService,
+    addEmailToQueue,
+    withCachedData,
+    CACHE_TTL,
+} from '@/utils/index';
+import {
     Conflict,
     ResourceNotFound,
     BadRequest,
     Forbidden,
     Unauthorized,
-    authMiddleware,
 } from '@/middlewares/index';
 
 export class RestaurantService {
@@ -32,7 +36,10 @@ export class RestaurantService {
         this.cloudinaryService = new CloudinaryService();
     }
     private restaurant = RestaurantModel;
-
+    private readonly CACHE_KEYS = {
+        ALL_RESTAURANTS: 'all_restaurants',
+        RESTAURANT_BY_ID: (id: string) => `restaurant:${id}`,
+    };
     private async checkDuplicateEmail(email: string): Promise<void> {
         const existingRestaurant = await this.restaurant.findOne({ email });
         if (existingRestaurant) {
@@ -63,7 +70,7 @@ export class RestaurantService {
         }
     }
 
-    private sanitizeRestaurant(restaurant: IRestaurant): Partial<IRestaurant> {
+    private sanitizeRestaurant(restaurant: IRestaurant): ISanitizedRestaurant {
         return {
             _id: restaurant._id,
             name: restaurant.name,
@@ -242,7 +249,7 @@ export class RestaurantService {
 
     public async login(
         credentials: LoginCredentials,
-    ): Promise<{ restaurant: IRestaurant; token: string }> {
+    ): Promise<{ restaurant: ISanitizedRestaurant; token: string }> {
         const restaurant = await this.restaurant.findOne({
             email: credentials.email,
         });
@@ -290,7 +297,10 @@ export class RestaurantService {
             role: restaurant.role,
         });
 
-        return { restaurant, token };
+        return {
+            restaurant: this.sanitizeRestaurant(restaurant),
+            token,
+        };
     }
 
     public async createRestaurant(
@@ -334,19 +344,26 @@ export class RestaurantService {
         };
     }
 
-    public async getRestaurant(restaurantId: string): Promise<IRestaurant> {
-        const restaurant = await this.restaurant
-            .findById(restaurantId)
-            .select(
-                '-password -failedLoginAttempts -isLocked -passwordHistory -__v -isEmailVerified -emailVerificationOTP',
-            )
-            .lean();
+    public async getRestaurant(
+        restaurantId: string,
+    ): Promise<ISanitizedRestaurant> {
+        const cacheKey = this.CACHE_KEYS.RESTAURANT_BY_ID(restaurantId);
 
-        if (!restaurant) {
-            throw new ResourceNotFound('Restaurant not found');
-        }
+        return withCachedData<ISanitizedRestaurant>(
+            cacheKey,
+            async () => {
+                const restaurant = await this.restaurant
+                    .findById(restaurantId)
+                    .lean();
 
-        return restaurant;
+                if (!restaurant) {
+                    throw new ResourceNotFound('Restaurant not found');
+                }
+
+                return this.sanitizeRestaurant(restaurant);
+            },
+            CACHE_TTL.ONE_HOUR,
+        );
     }
 
     public async updateRestaurant(

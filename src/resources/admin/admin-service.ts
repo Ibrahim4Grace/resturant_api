@@ -1,6 +1,6 @@
+import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import AdminModel from '@/resources/admin/admin-model';
-import { LoginCredentials } from '@/types/index';
 import UserModel from '@/resources/user/user-model';
 import RestaurantModel from '@/resources/restaurant/model';
 import RiderModel from '@/resources/rider/rider-model';
@@ -18,9 +18,9 @@ import {
     TokenService,
     addEmailToQueue,
     CACHE_TTL,
-    cacheData,
-    getCachedData,
     deleteCacheData,
+    getPaginatedAndCachedResults,
+    withCachedData,
 } from '@/utils/index';
 import {
     IAdmin,
@@ -35,6 +35,14 @@ import {
     Forbidden,
     Unauthorized,
 } from '@/middlewares/index';
+import {
+    LoginCredentials,
+    IAdminPaginatedResponse,
+    IUserPaginatedResponse,
+    IRestaurantPaginatedResponse,
+    IRiderPaginatedResponse,
+    IOrderPaginatedResponse,
+} from '@/types/index';
 
 export class AdminService {
     private admin = AdminModel;
@@ -55,6 +63,19 @@ export class AdminService {
         ORDER_BY_ID: (id: string) => `order:${id}`,
     };
 
+    private async checkDuplicateEmail(email: string): Promise<void> {
+        const existingUser = await this.admin.findOne({ email });
+        if (existingUser) {
+            throw new Conflict('Email already registered!');
+        }
+    }
+    private async checkDuplicatePhone(phone: string): Promise<void> {
+        const existingUser = await this.admin.findOne({ phone });
+        if (existingUser) {
+            throw new Conflict('Phone Number already registered!');
+        }
+    }
+
     private sanitizeAdmin(admin: IAdmin): Partial<IAdmin> {
         return {
             _id: admin._id,
@@ -71,12 +92,10 @@ export class AdminService {
     public async register(
         adminData: RegisterAdminto,
     ): Promise<RegistrationResponse> {
-        const existingAdmin = await this.admin.findOne({
-            email: adminData.email,
-        });
-        if (existingAdmin) {
-            throw new Conflict('Email already registered!');
-        }
+        await Promise.all([
+            this.checkDuplicateEmail(adminData.email),
+            this.checkDuplicatePhone(adminData.phone),
+        ]);
 
         const admin = await this.admin.create({
             ...adminData,
@@ -261,48 +280,38 @@ export class AdminService {
         };
     }
 
-    public async fetchAllAdmins(): Promise<IAdmin[]> {
-        const cachedAdmins = await getCachedData<IAdmin[]>(
+    public async fetchAllAdmins(
+        req: Request,
+        res: Response,
+    ): Promise<IAdminPaginatedResponse> {
+        const paginatedResults = await getPaginatedAndCachedResults<IAdmin>(
+            req,
+            res,
+            this.admin,
             this.CACHE_KEYS.ALL_ADMINS,
+            { name: 1, email: 1, address: 1, phone: 1, role: 1 },
         );
-        if (cachedAdmins) {
-            return cachedAdmins;
-        }
 
-        const admins = await this.admin
-            .find(
-                {},
-                {
-                    name: 1,
-                    email: 1,
-                    address: 1,
-                    phone: 1,
-                    role: 1,
-                },
-            )
-            .lean();
-
-        await cacheData(
-            this.CACHE_KEYS.ALL_ADMINS,
-            admins,
-            CACHE_TTL.FIVE_MINUTES,
-        );
-        return admins;
+        return {
+            results: paginatedResults.results,
+            pagination: {
+                currentPage: paginatedResults.currentPage,
+                totalPages: paginatedResults.totalPages,
+                limit: paginatedResults.limit,
+            },
+        };
     }
 
     public async fetchAdminsById(userId: string): Promise<IAdmin> {
-        const cacheKey = this.CACHE_KEYS.ADMIN_BY_ID(userId);
-        const cachedAdmin = await getCachedData<IAdmin>(cacheKey);
-        if (cachedAdmin) {
-            return cachedAdmin;
-        }
-        const admin = await this.admin.findById(userId);
-        if (!admin) {
-            throw new ResourceNotFound('Admin not found');
-        }
-
-        await cacheData(cacheKey, admin, CACHE_TTL.ONE_HOUR);
-        return admin;
+        return withCachedData(
+            this.CACHE_KEYS.ADMIN_BY_ID(userId),
+            async () => {
+                const admin = await this.admin.findById(userId);
+                if (!admin) throw new ResourceNotFound('Admin not found');
+                return admin;
+            },
+            CACHE_TTL.ONE_HOUR,
+        );
     }
 
     public async deletedAdmin(userId: string): Promise<IAdmin> {
@@ -319,48 +328,38 @@ export class AdminService {
         return admin;
     }
 
-    public async fetchAllUsers(): Promise<IUser[]> {
-        const cachedUsers = await getCachedData<IUser[]>(
+    public async fetchAllUsers(
+        req: Request,
+        res: Response,
+    ): Promise<IUserPaginatedResponse> {
+        const paginatedResults = await getPaginatedAndCachedResults<IUser>(
+            req,
+            res,
+            this.user,
             this.CACHE_KEYS.ALL_USERS,
+            { name: 1, email: 1, addresses: 1, phone: 1, status: 1 },
         );
-        if (cachedUsers) {
-            return cachedUsers;
-        }
-        const users = await this.user
-            .find(
-                {},
-                {
-                    name: 1,
-                    email: 1,
-                    addresses: 1,
-                    phone: 1,
-                    status: 1,
-                },
-            )
-            .lean();
 
-        await cacheData(
-            this.CACHE_KEYS.ALL_USERS,
-            users,
-            CACHE_TTL.FIVE_MINUTES,
-        );
-        return users;
+        return {
+            results: paginatedResults.results,
+            pagination: {
+                currentPage: paginatedResults.currentPage,
+                totalPages: paginatedResults.totalPages,
+                limit: paginatedResults.limit,
+            },
+        };
     }
 
     public async fetchUserById(userId: string): Promise<IUser> {
-        const cacheKey = this.CACHE_KEYS.USER_BY_ID(userId);
-        const cachedUser = await getCachedData<IUser>(cacheKey);
-        if (cachedUser) {
-            return cachedUser;
-        }
-
-        const user = await this.user.findById(userId);
-        if (!user) {
-            throw new ResourceNotFound('User not found');
-        }
-
-        await cacheData(cacheKey, user, CACHE_TTL.ONE_HOUR);
-        return user;
+        return withCachedData(
+            this.CACHE_KEYS.USER_BY_ID(userId),
+            async () => {
+                const user = await this.user.findById(userId);
+                if (!user) throw new ResourceNotFound('User not found');
+                return user;
+            },
+            CACHE_TTL.ONE_HOUR,
+        );
     }
 
     public async deleteUser(userId: string): Promise<IUser> {
@@ -376,17 +375,16 @@ export class AdminService {
         return user;
     }
 
-    public async fetchAllRestaurants(): Promise<IRestaurant[]> {
-        const cachedRestaurants = await getCachedData<IRestaurant[]>(
-            this.CACHE_KEYS.ALL_RESTAURANTS,
-        );
-        if (cachedRestaurants) {
-            return cachedRestaurants;
-        }
-
-        const restaurants = await this.restaurant
-            .find(
-                {},
+    public async fetchAllRestaurants(
+        req: Request,
+        res: Response,
+    ): Promise<IRestaurantPaginatedResponse> {
+        const paginatedResults =
+            await getPaginatedAndCachedResults<IRestaurant>(
+                req,
+                res,
+                this.restaurant,
+                this.CACHE_KEYS.ALL_RESTAURANTS,
                 {
                     name: 1,
                     email: 1,
@@ -395,31 +393,29 @@ export class AdminService {
                     businessLicense: 1,
                     status: 1,
                 },
-            )
-            .lean();
+            );
 
-        await cacheData(
-            this.CACHE_KEYS.ALL_RESTAURANTS,
-            restaurants,
-            CACHE_TTL.FIVE_MINUTES,
-        );
-        return restaurants;
+        return {
+            results: paginatedResults.results,
+            pagination: {
+                currentPage: paginatedResults.currentPage,
+                totalPages: paginatedResults.totalPages,
+                limit: paginatedResults.limit,
+            },
+        };
     }
 
     public async fetchRestaurantById(userId: string): Promise<IRestaurant> {
-        const cacheKey = this.CACHE_KEYS.RESTAURANT_BY_ID(userId);
-        const cachedRestaurants = await getCachedData<IRestaurant>(cacheKey);
-        if (cachedRestaurants) {
-            return cachedRestaurants;
-        }
-
-        const restaurant = await this.restaurant.findById(userId);
-        if (!restaurant) {
-            throw new ResourceNotFound('Restaurant not found');
-        }
-
-        await cacheData(cacheKey, restaurant, CACHE_TTL.ONE_HOUR);
-        return restaurant;
+        return withCachedData(
+            this.CACHE_KEYS.RESTAURANT_BY_ID(userId),
+            async () => {
+                const restaurant = await this.restaurant.findById(userId);
+                if (!restaurant)
+                    throw new ResourceNotFound('Restaurant not found');
+                return restaurant;
+            },
+            CACHE_TTL.ONE_HOUR,
+        );
     }
 
     public async deleteRestaurant(userId: string): Promise<IRestaurant> {
@@ -435,48 +431,38 @@ export class AdminService {
         return restaurant;
     }
 
-    public async fetchAllRiders(): Promise<IRider[]> {
-        const cachedRiders = await getCachedData<IRider[]>(
+    public async fetchAllRiders(
+        req: Request,
+        res: Response,
+    ): Promise<IRiderPaginatedResponse> {
+        const paginatedResults = await getPaginatedAndCachedResults<IRider>(
+            req,
+            res,
+            this.rider,
             this.CACHE_KEYS.ALL_RIDERS,
+            { name: 1, email: 1, phone: 1, address: 1, status: 1 },
         );
-        if (cachedRiders) {
-            return cachedRiders;
-        }
-        const riders = await this.rider
-            .find(
-                {},
-                {
-                    name: 1,
-                    email: 1,
-                    phone: 1,
-                    address: 1,
-                    status: 1,
-                },
-            )
-            .lean();
 
-        await cacheData(
-            this.CACHE_KEYS.ALL_RIDERS,
-            riders,
-            CACHE_TTL.FIVE_MINUTES,
-        );
-        return riders;
+        return {
+            results: paginatedResults.results,
+            pagination: {
+                currentPage: paginatedResults.currentPage,
+                totalPages: paginatedResults.totalPages,
+                limit: paginatedResults.limit,
+            },
+        };
     }
 
     public async fetchRiderById(userId: string): Promise<IRider> {
-        const cacheKey = this.CACHE_KEYS.RIDER_BY_ID(userId);
-        const cachedRiders = await getCachedData<IRider>(cacheKey);
-        if (cachedRiders) {
-            return cachedRiders;
-        }
-
-        const rider = await this.rider.findById(userId);
-        if (!rider) {
-            throw new ResourceNotFound('Rider not found');
-        }
-
-        await cacheData(cacheKey, rider, CACHE_TTL.ONE_HOUR);
-        return rider;
+        return withCachedData(
+            this.CACHE_KEYS.RIDER_BY_ID(userId),
+            async () => {
+                const rider = await this.rider.findById(userId);
+                if (!rider) throw new ResourceNotFound('Rider not found');
+                return rider;
+            },
+            CACHE_TTL.ONE_HOUR,
+        );
     }
 
     public async deleteRider(userId: string): Promise<IRider> {
@@ -492,48 +478,38 @@ export class AdminService {
         return rider;
     }
 
-    public async fetchAllOrders(): Promise<IOrder[]> {
-        const cachedOrders = await getCachedData<IOrder[]>(
+    public async fetchAllOrders(
+        req: Request,
+        res: Response,
+    ): Promise<IOrderPaginatedResponse> {
+        const paginatedResults = await getPaginatedAndCachedResults<IOrder>(
+            req,
+            res,
+            this.order,
             this.CACHE_KEYS.ALL_ORDERS,
+            { name: 1, email: 1, address: 1, status: 1 },
         );
-        if (cachedOrders) {
-            return cachedOrders;
-        }
 
-        const orders = await this.order
-            .find(
-                {},
-                {
-                    name: 1,
-                    email: 1,
-                    address: 1,
-                    status: 1,
-                },
-            )
-            .lean();
-
-        await cacheData(
-            this.CACHE_KEYS.ALL_ORDERS,
-            orders,
-            CACHE_TTL.FIVE_MINUTES,
-        );
-        return orders;
+        return {
+            results: paginatedResults.results,
+            pagination: {
+                currentPage: paginatedResults.currentPage,
+                totalPages: paginatedResults.totalPages,
+                limit: paginatedResults.limit,
+            },
+        };
     }
 
     public async fetchOrdersById(userId: string): Promise<IOrder> {
-        const cacheKey = this.CACHE_KEYS.ORDER_BY_ID(userId);
-        const cachedOrders = await getCachedData<IOrder>(cacheKey);
-        if (cachedOrders) {
-            return cachedOrders;
-        }
-
-        const order = await this.order.findById(userId);
-        if (!order) {
-            throw new ResourceNotFound('Order not found');
-        }
-
-        await cacheData(cacheKey, order, CACHE_TTL.ONE_HOUR);
-        return order;
+        return withCachedData(
+            this.CACHE_KEYS.ORDER_BY_ID(userId),
+            async () => {
+                const order = await this.order.findById(userId);
+                if (!order) throw new ResourceNotFound('Order not found');
+                return order;
+            },
+            CACHE_TTL.ONE_HOUR,
+        );
     }
 
     public async deleteOrder(userId: string): Promise<IOrder> {

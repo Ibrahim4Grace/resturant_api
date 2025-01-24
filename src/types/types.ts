@@ -2,6 +2,7 @@ import { IUser } from '@/resources/user/user-interface';
 import { IRestaurant } from '@/resources/restaurant/interface';
 import { IRider } from '@/resources/rider/rider-interface';
 import { IAdmin } from '@/resources/admin/admin-interface';
+import { IOrder } from '@/resources/order/order-interface';
 
 export const UserRoles = {
     User: 'user',
@@ -49,8 +50,30 @@ export interface AuthUser {
     name: string;
 }
 
+export interface IPaginationResponse {
+    currentPage: number;
+    totalPages: number;
+    limit: number;
+}
+
+export interface IPaginatedEntityResponse<T> {
+    results: T[];
+    pagination: IPaginationResponse;
+}
+
+// Entity-specific response types
+export type IAdminPaginatedResponse = IPaginatedEntityResponse<IAdmin>;
+export type IUserPaginatedResponse = IPaginatedEntityResponse<IUser>;
+export type IRiderPaginatedResponse = IPaginatedEntityResponse<IRider>;
+export type IOrderPaginatedResponse = IPaginatedEntityResponse<IOrder>;
+export type IRestaurantPaginatedResponse =
+    IPaginatedEntityResponse<IRestaurant>;
+
 declare global {
     namespace Express {
+        interface Response {
+            paginatedResults?: IPaginationResponse;
+        }
         interface Request {
             user?: AuthUser;
             currentUser?: IUser;

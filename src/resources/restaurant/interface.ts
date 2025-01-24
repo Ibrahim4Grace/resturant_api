@@ -88,3 +88,17 @@ export interface RestaurantCreationResponse {
     restaurant: Partial<IRestaurant>;
     token: string;
 }
+
+export interface ISanitizedRestaurant {
+    _id: string;
+    name: string;
+    email: string;
+    phone?: string;
+    address: Address;
+    cuisine: string[];
+    status: 'active' | 'pending' | 'suspended';
+    businessLicense: { imageId?: string; imageUrl?: string };
+    operatingHours?: operatingHours;
+    createdAt: Date;
+    updatedAt: Date;
+}

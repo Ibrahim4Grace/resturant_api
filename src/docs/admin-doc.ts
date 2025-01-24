@@ -19,6 +19,22 @@ export const authAdminDocs = {
                                         type: 'string',
                                         example: 'john.doe@example.com',
                                     },
+                                    phone: {
+                                        type: 'number',
+                                        example: '08097654321',
+                                    },
+                                    street: {
+                                        type: 'string',
+                                        example: '123 mary ave',
+                                    },
+                                    city: {
+                                        type: 'string',
+                                        example: 'Ikeja',
+                                    },
+                                    state: {
+                                        type: 'string',
+                                        example: 'LA',
+                                    },
                                     password: {
                                         type: 'string',
                                         example: 'strongpassword123',

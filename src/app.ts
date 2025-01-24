@@ -1,14 +1,18 @@
 import express, { Application } from 'express';
-import mongoose from 'mongoose';
 import compression from 'compression';
 import cors from 'cors';
-import { corsOptions, specs, ServerAdapter } from '@/config/index';
+import helmet from 'helmet';
 import swaggerUi from 'swagger-ui-express';
 import morgan from 'morgan';
-import { log } from '@/utils/index';
+import { log, initializeEmailQueue, consumeEmails } from '@/utils/index';
 import { Controller } from '@/types/index';
 import { errorHandler, routeNotFound } from '@/middlewares/index';
-import helmet from 'helmet';
+import {
+    corsOptions,
+    specs,
+    initializeDatabase,
+    closeRabbitMQ,
+} from '@/config/index';
 
 class App {
     public express: Application;
@@ -18,12 +22,13 @@ class App {
         this.express = express();
         this.port = port;
 
-        this.initializeDatabaseConnection();
+        this.initializeDatabase();
         this.initializeMiddlewares();
         this.initializeControllers(controllers);
-        this.initializeQueueRoutes();
+        this.initializeRabbitMQ();
         this.initializeDefaultRoute();
         this.initializeErrorHandling();
+        this.setupGracefulShutdown();
     }
 
     private initializeMiddlewares(): void {
@@ -42,8 +47,15 @@ class App {
         });
     }
 
-    private initializeQueueRoutes(): void {
-        this.express.use('/admin/queues', ServerAdapter.getRouter());
+    private async initializeRabbitMQ(): Promise<void> {
+        try {
+            await initializeEmailQueue(); // Initialize queue
+            await consumeEmails(); // Start consuming emails
+            log.info('RabbitMQ initialized successfully');
+        } catch (error) {
+            log.error('Failed to initialize RabbitMQ:', error);
+            process.exit(1);
+        }
     }
 
     private initializeDefaultRoute(): void {
@@ -60,17 +72,26 @@ class App {
         this.express.use(errorHandler);
     }
 
-    private initializeDatabaseConnection(): void {
-        const { MONGODB_URI } = process.env;
+    private async initializeDatabase(): Promise<void> {
+        await initializeDatabase();
+    }
 
-        if (!MONGODB_URI) {
-            throw new Error('MongoDB URI is missing!');
-        }
+    private setupGracefulShutdown(): void {
+        const shutdown = async (signal: string) => {
+            log.info(`${signal} received. Shutting down gracefully...`);
+            try {
+                await closeRabbitMQ(); // Close RabbitMQ connection
+                log.info('RabbitMQ connection closed');
+                process.exit(0);
+            } catch (error) {
+                log.error('Error during shutdown:', error);
+                process.exit(1);
+            }
+        };
 
-        mongoose
-            .connect(MONGODB_URI)
-            .then(() => log.info('Database connected successfully'))
-            .catch((err) => console.error('Database connection failed:', err));
+        ['SIGINT', 'SIGTERM'].forEach((signal) =>
+            process.on(signal, () => shutdown(signal)),
+        );
     }
 
     public listen(): void {

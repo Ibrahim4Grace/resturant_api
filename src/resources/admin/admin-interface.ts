@@ -28,12 +28,6 @@ export interface IAdmin extends Document {
     }>;
 }
 
-export interface Address {
-    street: string;
-    city: string;
-    state: string;
-}
-
 export interface IPasswordHistoryEntry {
     password: string;
     changedAt: Date;
@@ -43,7 +37,15 @@ export interface RegisterAdminto {
     name: string;
     email: string;
     password: string;
+    phone: string;
     role?: string;
+    address: Address;
+}
+
+export interface Address {
+    street: string;
+    city: string;
+    state: string;
 }
 
 export interface emailVerificationOTP {

@@ -8,13 +8,13 @@
         "dev": "tsc-watch --onSuccess \"node ./dist/index.js\"",
         "build": "tsc",
         "postinstall": "npm run build",
-        "docker:redis": "docker-compose up -d",
-        "docker:redis:stop": "docker-compose down"
+        "docker:services": "docker-compose up"
     },
     "keywords": [],
     "author": "",
     "license": "ISC",
     "devDependencies": {
+        "@types/amqplib": "^0.10.6",
         "@types/compression": "^1.7.5",
         "@types/cors": "^2.8.17",
         "@types/express": "^5.0.0",
@@ -41,6 +41,7 @@
         "@types/otp-generator": "^4.0.2",
         "@types/swagger-jsdoc": "^6.0.4",
         "@types/swagger-ui-express": "^4.1.7",
+        "amqplib": "^0.10.5",
         "axios": "^1.7.9",
         "bcryptjs": "^2.4.3",
         "bull": "^4.16.5",

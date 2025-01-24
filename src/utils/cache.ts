@@ -49,44 +49,34 @@ export async function deleteCacheData(key: string): Promise<void> {
     }
 }
 
-// Check if key exists
-export async function existsInCache(key: string): Promise<boolean> {
-    try {
-        return (await redis.exists(key)) === 1;
-    } catch (error) {
-        log.error(`Error checking existence for key ${key}:`, error);
-        return false;
-    }
-}
-
-// Set with hash for complex objects
-export async function cacheHashData(
+export async function withCachedData<T>(
     key: string,
-    data: Record<string, any>,
-    expirationInSeconds = CACHE_TTL.ONE_HOUR,
-): Promise<void> {
-    try {
-        await redis.hmset(key, data);
-        await redis.expire(key, expirationInSeconds);
-        log.info(`Cached hash data for key: ${key}`);
-    } catch (error) {
-        log.error(`Error caching hash data for key ${key}:`, error);
+    fetchData: () => Promise<T>,
+    ttl: number,
+): Promise<T> {
+    const cachedData = await getCachedData<T>(key);
+    if (cachedData) {
+        return cachedData;
     }
+
+    const data = await fetchData();
+    await cacheData(key, data, ttl);
+    return data;
 }
 
-// export async function withCachedData<T>(
-//     key: string,
-//     fetchData: () => Promise<T>,
-//     ttl: number,
-// ): Promise<T> {
-//     const cachedData = await getCachedData<T>(key);
-//     if (cachedData) {
-//         return cachedData;
+// public async fetchAdminsById(userId: string): Promise<IAdmin> {
+//     const cacheKey = this.CACHE_KEYS.ADMIN_BY_ID(userId);
+//     const cachedAdmin = await getCachedData<IAdmin>(cacheKey);
+//     if (cachedAdmin) {
+//         return cachedAdmin;
+//     }
+//     const admin = await this.admin.findById(userId);
+//     if (!admin) {
+//         throw new ResourceNotFound('Admin not found');
 //     }
 
-//     const data = await fetchData();
-//     await cacheData(key, data, ttl);
-//     return data;
+//     await cacheData(cacheKey, admin, CACHE_TTL.ONE_HOUR);
+//     return admin;
 // }
 // public async fetchUserById(userId: string): Promise<IUser> {
 //     return withCachedData(

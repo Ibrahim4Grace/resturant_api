@@ -277,7 +277,14 @@ export default class RestaurantController implements Controller {
             if (!restaurantId) {
                 throw new ResourceNotFound('Restaurant not found');
             }
-            const updateData = req.body;
+
+            // Transform the request body
+            const { street, city, state, ...rest } = req.body;
+            const updateData = {
+                ...rest,
+                address: { street, city, state },
+            };
+
             const updatedRestaurant =
                 await this.restaurantService.updateRestaurant(
                     restaurantId,

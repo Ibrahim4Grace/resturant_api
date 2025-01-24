@@ -244,7 +244,6 @@ export class UserService {
         user.failedLoginAttempts = 0;
         await user.save();
 
-        // If no specific role is provided, default to 'user' role
         const requestedRole = credentials.role || 'user';
         if (!user.role.includes(requestedRole)) {
             throw new Forbidden(
@@ -257,7 +256,10 @@ export class UserService {
             role: user.role,
         });
 
-        return { user, token };
+        return {
+            user: this.sanitizeUser(user),
+            token,
+        };
     }
 
     public async getUserById(userId: string): Promise<IUser> {

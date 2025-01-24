@@ -4,6 +4,7 @@ import validate from '@/resources/admin/admin-validation';
 import { AdminService } from '@/resources/admin/admin-service';
 import { TokenService } from '@/utils/index';
 import AdminModel from '@/resources/admin/admin-model';
+import { RegisterAdminto, Address } from '@/resources/admin/admin-interface';
 import {
     validateData,
     sendJsonResponse,
@@ -156,12 +157,20 @@ export default class AdminController implements Controller {
 
     private register = asyncHandler(
         async (req: Request, res: Response): Promise<void> => {
-            const { name, email, password } = req.body;
-            const result = await this.adminService.register({
+            const { name, email, password, phone, street, city, state } =
+                req.body;
+
+            const address: Address = { street, city, state };
+
+            const registrationData: RegisterAdminto = {
                 name,
                 email,
                 password,
-            });
+                phone,
+                address,
+            };
+
+            const result = await this.adminService.register(registrationData);
             sendJsonResponse(
                 res,
                 201,
@@ -269,7 +278,7 @@ export default class AdminController implements Controller {
 
     private getAdmins = asyncHandler(
         async (req: Request, res: Response): Promise<void> => {
-            const admins = await this.adminService.fetchAllAdmins();
+            const admins = await this.adminService.fetchAllAdmins(req, res);
 
             sendJsonResponse(res, 200, 'Admins retrive succesful', admins);
         },
@@ -295,7 +304,7 @@ export default class AdminController implements Controller {
 
     private getUsers = asyncHandler(
         async (req: Request, res: Response): Promise<void> => {
-            const users = await this.adminService.fetchAllUsers();
+            const users = await this.adminService.fetchAllUsers(req, res);
 
             sendJsonResponse(res, 200, 'Users retrive succesful', users);
         },
@@ -321,7 +330,10 @@ export default class AdminController implements Controller {
 
     private getRestaurants = asyncHandler(
         async (req: Request, res: Response): Promise<void> => {
-            const restaurants = await this.adminService.fetchAllRestaurants();
+            const restaurants = await this.adminService.fetchAllRestaurants(
+                req,
+                res,
+            );
 
             sendJsonResponse(
                 res,
@@ -358,7 +370,7 @@ export default class AdminController implements Controller {
 
     private getRiders = asyncHandler(
         async (req: Request, res: Response): Promise<void> => {
-            const riders = await this.adminService.fetchAllRiders();
+            const riders = await this.adminService.fetchAllRiders(req, res);
 
             sendJsonResponse(res, 200, 'Riders retrive succesful', riders);
         },
@@ -384,7 +396,7 @@ export default class AdminController implements Controller {
 
     private getOrders = asyncHandler(
         async (req: Request, res: Response): Promise<void> => {
-            const orders = await this.adminService.fetchAllOrders();
+            const orders = await this.adminService.fetchAllOrders(req, res);
 
             sendJsonResponse(res, 200, 'Orders retrive succesful', orders);
         },
