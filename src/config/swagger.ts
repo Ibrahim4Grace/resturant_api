@@ -5,6 +5,8 @@ import {
     allAdminDocs,
     allUserDocs,
     allRestaurantDocs,
+    allOrderDocs,
+    allMenuDocs,
 } from '../docs/index';
 
 const swaggerOptions: swaggerJsdoc.Options = {
@@ -46,9 +48,11 @@ const swaggerOptions: swaggerJsdoc.Options = {
             ...allUserDocs.paths,
             ...allRestaurantDocs.paths,
             ...allRiderDocs.paths,
+            ...allOrderDocs.paths,
+            ...allMenuDocs.paths,
         },
     },
-    apis: [],
+    apis: ['./src/resources/**/*.ts'],
 };
 
 export const specs = swaggerJsdoc(swaggerOptions);

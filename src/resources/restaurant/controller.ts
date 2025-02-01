@@ -223,7 +223,7 @@ export default class RestaurantController implements Controller {
             if (!user) {
                 throw new Unauthorized('User not authenticated');
             }
-            const restaurantId = user.id;
+            const userId = user.id;
             const { name, password, phone, street, city, state } = req.body;
 
             const address: Address = { street, city, state };
@@ -233,7 +233,7 @@ export default class RestaurantController implements Controller {
                 email: user.email,
                 phone,
                 password,
-                ownerId: restaurantId,
+                ownerId: userId,
                 address,
                 businessLicense: '',
                 isEmailVerified: true,

@@ -1,13 +1,13 @@
-import RiderModel from "@/resources/rider/rider-model";
-import { addEmailToQueue } from "@/utils/index";
-import { IRider, RegisterRiderto } from "@/resources/rider/rider-interface";
-import { UserRoles } from "@/types/index";
-import bcrypt from "bcryptjs";
+import RiderModel from '@/resources/rider/rider-model';
+import { EmailQueueService } from '@/utils/index';
+import { IRider, RegisterRiderto } from '@/resources/rider/rider-interface';
+import { UserRoles } from '@/types/index';
+import bcrypt from 'bcryptjs';
 import {
     sendOTPByEmail,
     welcomeEmail,
     PasswordResetEmail,
-} from "@/resources/rider/rider-email-template";
+} from '@/resources/rider/rider-email-template';
 import {
     asyncHandler,
     Conflict,
@@ -16,7 +16,7 @@ import {
     Forbidden,
     Unauthorized,
     authMiddleware,
-} from "@/middlewares/index";
+} from '@/middlewares/index';
 
 export class RiderService {
     private rider = RiderModel;
@@ -28,7 +28,7 @@ export class RiderService {
             email: riderData.email,
         });
         if (existingRider) {
-            throw new Conflict("Email already registered!");
+            throw new Conflict('Email already registered!');
         }
 
         const rider = await this.rider.create({
@@ -41,7 +41,7 @@ export class RiderService {
         await rider.save();
 
         const emailOptions = sendOTPByEmail(rider as IRider, otp);
-        await addEmailToQueue(emailOptions);
+        await EmailQueueService.addEmailToQueue(emailOptions);
 
         const sanitizedRider: Partial<IRider> = {
             _id: rider._id,
@@ -65,19 +65,19 @@ export class RiderService {
         const rider = await this.rider.findOne({
             _id: userId,
             isEmailVerified: false,
-            "emailVerificationOTP.expiresAt": { $gt: new Date() },
+            'emailVerificationOTP.expiresAt': { $gt: new Date() },
         });
 
         if (!rider) {
-            throw new BadRequest("Invalid or expired verification session");
+            throw new BadRequest('Invalid or expired verification session');
         }
 
         if (!rider?.emailVerificationOTP?.otp) {
-            throw new BadRequest("No OTP found for this rider");
+            throw new BadRequest('No OTP found for this rider');
         }
 
         if (new Date() > rider.emailVerificationOTP.expiresAt) {
-            throw new BadRequest("OTP has expired");
+            throw new BadRequest('OTP has expired');
         }
 
         const isValid = await bcrypt.compare(
@@ -85,7 +85,7 @@ export class RiderService {
             rider.emailVerificationOTP.otp.toString(),
         );
         if (!isValid) {
-            throw new BadRequest("Invalid OTP");
+            throw new BadRequest('Invalid OTP');
         }
 
         rider.emailVerificationOTP = undefined;
@@ -93,7 +93,7 @@ export class RiderService {
         await rider.save();
 
         const emailOptions = welcomeEmail(rider as IRider);
-        await addEmailToQueue(emailOptions);
+        await EmailQueueService.addEmailToQueue(emailOptions);
 
         return rider;
     }
@@ -103,7 +103,7 @@ export class RiderService {
             email: email.toLowerCase().trim(),
         });
         if (!rider) {
-            throw new ResourceNotFound("Rider not found");
+            throw new ResourceNotFound('Rider not found');
         }
 
         const verificationResult = await rider.generateEmailVerificationOTP();
@@ -111,7 +111,7 @@ export class RiderService {
         await rider.save();
 
         const emailOptions = sendOTPByEmail(rider as IRider, otp);
-        await addEmailToQueue(emailOptions);
+        await EmailQueueService.addEmailToQueue(emailOptions);
 
         return verificationToken;
     }
@@ -121,20 +121,20 @@ export class RiderService {
         otp: string,
     ): Promise<IRider> {
         const rider = await this.rider.findOne({
-            "emailVerificationOTP.verificationToken": verificationToken,
-            "emailVerificationOTP.expiresAt": { $gt: new Date() },
+            'emailVerificationOTP.verificationToken': verificationToken,
+            'emailVerificationOTP.expiresAt': { $gt: new Date() },
         });
 
         if (!rider) {
-            throw new BadRequest("Invalid or expired reset token");
+            throw new BadRequest('Invalid or expired reset token');
         }
 
         if (!rider.emailVerificationOTP?.otp) {
-            throw new BadRequest("No OTP found for this rider");
+            throw new BadRequest('No OTP found for this rider');
         }
 
         if (new Date() > rider.emailVerificationOTP.expiresAt) {
-            throw new BadRequest("OTP has expired");
+            throw new BadRequest('OTP has expired');
         }
 
         const isValid = await bcrypt.compare(
@@ -142,7 +142,7 @@ export class RiderService {
             rider.emailVerificationOTP.otp.toString(),
         );
         if (!isValid) {
-            throw new BadRequest("Invalid OTP");
+            throw new BadRequest('Invalid OTP');
         }
 
         return rider;
@@ -153,12 +153,12 @@ export class RiderService {
         newPassword: string,
     ): Promise<void> {
         const rider = await this.rider.findOne({
-            "emailVerificationOTP.verificationToken": verificationToken,
-            "emailVerificationOTP.expiresAt": { $gt: new Date() },
+            'emailVerificationOTP.verificationToken': verificationToken,
+            'emailVerificationOTP.expiresAt': { $gt: new Date() },
         });
 
         if (!rider) {
-            throw new BadRequest("Invalid or expired reset token");
+            throw new BadRequest('Invalid or expired reset token');
         }
 
         rider.passwordHistory = rider.passwordHistory ?? [];
@@ -172,6 +172,6 @@ export class RiderService {
         await rider.save();
 
         const emailOptions = PasswordResetEmail(rider as IRider);
-        await addEmailToQueue(emailOptions);
+        await EmailQueueService.addEmailToQueue(emailOptions);
     }
 }

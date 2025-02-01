@@ -1,4 +1,4 @@
-import { Types, Document } from "mongoose";
+import { Types, Document } from 'mongoose';
 
 export interface IOrder extends Document {
     status: OrderStatus;
@@ -17,35 +17,21 @@ export interface IOrder extends Document {
 }
 
 export type OrderStatus =
-    | "pending"
-    | "confirmed"
-    | "preparing"
-    | "ready_for_pickup"
-    | "in_delivery"
-    | "delivered"
-    | "cancelled";
+    | 'pending'
+    | 'processing'
+    | 'ready_for_pickup'
+    | 'shipped'
+    | 'delivered'
+    | 'cancelled';
 
 export interface OrderItem {
     menuId: string; // Reference to the menu item
     quantity: number; // Quantity of the item
     price: number; // Price of the item
-    customizations?: Customization[]; // Optional customizations
-}
-
-export interface Customization {
-    name: string; // Customization group name (e.g., "Toppings")
-    option: string; // Selected option (e.g., "Extra cheese")
-    price: number; // Additional price for the customization
 }
 
 export interface DeliveryInfo {
-    address: {
-        address: string; // Delivery address
-        coordinates: {
-            latitude: number; // Latitude of the delivery address
-            longitude: number; // Longitude of the delivery address
-        };
-    };
+    address: string; // Delivery address
     riderId?: string; // Reference to the rider assigned for delivery
     estimatedDeliveryTime?: Date; // Estimated delivery time
 }

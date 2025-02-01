@@ -20,6 +20,8 @@ function validateEnv(): void {
         REDIS_PORT: num(),
         REDIS_PASSWORD: str(),
         REDIS_URL: str(),
+        TAX_RATE: str(),
+        DELIVERY_FEE: str(),
         CLOUDINARY_CLOUD_NAME: str(),
         CLOUDINARY_API_NAME: str(),
         CLOUDINARY_SECRET_NAME: str(),

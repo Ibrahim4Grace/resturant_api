@@ -1,20 +1,19 @@
-import { Schema, model } from "mongoose";
-import { IOrder } from "@/resources/order/order-interface";
+import { Schema, model } from 'mongoose';
+import { IOrder } from '@/resources/order/order-interface';
 
 const orderSchema = new Schema<IOrder>(
     {
         status: {
             type: String,
-            required: true,
             enum: [
-                "pending",
-                "confirmed",
-                "preparing",
-                "ready_for_pickup",
-                "in_delivery",
-                "delivered",
-                "cancelled",
+                'pending',
+                'proccessing',
+                'ready_for_pickup',
+                'shipped',
+                'delivered',
+                'cancelled',
             ],
+            default: 'pending',
         },
         totalPrice: {
             type: Number,
@@ -22,19 +21,19 @@ const orderSchema = new Schema<IOrder>(
         },
         userId: {
             type: Schema.Types.ObjectId,
-            ref: "User",
+            ref: 'User',
             required: true,
         },
         restaurantId: {
             type: Schema.Types.ObjectId,
-            ref: "Restaurant",
+            ref: 'Restaurant',
             required: true,
         },
         items: [
             {
                 menuId: {
                     type: Schema.Types.ObjectId,
-                    ref: "Menu",
+                    ref: 'Menu',
                     required: true,
                 },
                 quantity: {
@@ -45,13 +44,6 @@ const orderSchema = new Schema<IOrder>(
                     type: Number,
                     required: true,
                 },
-                customizations: [
-                    {
-                        name: String,
-                        option: String,
-                        price: Number,
-                    },
-                ],
             },
         ],
         subtotal: {
@@ -71,16 +63,10 @@ const orderSchema = new Schema<IOrder>(
             required: true,
         },
         deliveryInfo: {
-            address: {
-                address: String,
-                coordinates: {
-                    latitude: Number,
-                    longitude: Number,
-                },
-            },
+            address: String,
             riderId: {
                 type: Schema.Types.ObjectId,
-                ref: "Rider",
+                ref: 'Rider',
             },
             estimatedDeliveryTime: Date,
         },
@@ -93,4 +79,4 @@ const orderSchema = new Schema<IOrder>(
     { timestamps: true },
 );
 
-export default model<IOrder>("Order", orderSchema);
+export default model<IOrder>('Order', orderSchema);

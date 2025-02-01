@@ -48,14 +48,11 @@ export const validateUser = async (userId: string): Promise<ValidUser> => {
 };
 
 export const isRoleAuthorized = (
-    userRole: UserRole | UserRole[],
+    userRole: UserRole,
     allowedRoles: AllowedRoles,
 ): boolean => {
     if (allowedRoles === 'any') return true;
-
-    // Convert userRole to array if it's a single role
-    const userRoles = Array.isArray(userRole) ? userRole : [userRole];
-    return userRoles.some((role) => allowedRoles.includes(role));
+    return allowedRoles.includes(userRole);
 };
 
 export const authMiddleware = (allowedRoles: AllowedRoles = 'any') => {
@@ -67,10 +64,12 @@ export const authMiddleware = (allowedRoles: AllowedRoles = 'any') => {
                     throw new Unauthorized('No token provided');
                 }
 
+                //the issue is from userid and ownerId
+                //decode ownerid from userid
                 const decoded = await TokenService.verifyAuthToken(token);
-                console.log('decoded.userId', decoded.userId);
-                const user = await validateUser(decoded.userId);
+                console.log('decoded.userId:', decoded.userId);
 
+                const user = await validateUser(decoded.userId);
                 console.log('Validated user:', user);
 
                 if (
@@ -96,7 +95,7 @@ export const authMiddleware = (allowedRoles: AllowedRoles = 'any') => {
 
                 next();
             } catch (error) {
-                log.error('Authentication error:', error);
+                log.error('Authentication errors:', error);
                 if (error instanceof Unauthorized) {
                     return res.status(401).json({
                         status_code: '401',
@@ -113,13 +112,15 @@ export const authMiddleware = (allowedRoles: AllowedRoles = 'any') => {
 export const getCurrentUser = (model: any) =>
     asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
         const userId = req.user?.id;
-        // console.log("User ID from req.user:", userId);
+        console.log('User ID from req.user:', userId);
         if (!userId) {
             throw new Unauthorized('User not authenticated');
         }
 
         const currentUser = await model.findById(userId);
-        // console.log("Found current user:", currentUser);
+
+        // const currentUser = await model.findById(userId);
+        console.log('Found current user:', currentUser);
         if (!currentUser) {
             throw new ResourceNotFound('User not found');
         }

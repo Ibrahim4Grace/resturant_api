@@ -16,7 +16,7 @@ import {
 } from '@/resources/admin/admin-email-template';
 import {
     TokenService,
-    addEmailToQueue,
+    EmailQueueService,
     CACHE_TTL,
     deleteCacheData,
     getPaginatedAndCachedResults,
@@ -107,7 +107,7 @@ export class AdminService {
         await admin.save();
 
         const emailOptions = sendOTPByEmail(admin as IAdmin, otp);
-        await addEmailToQueue(emailOptions);
+        await EmailQueueService.addEmailToQueue(emailOptions);
 
         return {
             admin: this.sanitizeAdmin(admin),
@@ -150,7 +150,7 @@ export class AdminService {
         await admin.save();
 
         const emailOptions = welcomeEmail(admin as IAdmin);
-        await addEmailToQueue(emailOptions);
+        await EmailQueueService.addEmailToQueue(emailOptions);
 
         return admin;
     }
@@ -168,7 +168,7 @@ export class AdminService {
         await admin.save();
 
         const emailOptions = sendOTPByEmail(admin as IAdmin, otp);
-        await addEmailToQueue(emailOptions);
+        await EmailQueueService.addEmailToQueue(emailOptions);
 
         return verificationToken;
     }
@@ -230,7 +230,7 @@ export class AdminService {
         await admin.save();
 
         const emailOptions = PasswordResetEmail(admin as IAdmin);
-        await addEmailToQueue(emailOptions);
+        await EmailQueueService.addEmailToQueue(emailOptions);
     }
 
     public async login(credentials: LoginCredentials): Promise<loginResponse> {

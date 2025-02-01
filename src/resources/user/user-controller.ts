@@ -304,11 +304,15 @@ export default class UserController implements Controller {
         },
     );
 
-    // private getUserOrders = asyncHandler(
-    //     async (req: Request, res: Response): Promise<void> => {
-    //         const userId = req.params.id;
-    //         const orders = await this.userService.getUserOrders(userId);
-    //         sendJsonResponse(res, 200, "Orders retrieved successfully", orders);
-    //     },
-    // );
+    private getUserOrders = asyncHandler(
+        async (req: Request, res: Response): Promise<void> => {
+            const userId = req.currentUser?._id;
+            if (!userId) {
+                throw new ResourceNotFound('User not found');
+            }
+            const orders = await this.userService.getUserOrders(userId);
+
+            sendJsonResponse(res, 200, 'Orders retrieved successfully', orders);
+        },
+    );
 }

@@ -16,7 +16,6 @@ const registerSchema = z.object({
             regex,
             'Password must include at least one uppercase letter, one lowercase letter, one number, and one special character',
         ),
-    // Make the image optional since it's handled by multer
     images: z.any(),
 });
 

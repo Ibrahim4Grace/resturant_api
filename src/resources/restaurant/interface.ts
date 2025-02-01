@@ -75,10 +75,6 @@ export interface RegisterRestaurantto {
     isEmailVerified?: boolean;
 }
 
-export interface UploadedImage {
-    imageId: string;
-    imageUrl: string;
-}
 export interface RegistrationResponse {
     restaurant: Partial<IRestaurant>;
     verificationToken?: string;

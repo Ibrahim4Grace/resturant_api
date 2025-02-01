@@ -1,7 +1,9 @@
 import UserModel from '@/resources/user/user-model';
-import { TokenService, addEmailToQueue } from '@/utils/index';
+import OrderModel from '@/resources/order/order-model';
+import { TokenService, EmailQueueService } from '@/utils/index';
 import bcrypt from 'bcryptjs';
 import { LoginCredentials } from '@/types/index';
+import { IOrder } from '@/resources/order/order-interface';
 import {
     IUser,
     RegisterUserto,
@@ -22,10 +24,10 @@ import {
     Forbidden,
     Unauthorized,
 } from '@/middlewares/index';
-import userModel from '@/resources/user/user-model';
 
 export class UserService {
     private user = UserModel;
+    private order = OrderModel;
 
     private async checkDuplicateEmail(email: string): Promise<void> {
         const existingUser = await this.user.findOne({ email });
@@ -53,6 +55,25 @@ export class UserService {
         };
     }
 
+    private sanitizeOrder(order: IOrder): Partial<IOrder> {
+        return {
+            _id: order._id,
+            status: order.status,
+            totalPrice: order.totalPrice,
+            userId: order.userId,
+            restaurantId: order.restaurantId,
+            items: order.items,
+            subtotal: order.subtotal,
+            tax: order.tax,
+            deliveryFee: order.deliveryFee,
+            total: order.total,
+            deliveryInfo: order.deliveryInfo,
+            payment: order.payment,
+            createdAt: order.createdAt,
+            updatedAt: order.updatedAt,
+        };
+    }
+
     public async register(
         userData: RegisterUserto,
     ): Promise<RegistrationResponse> {
@@ -71,7 +92,7 @@ export class UserService {
         await user.save();
 
         const emailOptions = sendOTPByEmail(user as IUser, otp);
-        await addEmailToQueue(emailOptions);
+        await EmailQueueService.addEmailToQueue(emailOptions);
 
         return {
             user: this.sanitizeUser(user),
@@ -114,7 +135,7 @@ export class UserService {
         await user.save();
 
         const emailOptions = welcomeEmail(user as IUser);
-        await addEmailToQueue(emailOptions);
+        await EmailQueueService.addEmailToQueue(emailOptions);
 
         return user;
     }
@@ -132,7 +153,7 @@ export class UserService {
         await user.save();
 
         const emailOptions = sendOTPByEmail(user as IUser, otp);
-        await addEmailToQueue(emailOptions);
+        await EmailQueueService.addEmailToQueue(emailOptions);
 
         return verificationToken;
     }
@@ -214,7 +235,7 @@ export class UserService {
         await user.save();
 
         const emailOptions = PasswordResetEmail(user as IUser);
-        await addEmailToQueue(emailOptions);
+        await EmailQueueService.addEmailToQueue(emailOptions);
     }
 
     public async login(credentials: LoginCredentials): Promise<loginResponse> {
@@ -262,19 +283,16 @@ export class UserService {
         };
     }
 
-    public async getUserById(userId: string): Promise<IUser> {
-        const user = await this.user
-            .findById(userId)
-            .select(
-                '-password -failedLoginAttempts -isLocked -passwordHistory -__v -isEmailVerified',
-            )
-            .lean();
+    public async getUserById(userId: string) {
+        const user = await this.user.findById(userId).lean();
 
         if (!user) {
             throw new ResourceNotFound('User not found');
         }
 
-        return user;
+        return {
+            user: this.sanitizeUser(user),
+        };
     }
 
     public async updateUserById(
@@ -314,7 +332,7 @@ export class UserService {
         }
 
         const emailOptions = newAddressAdded(user as IUser, addressData);
-        await addEmailToQueue(emailOptions);
+        await EmailQueueService.addEmailToQueue(emailOptions);
 
         user.addresses.push(addressData);
         await user.save();
@@ -354,8 +372,18 @@ export class UserService {
         }
     }
 
-    // public async getUserOrders(userId: string): Promise<IOrder[]> {
-    //     const orders = await this.orderModel.find({ userId });
-    //     return orders;
-    // }
+    public async getUserOrders(userId: string): Promise<Partial<IOrder>[]> {
+        const user = await this.user.findById(userId);
+        if (!user) {
+            throw new ResourceNotFound('User not found');
+        }
+
+        // Find and return all orders for the user
+        const orders = await this.order
+            .find({ userId })
+            .sort({ createdAt: -1 })
+            .lean();
+
+        return orders.map((order) => this.sanitizeOrder(order));
+    }
 }

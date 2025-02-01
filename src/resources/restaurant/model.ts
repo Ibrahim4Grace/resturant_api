@@ -45,10 +45,7 @@ const restaurantSchema = new Schema<IRestaurant>(
             type: String,
             default: 'restaurant_owner',
         },
-        phone: {
-            type: String,
-            required: true,
-        },
+        phone: { type: String },
         businessLicense: { imageId: String, imageUrl: String },
         isEmailVerified: { type: Boolean, default: false },
         googleId: { type: String, trim: true },

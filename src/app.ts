@@ -4,7 +4,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import swaggerUi from 'swagger-ui-express';
 import morgan from 'morgan';
-import { log, initializeEmailQueue, consumeEmails } from '@/utils/index';
+import { log,  EmailQueueService } from '@/utils/index';
 import { Controller } from '@/types/index';
 import { errorHandler, routeNotFound } from '@/middlewares/index';
 import {
@@ -34,7 +34,9 @@ class App {
     private initializeMiddlewares(): void {
         this.express.use(helmet());
         this.express.use(cors(corsOptions));
-        this.express.use(morgan('dev'));
+        if (process.env.NODE_ENV === 'development') {
+            this.express.use(morgan('dev'));
+        }
         this.express.use(express.json({ limit: '15mb' }));
         this.express.use(express.urlencoded({ limit: '15mb', extended: true }));
         this.express.use(compression());
@@ -49,8 +51,8 @@ class App {
 
     private async initializeRabbitMQ(): Promise<void> {
         try {
-            await initializeEmailQueue(); // Initialize queue
-            await consumeEmails(); // Start consuming emails
+            await EmailQueueService.initializeEmailQueue(); 
+            await EmailQueueService.consumeEmails(); 
             log.info('RabbitMQ initialized successfully');
         } catch (error) {
             log.error('Failed to initialize RabbitMQ:', error);
@@ -80,7 +82,7 @@ class App {
         const shutdown = async (signal: string) => {
             log.info(`${signal} received. Shutting down gracefully...`);
             try {
-                await closeRabbitMQ(); // Close RabbitMQ connection
+                await closeRabbitMQ(); 
                 log.info('RabbitMQ connection closed');
                 process.exit(0);
             } catch (error) {

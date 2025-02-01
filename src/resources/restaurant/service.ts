@@ -1,12 +1,12 @@
 import RestaurantModel from '@/resources/restaurant/model';
+import UserModel from '@/resources/user/user-model';
 import { CloudinaryService } from '@/config/index';
 import bcrypt from 'bcryptjs';
-import { LoginCredentials } from '@/types/index';
+import { LoginCredentials, UploadedImage } from '@/types/index';
 import {
     IRestaurant,
     RegisterRestaurantto,
     Address,
-    UploadedImage,
     RegistrationResponse,
     RestaurantCreationResponse,
     ISanitizedRestaurant,
@@ -18,7 +18,7 @@ import {
 } from '@/resources/restaurant/email-template';
 import {
     TokenService,
-    addEmailToQueue,
+    EmailQueueService,
     withCachedData,
     CACHE_TTL,
 } from '@/utils/index';
@@ -31,11 +31,14 @@ import {
 } from '@/middlewares/index';
 
 export class RestaurantService {
+    private restaurant = RestaurantModel;
+    private user = UserModel;
+
     private cloudinaryService: CloudinaryService;
     constructor() {
         this.cloudinaryService = new CloudinaryService();
     }
-    private restaurant = RestaurantModel;
+
     private readonly CACHE_KEYS = {
         ALL_RESTAURANTS: 'all_restaurants',
         RESTAURANT_BY_ID: (id: string) => `restaurant:${id}`,
@@ -97,6 +100,15 @@ export class RestaurantService {
             this.checkDuplicateAddress(restaurantData.address),
         ]);
 
+        // Create a user account for the unauthenticated user
+        const user = await this.user.create({
+            name: restaurantData.name,
+            email: restaurantData.email,
+            password: restaurantData.password,
+            phone: restaurantData.phone,
+            isEmailVerified: true,
+        });
+
         let businessLicense: UploadedImage | undefined;
         if (file) {
             const uploadResult = await this.cloudinaryService.uploadImage(file);
@@ -109,6 +121,7 @@ export class RestaurantService {
         const restaurant = await this.restaurant.create({
             ...restaurantData,
             businessLicense,
+            ownerId: user._id,
             status: 'pending',
             isEmailVerified: false,
         });
@@ -119,7 +132,7 @@ export class RestaurantService {
         await restaurant.save();
 
         const emailOptions = sendOTPByEmail(restaurant as IRestaurant, otp);
-        await addEmailToQueue(emailOptions);
+        await EmailQueueService.addEmailToQueue(emailOptions);
 
         return {
             restaurant: this.sanitizeRestaurant(restaurant),
@@ -164,7 +177,7 @@ export class RestaurantService {
         const emailOptions = pendingVerificationEmail(
             restaurant as IRestaurant,
         );
-        await addEmailToQueue(emailOptions);
+        await EmailQueueService.addEmailToQueue(emailOptions);
 
         return restaurant;
     }
@@ -183,7 +196,7 @@ export class RestaurantService {
         await restaurant.save();
 
         const emailOptions = sendOTPByEmail(restaurant as IRestaurant, otp);
-        await addEmailToQueue(emailOptions);
+        await EmailQueueService.addEmailToQueue(emailOptions);
 
         return verificationToken;
     }
@@ -244,7 +257,7 @@ export class RestaurantService {
         await restaurant.save();
 
         const emailOptions = PasswordResetEmail(restaurant as IRestaurant);
-        await addEmailToQueue(emailOptions);
+        await EmailQueueService.addEmailToQueue(emailOptions);
     }
 
     public async login(
@@ -293,9 +306,11 @@ export class RestaurantService {
         }
 
         const token = TokenService.createAuthToken({
-            userId: restaurant._id.toString(),
+            userId: restaurant.ownerId.toString(),
+            // userId: restaurant._id.toString(),
             role: restaurant.role,
         });
+        console.log('login token :', token);
 
         return {
             restaurant: this.sanitizeRestaurant(restaurant),
@@ -331,12 +346,13 @@ export class RestaurantService {
         const emailOptions = pendingVerificationEmail(
             restaurant as IRestaurant,
         );
-        await addEmailToQueue(emailOptions);
+        await EmailQueueService.addEmailToQueue(emailOptions);
 
         const restaurantToken = TokenService.createAuthToken({
             userId: restaurant._id.toString(),
             role: restaurant.role,
         });
+        console.log('create Restaurant Token:', restaurantToken);
 
         return {
             restaurant: this.sanitizeRestaurant(restaurant),

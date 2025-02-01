@@ -15,7 +15,7 @@ export type UserRole = (typeof UserRoles)[keyof typeof UserRoles];
 
 export interface AuthJwtPayload {
     userId: string;
-    role: UserRole[];
+    role: UserRole;
 }
 
 export interface EmailVerificationPayload {
@@ -46,7 +46,7 @@ export type AllowedRoles = UserRole[] | 'any';
 export interface AuthUser {
     id: string;
     email: string;
-    role: UserRole | UserRole[];
+    role: UserRole;
     name: string;
 }
 
@@ -84,8 +84,13 @@ declare global {
 export interface ValidUser {
     id: string;
     email: string;
-    role: UserRole | UserRole[];
+    role: UserRole;
     name: string;
+}
+
+export interface UploadedImage {
+    imageId: string;
+    imageUrl: string;
 }
 
 // export interface MulterFile {
