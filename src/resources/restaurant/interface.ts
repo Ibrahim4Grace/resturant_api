@@ -93,7 +93,6 @@ export interface ISanitizedRestaurant {
     address: Address;
     cuisine: string[];
     status: 'active' | 'pending' | 'suspended';
-    businessLicense: { imageId?: string; imageUrl?: string };
     operatingHours?: operatingHours;
     createdAt: Date;
     updatedAt: Date;

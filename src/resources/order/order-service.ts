@@ -1,11 +1,13 @@
-import { EmailQueueService, withCachedData, CACHE_TTL } from '@/utils/index';
 import UserModel from '@/resources/user/user-model';
 import OrderModel from '@/resources/order/order-model';
+import MenuModel from '@/resources/menu/menu-model';
+import { generateOrderId } from '@/utils/index';
 import {
     IOrder,
     OrderStatus,
-    OrderItem,
+    DeliveryInfo,
 } from '@/resources/order/order-interface';
+import { EmailQueueService, withCachedData, CACHE_TTL } from '@/utils/index';
 import {
     orderConfirmationEmail,
     orderStatusUpdateEmail,
@@ -23,20 +25,20 @@ import {
 export class OrderService {
     private order = OrderModel;
     private user = UserModel;
+    private menu = MenuModel;
 
     private sanitizeOrder(order: IOrder): Partial<IOrder> {
         return {
-            _id: order._id,
+            orderId: order.orderId,
             status: order.status,
-            totalPrice: order.totalPrice,
+            total_price: order.total_price,
             userId: order.userId,
             restaurantId: order.restaurantId,
             items: order.items,
             subtotal: order.subtotal,
             tax: order.tax,
-            deliveryFee: order.deliveryFee,
-            total: order.total,
-            deliveryInfo: order.deliveryInfo,
+            delivery_fee: order.delivery_fee,
+            delivery_info: order.delivery_info,
             payment: order.payment,
             createdAt: order.createdAt,
             updatedAt: order.updatedAt,
@@ -45,35 +47,63 @@ export class OrderService {
 
     public async placeOrder(
         userId: string,
-        orderData: { items: OrderItem[]; restaurantId: string },
-    ): Promise<any> {
-        // Verify user exists
+        orderData: {
+            items: { menuId: string; quantity: number }[];
+            restaurantId: string;
+            address: string;
+        },
+    ): Promise<Partial<IOrder>> {
         const user = await this.user.findById(userId);
         if (!user) {
             throw new ResourceNotFound('User not found');
         }
+        const orderId = await generateOrderId();
+        // Fetch prices for each menu item
+        const itemsWithPrices = await Promise.all(
+            orderData.items.map(async (item) => {
+                const menuItem = await this.menu.findById(item.menuId);
+                if (!menuItem) {
+                    throw new ResourceNotFound(
+                        `Menu item with ID ${item.menuId} not found`,
+                    );
+                }
+                return {
+                    ...item,
+                    price: menuItem.price,
+                    name: menuItem.name,
+                };
+            }),
+        );
 
         // Calculate total
-        const subtotal = orderData.items.reduce(
+        const subtotal = itemsWithPrices.reduce(
             (acc, item) => acc + item.quantity * item.price,
             0,
         );
-        const taxRate = parseFloat(process.env.TAX_RATE || '0.05'); // Default to 5% if not set
-        const deliveryFee = parseFloat(process.env.DELIVERY_FEE || '5'); // Default to 5 if not set
 
+        //Both5%
+        const taxRate = parseFloat(process.env.TAX_RATE);
+        const delivery_fee = parseFloat(process.env.DELIVERY_FEE);
         const tax = subtotal * taxRate;
-        const total = subtotal + tax + deliveryFee;
+        const total_price = subtotal + tax + delivery_fee;
 
-        // Create new order
+        // Round the values to 2 decimal places
+        const roundedSubtotal = Math.round(subtotal * 100) / 100;
+        const roundedTax = Math.round(tax * 100) / 100;
+        const roundedTotalPrice = Math.round(total_price * 100) / 100;
+
+        const delivery_info: DeliveryInfo = { address: orderData.address };
+
         const newOrder = await this.order.create({
+            orderId,
             userId,
+            delivery_info,
             restaurantId: orderData.restaurantId,
-            items: orderData.items,
-            subtotal,
-            tax,
-            deliveryFee,
-            total,
-            status: 'pending',
+            items: itemsWithPrices,
+            subtotal: roundedSubtotal,
+            tax: roundedTax,
+            delivery_fee,
+            total_price: roundedTotalPrice,
         });
 
         const emailOptions = orderConfirmationEmail(user, newOrder);

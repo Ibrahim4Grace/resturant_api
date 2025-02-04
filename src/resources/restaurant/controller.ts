@@ -20,6 +20,7 @@ import {
     Unauthorized,
     authMiddleware,
     getCurrentUser,
+    checkRole,
 } from '@/middlewares/index';
 
 export default class RestaurantController implements Controller {
@@ -74,14 +75,16 @@ export default class RestaurantController implements Controller {
         this.router.get(
             `${this.path}`,
             authMiddleware(),
-            authMiddleware(['restaurant_owner']),
+            authMiddleware(),
             getCurrentUser(RestaurantModel),
+            checkRole(['restaurant_owner']),
             this.getRestaurant,
         );
         this.router.put(
             `${this.path}`,
-            authMiddleware(['restaurant_owner']),
+            authMiddleware(),
             getCurrentUser(RestaurantModel),
+            checkRole(['restaurant_owner']),
             validateData(validate.updateSchema),
             this.updateRestaurant,
         );
@@ -208,11 +211,8 @@ export default class RestaurantController implements Controller {
 
     private login = asyncHandler(
         async (req: Request, res: Response): Promise<void> => {
-            const { email, password } = req.body;
-            const result = await this.restaurantService.login({
-                email,
-                password,
-            });
+            const credentials = req.body;
+            const result = await this.restaurantService.login(credentials);
             sendJsonResponse(res, 200, 'Login successful', result);
         },
     );

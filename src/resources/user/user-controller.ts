@@ -13,6 +13,7 @@ import {
     BadRequest,
     authMiddleware,
     getCurrentUser,
+    checkRole,
 } from '@/middlewares/index';
 
 export default class UserController implements Controller {
@@ -58,40 +59,46 @@ export default class UserController implements Controller {
         );
         this.router.get(
             `${this.path}/address`,
-            authMiddleware(['user']),
+            authMiddleware(),
             getCurrentUser(UserModel),
+            checkRole(['user']),
             this.getUserAddress,
         );
         this.router.get(
             `${this.path}`,
-            authMiddleware(['user']),
+            authMiddleware(),
             getCurrentUser(UserModel),
+            checkRole(['user']),
             this.getUser,
         );
         this.router.put(
             `${this.path}`,
-            authMiddleware(['user']),
+            authMiddleware(),
             getCurrentUser(UserModel),
+            checkRole(['user']),
             validateData(validate.updateUserSchema),
             this.updateUser,
         );
         this.router.post(
             `${this.path}/address`,
-            authMiddleware(['user']),
+            authMiddleware(),
             getCurrentUser(UserModel),
+            checkRole(['user']),
             validateData(validate.addressesSchema),
             this.addNewAddress,
         );
         this.router.delete(
             `${this.path}/address/:id`,
-            authMiddleware(['user']),
+            authMiddleware(),
             getCurrentUser(UserModel),
+            checkRole(['user']),
             this.deleteAddress,
         );
         // this.router.get(
         //     `${this.path}/:id/orders`,
-        //     authMiddleware(["user"]),
+        //     authMiddleware(),
         //     getCurrentUser(UserModel),
+        // checkRole(['user']),
         //     asyncHandler(this.getUserOrders),
         // );
     }

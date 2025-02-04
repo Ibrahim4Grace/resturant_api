@@ -1,16 +1,16 @@
 import { Types, Document } from 'mongoose';
 
 export interface IOrder extends Document {
+    orderId: string;
     status: OrderStatus;
-    totalPrice: number;
+    total_price: number;
     userId: Types.ObjectId;
     restaurantId: Types.ObjectId;
     items: OrderItem[];
     subtotal: number;
     tax: number;
-    deliveryFee: number;
-    total: number; // Final total price (subtotal + tax + delivery fee)
-    deliveryInfo?: DeliveryInfo;
+    delivery_fee: number;
+    delivery_info: DeliveryInfo;
     payment?: PaymentInfo;
     createdAt?: Date;
     updatedAt?: Date;
@@ -25,19 +25,20 @@ export type OrderStatus =
     | 'cancelled';
 
 export interface OrderItem {
-    menuId: string; // Reference to the menu item
-    quantity: number; // Quantity of the item
-    price: number; // Price of the item
+    menuId: string;
+    quantity: number;
+    price: number;
+    name: string;
 }
 
 export interface DeliveryInfo {
-    address: string; // Delivery address
-    riderId?: string; // Reference to the rider assigned for delivery
-    estimatedDeliveryTime?: Date; // Estimated delivery time
+    address: string;
+    riderId?: string;
+    estimatedDeliveryTime?: Date;
 }
 
 export interface PaymentInfo {
-    method: string; // Payment method (e.g., "credit_card", "cash")
-    status: string; // Payment status (e.g., "paid", "pending")
+    method: string; //  (e.g., "credit_card", "cash")
+    status: string; //(e.g., "paid", "pending")
     transactionId?: string; // Optional transaction ID for the payment
 }

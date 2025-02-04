@@ -4,9 +4,13 @@ import { log } from '@/utils/index';
 // Define TTL constants
 export const CACHE_TTL = {
     ONE_MINUTE: 60,
-    FIVE_MINUTES: 300,
-    ONE_HOUR: 3600,
-    ONE_DAY: 86400,
+    FIVE_MINUTES: 60,
+    ONE_HOUR: 60,
+    ONE_DAY: 60,
+
+    // FIVE_MINUTES: 300,
+    // ONE_HOUR: 3600,
+    // ONE_DAY: 86400,
 } as const;
 
 // Generic cache data function

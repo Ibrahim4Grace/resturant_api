@@ -4,9 +4,9 @@ const orderSchema = z.object({
         z.object({
             menuId: z.string(),
             quantity: z.number().min(1),
-            price: z.number().min(0),
         }),
     ),
+    address: z.string().min(0, 'Delivery address is required'),
     restaurantId: z.string(),
 });
 

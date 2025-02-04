@@ -57,17 +57,16 @@ export class UserService {
 
     private sanitizeOrder(order: IOrder): Partial<IOrder> {
         return {
-            _id: order._id,
+            orderId: order.orderId,
             status: order.status,
-            totalPrice: order.totalPrice,
+            total_price: order.total_price,
             userId: order.userId,
             restaurantId: order.restaurantId,
             items: order.items,
             subtotal: order.subtotal,
             tax: order.tax,
-            deliveryFee: order.deliveryFee,
-            total: order.total,
-            deliveryInfo: order.deliveryInfo,
+            delivery_fee: order.delivery_fee,
+            delivery_info: order.delivery_info,
             payment: order.payment,
             createdAt: order.createdAt,
             updatedAt: order.updatedAt,

@@ -3,22 +3,6 @@ import { IOrder } from '@/resources/order/order-interface';
 
 const orderSchema = new Schema<IOrder>(
     {
-        status: {
-            type: String,
-            enum: [
-                'pending',
-                'proccessing',
-                'ready_for_pickup',
-                'shipped',
-                'delivered',
-                'cancelled',
-            ],
-            default: 'pending',
-        },
-        totalPrice: {
-            type: Number,
-            required: true,
-        },
         userId: {
             type: Schema.Types.ObjectId,
             ref: 'User',
@@ -36,16 +20,12 @@ const orderSchema = new Schema<IOrder>(
                     ref: 'Menu',
                     required: true,
                 },
-                quantity: {
-                    type: Number,
-                    required: true,
-                },
-                price: {
-                    type: Number,
-                    required: true,
-                },
+                name: { type: String, required: true },
+                quantity: { type: Number, required: true },
+                price: { type: Number, required: true },
             },
         ],
+        total_price: { type: Number, required: true },
         subtotal: {
             type: Number,
             required: true,
@@ -54,15 +34,11 @@ const orderSchema = new Schema<IOrder>(
             type: Number,
             required: true,
         },
-        deliveryFee: {
+        delivery_fee: {
             type: Number,
             required: true,
         },
-        total: {
-            type: Number,
-            required: true,
-        },
-        deliveryInfo: {
+        delivery_info: {
             address: String,
             riderId: {
                 type: Schema.Types.ObjectId,
@@ -70,10 +46,23 @@ const orderSchema = new Schema<IOrder>(
             },
             estimatedDeliveryTime: Date,
         },
+        orderId: { type: String, required: true },
         payment: {
             method: String,
             status: String,
             transactionId: String,
+        },
+        status: {
+            type: String,
+            enum: [
+                'pending',
+                'proccessing',
+                'ready_for_pickup',
+                'shipped',
+                'delivered',
+                'cancelled',
+            ],
+            default: 'pending',
         },
     },
     { timestamps: true },

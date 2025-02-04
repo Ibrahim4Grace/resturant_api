@@ -82,7 +82,6 @@ export class RestaurantService {
             address: restaurant.address,
             cuisine: restaurant.cuisine,
             status: restaurant.status,
-            businessLicense: restaurant.businessLicense,
             operatingHours: restaurant.operatingHours,
             createdAt: restaurant.createdAt,
             updatedAt: restaurant.updatedAt,
@@ -297,8 +296,7 @@ export class RestaurantService {
         restaurant.failedLoginAttempts = 0;
         await restaurant.save();
 
-        // If no specific role is provided, default to 'restaurant' role
-        const requestedRole = credentials.role || 'restaurant_owner';
+        const requestedRole = 'restaurant_owner';
         if (!restaurant.role.includes(requestedRole)) {
             throw new Forbidden(
                 `You do not have permission to sign in as ${requestedRole}`,
@@ -306,11 +304,9 @@ export class RestaurantService {
         }
 
         const token = TokenService.createAuthToken({
-            userId: restaurant.ownerId.toString(),
-            // userId: restaurant._id.toString(),
-            role: restaurant.role,
+            userId: restaurant._id,
+            role: requestedRole,
         });
-        console.log('login token :', token);
 
         return {
             restaurant: this.sanitizeRestaurant(restaurant),
@@ -349,10 +345,9 @@ export class RestaurantService {
         await EmailQueueService.addEmailToQueue(emailOptions);
 
         const restaurantToken = TokenService.createAuthToken({
-            userId: restaurant._id.toString(),
+            userId: restaurant._id,
             role: restaurant.role,
         });
-        console.log('create Restaurant Token:', restaurantToken);
 
         return {
             restaurant: this.sanitizeRestaurant(restaurant),

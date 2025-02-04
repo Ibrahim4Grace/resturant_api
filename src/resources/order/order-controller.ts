@@ -11,6 +11,7 @@ import {
     BadRequest,
     authMiddleware,
     getCurrentUser,
+    checkRole,
 } from '@/middlewares/index';
 
 export default class OrderController implements Controller {
@@ -25,43 +26,53 @@ export default class OrderController implements Controller {
     private initializeRoutes(): void {
         this.router.post(
             `${this.path}`,
-            authMiddleware(['user']),
+            authMiddleware(),
             getCurrentUser(UserModel),
+            checkRole(['user']),
             validateData(validate.orderSchema),
             this.placeOrder,
         );
         this.router.get(
             `${this.path}`,
-            authMiddleware(['user']),
+            authMiddleware(),
             getCurrentUser(UserModel),
+            checkRole(['user']),
             this.getUserOrders,
         );
         this.router.get(
             `${this.path}/:id`,
-            authMiddleware(['user', 'admin']),
+            authMiddleware(),
             getCurrentUser(UserModel),
+            checkRole(['user']),
             this.getOrderById,
         );
         this.router.patch(
             `${this.path}/:id/status`,
-            authMiddleware(['admin']),
+            authMiddleware(),
+            getCurrentUser(UserModel),
+            checkRole(['user']),
             validateData(validate.orderStatusSchema),
             this.updateOrderStatus,
         );
         this.router.delete(
             `${this.path}/:id`,
-            authMiddleware(['user']),
+            authMiddleware(),
             getCurrentUser(UserModel),
+            checkRole(['user']),
             this.cancelOrder,
         );
         this.router.get(
             `${this.path}/restaurant/:restaurantId`,
-            authMiddleware(['admin']),
+            authMiddleware(),
+            getCurrentUser(UserModel),
+            checkRole(['user']),
             this.getOrdersByRestaurant,
         );
         this.router.patch(
             `${this.path}/:id/assign-rider`,
-            authMiddleware(['admin']),
+            authMiddleware(),
+            getCurrentUser(UserModel),
+            checkRole(['user']),
             validateData(validate.assignRiderSchema),
             this.assignRiderToOrder,
         );

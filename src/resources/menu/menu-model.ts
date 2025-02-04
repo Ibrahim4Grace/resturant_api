@@ -11,6 +11,7 @@ const menuSchema = new Schema<IMenu>(
         name: String,
         description: String,
         price: Number,
+        quantity: Number,
         category: String,
         image: { imageId: String, imageUrl: String },
 

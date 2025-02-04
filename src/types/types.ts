@@ -3,6 +3,7 @@ import { IRestaurant } from '@/resources/restaurant/interface';
 import { IRider } from '@/resources/rider/rider-interface';
 import { IAdmin } from '@/resources/admin/admin-interface';
 import { IOrder } from '@/resources/order/order-interface';
+import { IMenu } from '@/resources/menu/menu-interface';
 
 export const UserRoles = {
     User: 'user',
@@ -41,8 +42,6 @@ export interface LoginCredentials {
     role?: UserRole;
 }
 
-export type AllowedRoles = UserRole[] | 'any';
-
 export interface AuthUser {
     id: string;
     email: string;
@@ -63,6 +62,7 @@ export interface IPaginatedEntityResponse<T> {
 
 // Entity-specific response types
 export type IAdminPaginatedResponse = IPaginatedEntityResponse<IAdmin>;
+export type IMenuPaginatedResponse = IPaginatedEntityResponse<IMenu>;
 export type IUserPaginatedResponse = IPaginatedEntityResponse<IUser>;
 export type IRiderPaginatedResponse = IPaginatedEntityResponse<IRider>;
 export type IOrderPaginatedResponse = IPaginatedEntityResponse<IOrder>;
@@ -74,7 +74,9 @@ declare global {
         interface Response {
             paginatedResults?: IPaginationResponse;
         }
+
         interface Request {
+            ownerId?: any;
             user?: AuthUser;
             currentUser?: IUser;
         }

@@ -11,6 +11,7 @@ import {
     authMiddleware,
     getCurrentUser,
     validateData,
+    checkRole,
 } from '@/middlewares/index';
 
 export default class MenuController implements Controller {
@@ -25,23 +26,41 @@ export default class MenuController implements Controller {
     private initializeRoutes(): void {
         this.router.post(
             `${this.path}/:restaurantId`,
-            authMiddleware(['restaurant_owner']),
+            authMiddleware(),
             getCurrentUser(RestaurantModel),
+            checkRole(['restaurant_owner']),
             upload.single('image'),
             validateData(validate.addMenuItemSchema),
             this.addMenuItem,
         );
-        this.router.get(`${this.path}/:restaurantId`, this.getMenuItems);
-        this.router.patch(
-            `${this.path}/:menuItemId`,
-            authMiddleware(['restaurant_owner']),
+        this.router.get(
+            `${this.path}`,
+            authMiddleware(),
             getCurrentUser(RestaurantModel),
+            checkRole(['restaurant_owner']),
+            this.fectchAllMenu,
+        );
+        this.router.get(
+            `${this.path}/:menuId`,
+            authMiddleware(),
+            getCurrentUser(RestaurantModel),
+            checkRole(['restaurant_owner']),
+            this.getMenuById,
+        );
+        this.router.patch(
+            `${this.path}/:menuId`,
+            authMiddleware(),
+            getCurrentUser(RestaurantModel),
+            checkRole(['restaurant_owner']),
+            upload.single('image'),
+            validateData(validate.addMenuItemSchema),
             this.updateMenuItem,
         );
         this.router.delete(
-            `${this.path}/:menuItemId`,
-            authMiddleware(['restaurant_owner']),
+            `${this.path}/:menuId`,
+            authMiddleware(),
             getCurrentUser(RestaurantModel),
+            checkRole(['restaurant_owner']),
             this.deleteMenuItem,
         );
     }
@@ -50,25 +69,51 @@ export default class MenuController implements Controller {
         const { restaurantId } = req.params;
         const menuItemData = req.body;
 
+        const ownerId = req.ownerId;
+        if (!ownerId) {
+            throw new ResourceNotFound('Owner ID not found');
+        }
+
         const userId = req.currentUser?._id;
         if (!userId) {
             throw new ResourceNotFound('Restaurant owner not found.');
         }
-        console.log('userId:', userId); // Log the userId
-        console.log('restaurantId:', restaurantId);
         const newMenuItem = await this.menuService.addMenuItem(
             restaurantId,
             menuItemData,
+            ownerId,
             req.file,
-            userId,
         );
 
         sendJsonResponse(res, 201, 'Menu item added successfully', newMenuItem);
     });
 
-    private getMenuItems = asyncHandler(async (req: Request, res: Response) => {
-        const { restaurantId } = req.params;
-        const menuItems = await this.menuService.getMenuItems(restaurantId);
+    private fectchAllMenu = asyncHandler(
+        async (req: Request, res: Response): Promise<void> => {
+            const userId = req.currentUser?._id;
+            if (!userId)
+                throw new ResourceNotFound('Restaurant owner not found');
+            const riders = await this.menuService.fetchAllMenu(
+                req,
+                res,
+                userId,
+            );
+
+            sendJsonResponse(res, 200, 'menus retrive succesful', riders);
+        },
+    );
+
+    private getMenuById = asyncHandler(async (req: Request, res: Response) => {
+        const { menuId } = req.params;
+        const restaurantId = req.currentUser?._id;
+        if (!restaurantId) {
+            throw new ResourceNotFound('Restaurant owner not found');
+        }
+
+        const menuItems = await this.menuService.getMenuItems(
+            menuId,
+            restaurantId,
+        );
         sendJsonResponse(
             res,
             200,
@@ -79,11 +124,16 @@ export default class MenuController implements Controller {
 
     private updateMenuItem = asyncHandler(
         async (req: Request, res: Response) => {
-            const { menuItemId } = req.params;
+            const { menuId } = req.params;
             const updateData = req.body;
+            const restaurantId = req.currentUser?._id;
+            if (!restaurantId) {
+                throw new ResourceNotFound('Restaurant owner not found');
+            }
 
             const updatedMenuItem = await this.menuService.updateMenuItem(
-                menuItemId,
+                menuId,
+                restaurantId,
                 updateData,
             );
 
@@ -98,8 +148,12 @@ export default class MenuController implements Controller {
 
     private deleteMenuItem = asyncHandler(
         async (req: Request, res: Response) => {
-            const { menuItemId } = req.params;
-            await this.menuService.deleteMenuItem(menuItemId);
+            const { menuId } = req.params;
+            const restaurantId = req.currentUser?._id;
+            if (!restaurantId) {
+                throw new ResourceNotFound('Restaurant owner not found');
+            }
+            await this.menuService.deleteMenuItem(menuId, restaurantId);
             sendJsonResponse(res, 200, 'Menu item deleted successfully');
         },
     );

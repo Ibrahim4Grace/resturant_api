@@ -4,7 +4,7 @@ import User from '@/resources/user/user-model';
 import Rider from '@/resources/rider/rider-model';
 import Restaurant from '@/resources/restaurant/model';
 import { TokenService, log } from '@/utils/index';
-import { AllowedRoles, ValidUser, UserRole } from '@/types/index';
+import { ValidUser } from '@/types/index';
 import {
     asyncHandler,
     ResourceNotFound,
@@ -47,15 +47,7 @@ export const validateUser = async (userId: string): Promise<ValidUser> => {
     throw new Unauthorized('User not found');
 };
 
-export const isRoleAuthorized = (
-    userRole: UserRole,
-    allowedRoles: AllowedRoles,
-): boolean => {
-    if (allowedRoles === 'any') return true;
-    return allowedRoles.includes(userRole);
-};
-
-export const authMiddleware = (allowedRoles: AllowedRoles = 'any') => {
+export const authMiddleware = () => {
     return asyncHandler(
         async (req: Request, res: Response, next: NextFunction) => {
             try {
@@ -64,26 +56,11 @@ export const authMiddleware = (allowedRoles: AllowedRoles = 'any') => {
                     throw new Unauthorized('No token provided');
                 }
 
-                //the issue is from userid and ownerId
-                //decode ownerid from userid
-                const decoded = await TokenService.verifyAuthToken(token);
-                console.log('decoded.userId:', decoded.userId);
+                const payload = await TokenService.verifyAuthToken(token);
+                console.log('decoded.userId:', payload.userId);
 
-                const user = await validateUser(decoded.userId);
+                const user = await validateUser(payload.userId);
                 console.log('Validated user:', user);
-
-                if (
-                    allowedRoles !== 'any' &&
-                    !isRoleAuthorized(user.role, allowedRoles)
-                ) {
-                    console.log('Role check failed:', {
-                        userRole: user.role,
-                        allowedRoles,
-                    });
-                    throw new Unauthorized(
-                        'You do not have permissions to visit this page.',
-                    );
-                }
 
                 req.user = {
                     id: user.id,
@@ -112,19 +89,20 @@ export const authMiddleware = (allowedRoles: AllowedRoles = 'any') => {
 export const getCurrentUser = (model: any) =>
     asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
         const userId = req.user?.id;
-        console.log('User ID from req.user:', userId);
         if (!userId) {
             throw new Unauthorized('User not authenticated');
         }
 
         const currentUser = await model.findById(userId);
-
-        // const currentUser = await model.findById(userId);
         console.log('Found current user:', currentUser);
         if (!currentUser) {
             throw new ResourceNotFound('User not found');
         }
 
         req.currentUser = currentUser;
+        // Conditionally set ownerId if the property exists
+        if (currentUser.ownerId) {
+            req.ownerId = currentUser.ownerId;
+        }
         next();
     });

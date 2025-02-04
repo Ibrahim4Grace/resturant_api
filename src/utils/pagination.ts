@@ -8,6 +8,7 @@ export async function getPaginatedAndCachedResults<T extends Document>(
     res: Response,
     model: Model<T>,
     cacheKeyPrefix: string,
+    filter: Record<string, any> = {},
     projection: Record<string, 1 | 0> = {},
 ): Promise<{ results: T[] } & IPaginationResponse> {
     const page = parseInt(req.query.page as string, 10) || 1;
@@ -27,7 +28,7 @@ export async function getPaginatedAndCachedResults<T extends Document>(
     const totalPages = Math.ceil(totalItems / limit);
 
     const results = await model
-        .find({}, projection)
+        .find(filter, projection)
         .sort({ createdAt: -1 })
         .skip((page - 1) * limit)
         .limit(limit)

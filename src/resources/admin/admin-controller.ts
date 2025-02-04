@@ -16,6 +16,7 @@ import {
     Unauthorized,
     authMiddleware,
     getCurrentUser,
+    checkRole,
 } from '@/middlewares/index';
 
 export default class AdminController implements Controller {
@@ -34,13 +35,11 @@ export default class AdminController implements Controller {
             validateData(validate.register),
             this.register,
         );
-
         this.router.post(
             `${this.authPath}/verify-otp`,
             validateData(validate.verifyOtp),
             this.registrationOTP,
         );
-
         this.router.post(
             `${this.authPath}/forgot`,
             validateData(validate.forgetPwd),
@@ -63,94 +62,109 @@ export default class AdminController implements Controller {
         );
         this.router.get(
             `${this.path}`,
-            authMiddleware(['admin']),
+            authMiddleware(),
             getCurrentUser(AdminModel),
+            checkRole(['admin']),
             this.getAdmins,
         );
         this.router.get(
             `${this.path}/admin/:id`,
-            authMiddleware(['admin']),
+            authMiddleware(),
             getCurrentUser(AdminModel),
+            checkRole(['admin']),
             this.getAdminsById,
         );
         this.router.delete(
             `${this.path}/admin/:id`,
-            authMiddleware(['super_admin']),
+            authMiddleware(),
             getCurrentUser(AdminModel),
+            checkRole(['admin']),
             this.deleteAdminById,
         );
         this.router.get(
             `${this.path}/users`,
-            authMiddleware(['admin']),
+            authMiddleware(),
             getCurrentUser(AdminModel),
+            checkRole(['admin']),
             this.getUsers,
         );
         this.router.get(
             `${this.path}/user/:id`,
-            authMiddleware(['admin']),
+            authMiddleware(),
             getCurrentUser(AdminModel),
+            checkRole(['admin']),
             this.getUsersById,
         );
         this.router.delete(
             `${this.path}/user/:id`,
-            authMiddleware(['super_admin']),
+            authMiddleware(),
             getCurrentUser(AdminModel),
+            checkRole(['admin']),
             this.deleteUserById,
         );
 
         this.router.get(
             `${this.path}/restaurants`,
-            authMiddleware(['admin']),
+            authMiddleware(),
             getCurrentUser(AdminModel),
+            checkRole(['admin']),
             this.getRestaurants,
         );
         this.router.get(
             `${this.path}/restaurant/:id`,
-            authMiddleware(['admin']),
+            authMiddleware(),
             getCurrentUser(AdminModel),
+            checkRole(['admin']),
             this.getRestaurantsById,
         );
         this.router.delete(
             `${this.path}/restaurant/:id`,
-            authMiddleware(['super_admin']),
+            authMiddleware(),
             getCurrentUser(AdminModel),
+            checkRole(['admin']),
             this.deleteRestaurantById,
         );
         this.router.get(
             `${this.path}/riders`,
-            authMiddleware(['admin']),
+            authMiddleware(),
             getCurrentUser(AdminModel),
+            checkRole(['admin']),
             this.getRiders,
         );
         this.router.get(
             `${this.path}/rider/:id`,
-            authMiddleware(['admin']),
+            authMiddleware(),
             getCurrentUser(AdminModel),
+            checkRole(['admin']),
             this.getRidersById,
         );
         this.router.delete(
             `${this.path}/rider/:id`,
-            authMiddleware(['super_admin']),
+            authMiddleware(),
             getCurrentUser(AdminModel),
+            checkRole(['admin']),
             this.deleteRiderById,
         );
 
         this.router.get(
             `${this.path}/orders`,
-            authMiddleware(['admin']),
+            authMiddleware(),
             getCurrentUser(AdminModel),
+            checkRole(['admin']),
             this.getOrders,
         );
         this.router.get(
             `${this.path}/order/:id`,
-            authMiddleware(['admin']),
+            authMiddleware(),
             getCurrentUser(AdminModel),
+            checkRole(['admin']),
             this.getOrdersById,
         );
         this.router.delete(
             `${this.path}/order/:id`,
-            authMiddleware(['super_admin']),
+            authMiddleware(),
             getCurrentUser(AdminModel),
+            checkRole(['admin']),
             this.deleteOrderById,
         );
     }

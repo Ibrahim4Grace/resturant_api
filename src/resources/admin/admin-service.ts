@@ -270,7 +270,7 @@ export class AdminService {
         }
 
         const token = TokenService.createAuthToken({
-            userId: admin._id.toString(),
+            userId: admin._id,
             role: admin.role,
         });
 

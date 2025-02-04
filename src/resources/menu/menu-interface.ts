@@ -6,6 +6,7 @@ export interface IMenu extends Document {
     name: string;
     description?: string;
     price: number;
+    quantity: Number,
     category?: string;
     image: { imageId?: string; imageUrl?: string };
     availability: boolean;
@@ -13,21 +14,13 @@ export interface IMenu extends Document {
     updatedAt?: Date;
 }
 
-export interface MenuItemData {
-    name: string;
-    description?: string;
-    price: number;
-    category?: string;
-    image?: { imageId: string; imageUrl: string };
-}
-
-// Define MenuItem as a plain object
 export interface MenuItem {
     _id: string;
     restaurantId: string;
     name: string;
     description?: string;
     price: number;
+    quantity: Number,
     category?: string;
     image?: { imageId?: string; imageUrl?: string };
     createdAt?: Date;

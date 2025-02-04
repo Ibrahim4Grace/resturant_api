@@ -1,18 +1,16 @@
 import amqplib, { Connection, Channel } from 'amqplib';
-import { log } from '../utils';
+import { log } from '@/utils/index';
 
 let connection: Connection;
 let channel: Channel;
 
 export const connectRabbitMQ = async (): Promise<Channel> => {
     if (connection && channel) {
-        return channel; // Reuse existing connection and channel
+        return channel;
     }
 
     try {
-        connection = await amqplib.connect(
-            process.env.RABBITMQ_URL || 'amqp://localhost',
-        );
+        connection = await amqplib.connect(process.env.RABBITMQ_URL);
         channel = await connection.createChannel();
         log.info('RabbitMQ connected');
         return channel;

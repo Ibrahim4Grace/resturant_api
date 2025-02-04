@@ -101,8 +101,9 @@ export const menuDocs = {
                     500: { description: 'Server error' },
                 },
             },
+
             get: {
-                summary: 'Get all menu items for a restaurant',
+                summary: 'Get  menu by  restaurant Id',
                 tags: ['Menu'],
                 parameters: [
                     {
@@ -166,14 +167,128 @@ export const menuDocs = {
                 },
             },
         },
-        '/menu/{menuItemId}': {
+        '/menu': {
+            get: {
+                summary: 'Get all menu items for a restaurant',
+                tags: ['Menu'],
+                security: [{ BearerAuth: [] }],
+                parameters: [
+                    {
+                        name: 'restaurantId',
+                        in: 'path',
+                        required: true,
+                        schema: {
+                            type: 'string',
+                            example: '65a1b2c3d4e5f6a7b8c9d0e1',
+                        },
+                    },
+                ],
+                responses: {
+                    200: {
+                        description: 'Menu items retrieved successfully',
+                        content: {
+                            'application/json': {
+                                schema: {
+                                    type: 'object',
+                                    properties: {
+                                        status: {
+                                            type: 'number',
+                                            example: 200,
+                                        },
+                                        message: {
+                                            type: 'string',
+                                            example:
+                                                'Menus retrieved successfully',
+                                        },
+                                        data: {
+                                            type: 'object',
+                                            properties: {
+                                                results: {
+                                                    type: 'array',
+                                                    items: {
+                                                        type: 'object',
+                                                        properties: {
+                                                            _id: {
+                                                                type: 'string',
+                                                                example:
+                                                                    '65a1b2c3d4e5f6a7b8c9d0e2',
+                                                            },
+                                                            name: {
+                                                                type: 'string',
+                                                                example:
+                                                                    'Margherita Pizza',
+                                                            },
+                                                            description: {
+                                                                type: 'string',
+                                                                example:
+                                                                    'Classic pizza with tomato sauce, mozzarella, and basil',
+                                                            },
+                                                            price: {
+                                                                type: 'number',
+                                                                example: 10.99,
+                                                            },
+                                                            category: {
+                                                                type: 'string',
+                                                                example:
+                                                                    'Pizza',
+                                                            },
+                                                            image: {
+                                                                type: 'object',
+                                                                properties: {
+                                                                    imageId: {
+                                                                        type: 'string',
+                                                                        example:
+                                                                            'pizza_margherita',
+                                                                    },
+                                                                    imageUrl: {
+                                                                        type: 'string',
+                                                                        example:
+                                                                            'https://example.com/pizza_margherita.jpg',
+                                                                    },
+                                                                },
+                                                            },
+                                                        },
+                                                    },
+                                                },
+                                                pagination: {
+                                                    type: 'object',
+                                                    properties: {
+                                                        currentPage: {
+                                                            type: 'number',
+                                                            example: 1,
+                                                        },
+                                                        totalPages: {
+                                                            type: 'number',
+                                                            example: 10,
+                                                        },
+                                                        limit: {
+                                                            type: 'number',
+                                                            example: 20,
+                                                        },
+                                                    },
+                                                },
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    404: {
+                        description: 'No menu items found for this restaurant',
+                    },
+                    500: { description: 'Server error' },
+                },
+            },
+        },
+        '/menu/{menuId}': {
             patch: {
                 summary: 'Update a menu item',
                 tags: ['Menu'],
                 security: [{ BearerAuth: [] }],
                 parameters: [
                     {
-                        name: 'menuItemId',
+                        name: 'menuId',
                         in: 'path',
                         required: true,
                         schema: {
@@ -273,7 +388,7 @@ export const menuDocs = {
                 security: [{ BearerAuth: [] }],
                 parameters: [
                     {
-                        name: 'menuItemId',
+                        name: 'menuId',
                         in: 'path',
                         required: true,
                         schema: {
