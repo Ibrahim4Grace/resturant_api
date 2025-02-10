@@ -6,8 +6,8 @@ dist/
 tmp/
 temp/
 .env
-src/entity
 src/ormconfig.ts
+src/utils
 yarn.lock
 build
 dist
@@ -16,7 +16,6 @@ requests.rest
 package-lock.json
 docker-compose.yml
 package-lock.json
-docker-compose.yml
 
 .mail.ts.bk
 src/bk

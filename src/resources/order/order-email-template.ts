@@ -3,7 +3,7 @@ import { IUser } from '@/resources/user/user-interface';
 import { EmailData } from '@/types/index';
 
 export const orderConfirmationEmail = (
-    user: IUser,
+    user: Pick<IUser, 'name' | 'email'>,
     newOrder: IOrder,
 ): EmailData => {
     const orderedItemsList = newOrder.items
@@ -22,7 +22,7 @@ export const orderConfirmationEmail = (
     return {
         from: process.env.nodemailerEmail as string,
         to: user.email,
-        subject: 'Order Confirmation',
+        subject: `Order Confirmation - ${newOrder.orderId}`,
         html: `
             <p>Dear ${user.name},</p>
             <p>Your order (#${newOrder.orderId}) has been placed successfully.</p>
@@ -52,13 +52,13 @@ export const orderConfirmationEmail = (
 
 export const orderStatusUpdateEmail = (
     user: IUser,
-    order: IOrder,
+    updatedOrder: IOrder,
 ): EmailData => {
     return {
         from: process.env.nodemailerEmail as string,
         to: user.email,
         subject: 'Order Status Update',
-        html: `<p>Hi ${user.name}, your order (#${order._id}) status has been updated to ${order.status}.</p>
+        html: `<p>Hi ${user.name}, your order (#${updatedOrder._id}) status has been updated to ${updatedOrder.status}.</p>
         <p>Best regards,<br>The Chef-kay restaurant Team</p>`,
     };
 };

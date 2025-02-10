@@ -8,10 +8,10 @@ export interface IOrder extends Document {
     restaurantId: Types.ObjectId;
     items: OrderItem[];
     subtotal: number;
+
     tax: number;
     delivery_fee: number;
     delivery_info: DeliveryInfo;
-    payment?: PaymentInfo;
     createdAt?: Date;
     updatedAt?: Date;
 }
@@ -34,11 +34,16 @@ export interface OrderItem {
 export interface DeliveryInfo {
     address: string;
     riderId?: string;
+    rider_name?: string;
     estimatedDeliveryTime?: Date;
 }
 
-export interface PaymentInfo {
-    method: string; //  (e.g., "credit_card", "cash")
-    status: string; //(e.g., "paid", "pending")
-    transactionId?: string; // Optional transaction ID for the payment
+export interface BaseOrderParams {
+    orderId: string;
+    restaurantId: string;
+}
+
+export interface UpdateOrderStatusParams extends BaseOrderParams {
+    status?: string;
+    rider_name?: string;
 }

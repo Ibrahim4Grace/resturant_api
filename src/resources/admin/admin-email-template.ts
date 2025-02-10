@@ -1,15 +1,16 @@
-import { EmailData } from "@/types/index";
+import { EmailData } from '@/types/index';
+import { config } from '@/config/index';
 
 export const sendOTPByEmail = (
     admin: { name: string; email: string },
     otp: string,
 ): EmailData => {
-    const otpExpiryMillis = Number(process.env.OTP_EXPIRY);
+    const otpExpiryMillis = Number(config.OTP_EXPIRY);
     const otpExpiryHour = otpExpiryMillis / (60 * 60 * 1000);
     return {
         from: process.env.nodemailerEmail as string,
         to: admin.email,
-        subject: "Your 6-digit Verification Code",
+        subject: 'Your 6-digit Verification Code',
         html: `  <p>Dear ${admin.name}, </p>
           <p>Use the 6-digit Code provided below to verify your email:</p>
           <p>Your verification code is: <b>${otp}</b></p>
@@ -26,7 +27,7 @@ export const welcomeEmail = (admin: {
     return {
         from: process.env.nodemailerEmail as string,
         to: admin.email,
-        subject: "Welcome to Chef-kay restaurant",
+        subject: 'Welcome to Chef-kay restaurant',
         html: `  <p>Dear ${admin.name}, </p>
            
         <p>Your account has been successfully created, granting you access to our platform's exciting features.</p>
@@ -42,7 +43,7 @@ export const PasswordResetEmail = (admin: {
     return {
         from: process.env.nodemailerEmail as string,
         to: admin.email,
-        subject: "Password Reset Confirmation",
+        subject: 'Password Reset Confirmation',
         html: `
             <p>Hello ${admin.name},</p>
             <p>Your password has been successfully reset. If you did not perform this action, please contact our support team immediately.</p>

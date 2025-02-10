@@ -10,6 +10,7 @@ import {
     ResourceNotFound,
     ServerError,
     Unauthorized,
+    Forbidden,
 } from '@/middlewares/index';
 
 export const extractToken = (req: Request): string | null => {
@@ -57,7 +58,7 @@ export const authMiddleware = () => {
                 }
 
                 const payload = await TokenService.verifyAuthToken(token);
-                console.log('decoded.userId:', payload.userId);
+                console.log('Full Payload:', payload);
 
                 const user = await validateUser(payload.userId);
                 console.log('Validated user:', user);
@@ -86,7 +87,7 @@ export const authMiddleware = () => {
     );
 };
 
-export const getCurrentUser = (model: any) =>
+export const authorization = (model: any, roles: string[]) =>
     asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
         const userId = req.user?.id;
         if (!userId) {
@@ -104,5 +105,12 @@ export const getCurrentUser = (model: any) =>
         if (currentUser.ownerId) {
             req.ownerId = currentUser.ownerId;
         }
+
+        if (!roles.includes(currentUser.role)) {
+            throw new Forbidden(
+                `Access denied ${currentUser.role} isn't allowed`,
+            );
+        }
+
         next();
     });

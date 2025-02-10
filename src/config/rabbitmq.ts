@@ -1,5 +1,6 @@
 import amqplib, { Connection, Channel } from 'amqplib';
 import { log } from '@/utils/index';
+import { config } from '@/config/index';
 
 let connection: Connection;
 let channel: Channel;
@@ -10,7 +11,7 @@ export const connectRabbitMQ = async (): Promise<Channel> => {
     }
 
     try {
-        connection = await amqplib.connect(process.env.RABBITMQ_URL);
+        connection = await amqplib.connect(config.RABBITMQ_URL);
         channel = await connection.createChannel();
         log.info('RabbitMQ connected');
         return channel;

@@ -9,9 +9,8 @@ import {
     asyncHandler,
     ResourceNotFound,
     authMiddleware,
-    getCurrentUser,
+    authorization,
     validateData,
-    checkRole,
 } from '@/middlewares/index';
 
 export default class MenuController implements Controller {
@@ -27,8 +26,7 @@ export default class MenuController implements Controller {
         this.router.post(
             `${this.path}/:restaurantId`,
             authMiddleware(),
-            getCurrentUser(RestaurantModel),
-            checkRole(['restaurant_owner']),
+            authorization(RestaurantModel, ['restaurant_owner']),
             upload.single('image'),
             validateData(validate.addMenuItemSchema),
             this.addMenuItem,
@@ -36,22 +34,19 @@ export default class MenuController implements Controller {
         this.router.get(
             `${this.path}`,
             authMiddleware(),
-            getCurrentUser(RestaurantModel),
-            checkRole(['restaurant_owner']),
+            authorization(RestaurantModel, ['restaurant_owner']),
             this.fectchAllMenu,
         );
         this.router.get(
             `${this.path}/:menuId`,
             authMiddleware(),
-            getCurrentUser(RestaurantModel),
-            checkRole(['restaurant_owner']),
+            authorization(RestaurantModel, ['restaurant_owner']),
             this.getMenuById,
         );
         this.router.patch(
             `${this.path}/:menuId`,
             authMiddleware(),
-            getCurrentUser(RestaurantModel),
-            checkRole(['restaurant_owner']),
+            authorization(RestaurantModel, ['restaurant_owner']),
             upload.single('image'),
             validateData(validate.addMenuItemSchema),
             this.updateMenuItem,
@@ -59,8 +54,7 @@ export default class MenuController implements Controller {
         this.router.delete(
             `${this.path}/:menuId`,
             authMiddleware(),
-            getCurrentUser(RestaurantModel),
-            checkRole(['restaurant_owner']),
+            authorization(RestaurantModel, ['restaurant_owner']),
             this.deleteMenuItem,
         );
     }

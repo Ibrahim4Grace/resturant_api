@@ -19,8 +19,7 @@ import {
     Forbidden,
     Unauthorized,
     authMiddleware,
-    getCurrentUser,
-    checkRole,
+    authorization,
 } from '@/middlewares/index';
 
 export default class RestaurantController implements Controller {
@@ -76,15 +75,13 @@ export default class RestaurantController implements Controller {
             `${this.path}`,
             authMiddleware(),
             authMiddleware(),
-            getCurrentUser(RestaurantModel),
-            checkRole(['restaurant_owner']),
+            authorization(RestaurantModel, ['restaurant_owner']),
             this.getRestaurant,
         );
         this.router.put(
             `${this.path}`,
             authMiddleware(),
-            getCurrentUser(RestaurantModel),
-            checkRole(['restaurant_owner']),
+            authorization(RestaurantModel, ['restaurant_owner']),
             validateData(validate.updateSchema),
             this.updateRestaurant,
         );

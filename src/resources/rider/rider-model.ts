@@ -1,6 +1,7 @@
 import { Schema, model } from 'mongoose';
 import { IRider } from '@/resources/rider/rider-interface';
 import bcrypt from 'bcryptjs';
+import { config } from '@/config/index';
 import { TokenService } from '@/utils/index';
 import { generateOTP } from '@/utils/index';
 
@@ -106,7 +107,7 @@ riderSchema.methods.generateEmailVerificationOTP = async function (): Promise<{
 
     this.emailVerificationOTP = {
         otp: hashedOTP,
-        expiresAt: new Date(Date.now() + Number(process.env.OTP_EXPIRY)),
+        expiresAt: new Date(Date.now() + Number(config.OTP_EXPIRY)),
         verificationToken,
     };
 

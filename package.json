@@ -4,8 +4,8 @@
     "description": "",
     "main": "index.js",
     "scripts": {
-        "dev": "ts-node-dev --respawn --transpile-only ./src/index",
-        "start": "node dist/src/index.js",
+        "start": "ts-node --transpile-only ./src/index",
+        "dev": "ts-node-dev --respawn --transpile-only --poll ./src/index",
         "build": "tsc",
         "docker": "docker-compose up"
     },
@@ -44,7 +44,6 @@
         "compression": "^1.7.5",
         "cors": "^2.8.5",
         "dotenv": "^16.4.7",
-        "envalid": "^8.0.0",
         "express": "^4.21.2",
         "express-rate-limit": "^7.5.0",
         "handlebars": "^4.7.8",

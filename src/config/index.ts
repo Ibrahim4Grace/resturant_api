@@ -5,3 +5,4 @@ export * from './multer';
 export * from './redis';
 export * from './rabbitmq';
 export * from './database';
+export * from './env-config';

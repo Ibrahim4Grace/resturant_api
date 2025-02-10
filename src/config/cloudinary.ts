@@ -1,11 +1,12 @@
 import { v2 as cloudinary } from 'cloudinary';
+import { config } from '@/config/index';
 
 export class CloudinaryService {
     constructor() {
         cloudinary.config({
-            cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-            api_key: process.env.CLOUDINARY_API_NAME,
-            api_secret: process.env.CLOUDINARY_SECRET_NAME,
+            cloud_name: config.CLOUDINARY_CLOUD_NAME,
+            api_key: config.CLOUDINARY_API_NAME,
+            api_secret: config.CLOUDINARY_SECRET_NAME,
         });
     }
 

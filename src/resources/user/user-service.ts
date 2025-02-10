@@ -67,7 +67,6 @@ export class UserService {
             tax: order.tax,
             delivery_fee: order.delivery_fee,
             delivery_info: order.delivery_info,
-            payment: order.payment,
             createdAt: order.createdAt,
             updatedAt: order.updatedAt,
         };
@@ -282,16 +281,14 @@ export class UserService {
         };
     }
 
-    public async getUserById(userId: string) {
+    public async getUserById(userId: string): Promise<Partial<IUser>> {
         const user = await this.user.findById(userId).lean();
 
         if (!user) {
             throw new ResourceNotFound('User not found');
         }
 
-        return {
-            user: this.sanitizeUser(user),
-        };
+        return this.sanitizeUser(user);
     }
 
     public async updateUserById(

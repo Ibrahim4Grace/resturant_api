@@ -1,4 +1,5 @@
 import { Schema, model } from 'mongoose';
+import { config } from '@/config/index';
 import { IRestaurant } from '@/resources/restaurant/interface';
 import { TokenService } from '@/utils/index';
 import bcrypt from 'bcryptjs';
@@ -98,7 +99,7 @@ restaurantSchema.methods.generateEmailVerificationOTP =
 
         this.emailVerificationOTP = {
             otp: hashedOTP,
-            expiresAt: new Date(Date.now() + Number(process.env.OTP_EXPIRY)),
+            expiresAt: new Date(Date.now() + Number(config.OTP_EXPIRY)),
             verificationToken,
         };
 

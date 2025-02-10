@@ -1,8 +1,9 @@
 import mongoose from 'mongoose';
 import { log } from '@/utils/index';
+import { config } from '@/config/index';
 
 export const initializeDatabase = async (): Promise<void> => {
-    const { MONGODB_URI } = process.env;
+    const { MONGODB_URI } = config;
 
     if (!MONGODB_URI) {
         throw new Error('MongoDB URI is missing!');
@@ -13,6 +14,6 @@ export const initializeDatabase = async (): Promise<void> => {
         log.info('Database connected successfully');
     } catch (err) {
         log.error('Database connection failed:', err);
-        process.exit(1); // Exit the process if the database connection fails
+        process.exit(1);
     }
 };

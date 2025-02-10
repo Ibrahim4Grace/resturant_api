@@ -1,6 +1,7 @@
 import { Schema, model } from 'mongoose';
 import { IAdmin } from '@/resources/admin/admin-interface';
 import { TokenService } from '@/utils/index';
+import { config } from '@/config/index';
 import bcrypt from 'bcryptjs';
 import { generateOTP } from '@/utils/index';
 
@@ -85,7 +86,7 @@ adminSchema.methods.generateEmailVerificationOTP = async function (): Promise<{
 
     this.emailVerificationOTP = {
         otp: hashedOTP,
-        expiresAt: new Date(Date.now() + Number(process.env.OTP_EXPIRY)),
+        expiresAt: new Date(Date.now() + Number(config.OTP_EXPIRY)),
         verificationToken,
     };
 

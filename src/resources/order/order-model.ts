@@ -44,14 +44,10 @@ const orderSchema = new Schema<IOrder>(
                 type: Schema.Types.ObjectId,
                 ref: 'Rider',
             },
+            rider_name: String,
             estimatedDeliveryTime: Date,
         },
         orderId: { type: String, required: true },
-        payment: {
-            method: String,
-            status: String,
-            transactionId: String,
-        },
         status: {
             type: String,
             enum: [

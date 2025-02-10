@@ -22,7 +22,7 @@ const orderStatusSchema = z.object({
 });
 
 const assignRiderSchema = z.object({
-    riderId: z.string(),
+    rider_name: z.string().min(1, 'Rider Name is required'),
 });
 
 export default {
