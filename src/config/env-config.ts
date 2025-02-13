@@ -28,6 +28,7 @@ export const config = {
     CLOUDINARY_SECRET_NAME: process.env.CLOUDINARY_SECRET_NAME,
     PAYSTACK_SECRET_KEY: process.env.PAYSTACK_SECRET_KEY,
     PAYSTACK_URL: process.env.PAYSTACK_URL,
+    PAYMENT_CALLBACK_URL: process.env.PAYMENT_CALLBACK_URL,
     SUPPORT_EMAIL: process.env.SUPPORT_EMAIL,
     SUPPORT_PHONE: process.env.SUPPORT_PHONE,
 } as const;

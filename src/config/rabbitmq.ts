@@ -11,7 +11,9 @@ export const connectRabbitMQ = async (): Promise<Channel> => {
     }
 
     try {
-        connection = await amqplib.connect(config.RABBITMQ_URL);
+        connection = await amqplib.connect(
+            config.RABBITMQ_URL || 'amqp://localhost',
+        );
         channel = await connection.createChannel();
         log.info('RabbitMQ connected');
         return channel;
