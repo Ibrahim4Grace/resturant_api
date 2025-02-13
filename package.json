@@ -4,8 +4,8 @@
     "description": "",
     "main": "index.js",
     "scripts": {
-        "start": "ts-node --transpile-only ./src/index",
-        "dev": "ts-node-dev --respawn --transpile-only ./src/index",
+        "start": "ts-node --transpile-only -r tsconfig-paths/register src/app",
+        "dev": "ts-node-dev --respawn --transpile-only ./src/app",
         "build": "tsc",
         "docker": "docker-compose up"
     },
@@ -28,6 +28,7 @@
         "nodemon": "^3.1.9",
         "prettier": "^3.4.2",
         "tsc-watch": "^6.2.1",
+        "tsconfig-paths": "^4.2.0",
         "typescript": "^5.7.2"
     },
     "dependencies": {
@@ -42,6 +43,7 @@
         "bcryptjs": "^2.4.3",
         "cloudinary": "^2.5.1",
         "compression": "^1.7.5",
+        "config": "^3.3.12",
         "cors": "^2.8.5",
         "dotenv": "^16.4.7",
         "express": "^4.21.2",
