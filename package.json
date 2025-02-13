@@ -6,7 +6,8 @@
     "scripts": {
         "start": "node -r module-alias/register dist/index",
         "dev": "ts-node-dev --respawn --transpile-only ./src/index",
-        "build": "tsc",
+        "build": "tsc && tsc-alias",
+        "postinstall": "tsc && tsc-alias",
         "docker": "docker-compose up"
     },
     "keywords": [],
