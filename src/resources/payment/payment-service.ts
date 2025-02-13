@@ -62,6 +62,7 @@ export class PaymentService {
                 restaurant_id: order.restaurantId,
                 user_id: order.userId,
             },
+            callback_url: config.PAYMENT_CALLBACK_URL,
         };
 
         try {
