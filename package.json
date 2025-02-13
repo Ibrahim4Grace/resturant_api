@@ -4,7 +4,7 @@
     "description": "",
     "main": "index.js",
     "scripts": {
-        "start": "ts-node --transpile-only -r tsconfig-paths/register src/index",
+        "start": "node -r module-alias/register dist/index",
         "dev": "ts-node-dev --respawn --transpile-only ./src/index",
         "build": "tsc",
         "docker": "docker-compose up"
@@ -28,7 +28,6 @@
         "nodemon": "^3.1.9",
         "prettier": "^3.4.2",
         "tsc-watch": "^6.2.1",
-        "tsconfig-paths": "^4.2.0",
         "typescript": "^5.7.2"
     },
     "dependencies": {
