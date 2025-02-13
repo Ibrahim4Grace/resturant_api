@@ -2,14 +2,14 @@
 .vscode/
 node_modules/
 build/
-dist/
+# dist/
 tmp/
 temp/
 .env
 src/ormconfig.ts
 yarn.lock
 build
-dist
+# dist
 issueformat.md
 requests.rest
 package-lock.json
