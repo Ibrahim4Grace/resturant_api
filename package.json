@@ -2,14 +2,12 @@
     "name": "chef-kay",
     "version": "1.0.0",
     "description": "",
-    "main": "index.js",
+    "main": "dist/index.js",
     "scripts": {
-        "start": "node -r module-alias/register ./dist/index",
+        "start": "node -r module-alias/register dist/index",
         "dev": "ts-node-dev --respawn --transpile-only ./src/index",
-        "build": "tsc && tsc-alias",
-        "postinstall": "tsc && tsc-alias",
-        "docker": "docker-compose up",
-        "vercel-build": "echo hello"
+        "build": "tsc",
+        "docker": "docker-compose up"
     },
     "keywords": [],
     "author": "",
