@@ -1,9 +1,8 @@
 import mongoose from 'mongoose';
 import { log } from '@/utils/index';
-import { config } from '@/config/index';
 
 export const initializeDatabase = async (): Promise<void> => {
-    const { MONGODB_URI } = config;
+    const { MONGODB_URI } = process.env;
 
     if (!MONGODB_URI) {
         throw new Error('MongoDB URI is missing!');
