@@ -88,12 +88,18 @@ export default class UserController implements Controller {
             authorization(UserModel, ['user']),
             this.deleteAddress,
         );
-        // this.router.get(
-        //     `${this.path}/:id/orders`,
-        //     authMiddleware(),
-        //       authorization(UserModel, ['user']),
-        //     asyncHandler(this.getUserOrders),
-        // );
+        this.router.get(
+            `${this.path}/orders`,
+            authMiddleware(),
+            authorization(UserModel, ['user']),
+            this.getUserOrders,
+        );
+        this.router.get(
+            `${this.path}/orders/:orderId`,
+            authMiddleware(),
+            authorization(UserModel, ['user']),
+            this.getUserOrder,
+        );
     }
 
     private register = asyncHandler(
@@ -305,12 +311,32 @@ export default class UserController implements Controller {
     );
 
     private getUserOrders = asyncHandler(
-        async (req: Request, res: Response): Promise<void> => {
+        async (req: Request, res: Response) => {
             const userId = req.currentUser?._id;
             if (!userId) {
                 throw new ResourceNotFound('User not found');
             }
-            const orders = await this.userService.getUserOrders(userId);
+
+            const orders = await this.userService.getUserOrders(
+                userId.toString(),
+            );
+            return sendJsonResponse(
+                res,
+                200,
+                'Orders retrieved successfully',
+                orders,
+            );
+        },
+    );
+
+    private getUserOrder = asyncHandler(
+        async (req: Request, res: Response): Promise<void> => {
+            const userId = req.currentUser?._id;
+            const orderId = req.params.orderId;
+            if (!userId) {
+                throw new ResourceNotFound('User not foundw');
+            }
+            const orders = await this.userService.getUserOrder(userId, orderId);
 
             sendJsonResponse(res, 200, 'Orders retrieved successfully', orders);
         },

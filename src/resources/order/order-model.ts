@@ -47,7 +47,7 @@ const orderSchema = new Schema<IOrder>(
             rider_name: String,
             estimatedDeliveryTime: Date,
         },
-        orderId: { type: String, required: true },
+        order_number: { type: String, required: true },
         status: {
             type: String,
             enum: [

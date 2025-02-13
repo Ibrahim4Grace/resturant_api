@@ -1,182 +1,203 @@
-// import axios from 'axios';
-// import { config } from '@/config/index';
-// import PaymentModel from '@/resources/payment/payment-model';
-// import { OrderService } from '@/resources/order/order-service';
-// import { EmailQueueService } from '@/utils/index';
-// import {
-//     PaymentInitiateDTO,
-//     PaymentResponse,
-//     IPayment,
-// } from '@/resources/payment/payment-interface';
-// import {
-//     orderConfirmationEmail,
-//     orderStatusUpdateEmail,
-//     orderCancellationEmail,
-//     riderAssignedEmail,
-// } from '@/resources/order/order-email-template';
+import axios from 'axios';
+import { config } from '@/config/index';
+import crypto from 'crypto';
+import PaymentModel from '@/resources/payment/payment-model';
+import { OrderService } from '@/resources/order/order-service';
+import { UserService } from '@/resources/user/user-service';
+import { IOrder } from '@/resources/order/order-interface';
+import { EmailQueueService } from '@/utils/index';
+import { ServerError, ResourceNotFound } from '@/middlewares/index';
+import { orderConfirmationEmail } from '@/resources/order/order-email-template';
+import {
+    PaystackResponse,
+    PaymentResponse,
+    IPayment,
+    paymentProcess,
+} from '@/resources/payment/payment-interface';
 
-// import { ServerError, BadRequest } from '@/middlewares/index';
+export class PaymentService {
+    private readonly PAYSTACK_SECRET = config.PAYSTACK_SECRET_KEY;
+    private readonly PAYSTACK_URL = config.PAYSTACK_URL;
+    private paymentModel = PaymentModel;
 
-// export class PaymentService {
-//     private paymentModel = PaymentModel;
-//     private orderService = new OrderService();
-//     private readonly paystackBaseUrl = 'https://api.paystack.co';
-//     private readonly secretKey = config.PAYSTACK_SECRET_KEY;
+    constructor(
+        private orderService: OrderService,
+        private userService: UserService,
+    ) {}
 
-//     private async handleCashPayment(
-//         orderId: string,
-//         userId: string,
-//         amount: number,
-//     ): Promise<IPayment> {
-//         const payment = await PaymentModel.create({
-//             orderId,
-//             userId,
-//             amount,
-//             method: 'cash',
-//             status: 'pending',
-//         });
+    private async processCashOnDelivery(
+        payment: IPayment,
+        order: IOrder,
+    ): Promise<PaymentResponse> {
+        await this.paymentModel.findByIdAndUpdate(payment._id, {
+            status: 'processing',
+        });
 
-//         await this.orderService.updateOrderStatus(orderId, {
-//             status: 'processing',
-//             method: {
-//                 method: 'cash',
-//                 status: 'pending',
-//             },
-//         });
+        await this.orderService.updateOrderStatus({
+            orderId: order._id.toString(),
+            restaurantId: order.restaurantId.toString(),
+            status: 'processing',
+        });
 
-//         return payment;
-//     }
+        return {
+            success: true,
+            message: 'Order confirmed for cash on delivery',
+            data: {
+                reference: order.order_number,
+            },
+        };
+    }
 
-//     private async initializePaystackPayment(
-//         email: string,
-//         amount: number,
-//     ): Promise<PaymentInitialization> {
-//         const response = await axios.post(
-//             `${this.paystackBaseUrl}/transaction/initialize`,
-//             { email, amount: amount * 100 }, // Paystack expects amount in kobo
-//             { headers: { Authorization: `Bearer ${this.secretKey}` } },
-//         );
+    private async processPaystackPayment(
+        payment: IPayment,
+        order: IOrder,
+        userEmail: string,
+    ): Promise<PaymentResponse> {
+        const paymentData = {
+            amount: order.total_price * 100,
+            email: userEmail,
+            reference: order.order_number,
+            metadata: {
+                order_id: order._id,
+                restaurant_id: order.restaurantId,
+                user_id: order.userId,
+            },
+        };
 
-//         return {
-//             authorizationUrl: response.data.data.authorization_url,
-//             reference: response.data.data.reference,
-//         };
-//     }
+        try {
+            const response = await axios.post<PaystackResponse>(
+                this.PAYSTACK_URL,
+                paymentData,
+                {
+                    headers: {
+                        Authorization: `Bearer ${this.PAYSTACK_SECRET}`,
+                        'Content-Type': 'application/json',
+                    },
+                },
+            );
 
-//     private async handlePaystackPayment(
-//         orderId: string,
-//         userId: string,
-//         amount: number,
-//         email: string,
-//     ): Promise<{ authorizationUrl: string }> {
-//         const paystackResponse = await this.initializePaystackPayment(
-//             email,
-//             amount,
-//         );
+            await this.paymentModel.findByIdAndUpdate(payment._id, {
+                transactionDetails: {
+                    reference: response.data.data.reference,
+                    authorizationUrl: response.data.data.authorization_url,
+                },
+            });
 
-//         await PaymentModel.create({
-//             orderId,
-//             userId,
-//             amount,
-//             method: 'paystack',
-//             status: 'pending',
-//             transactionDetails: {
-//                 provider: 'paystack',
-//                 reference: paystackResponse.reference,
-//                 authorizationUrl: paystackResponse.authorizationUrl,
-//             },
-//         });
+            return {
+                success: true,
+                message: 'Payment initialized successfully',
+                data: {
+                    authorization_url: response.data.data.authorization_url,
+                    reference: response.data.data.reference,
+                },
+            };
+        } catch (error) {
+            await this.paymentModel.findByIdAndUpdate(payment._id, {
+                status: 'failed',
+            });
+            throw new ServerError('Payment initialization failed');
+        }
+    }
 
-//         await this.orderService.updateOrderStatus(orderId, {
-//             payment: {
-//                 method: 'paystack',
-//                 status: 'pending',
-//                 transactionId: paystackResponse.reference,
-//             },
-//         });
+    private async processSuccessfulPayment(data: any): Promise<void> {
+        await this.paymentModel.findOneAndUpdate(
+            { 'transactionDetails.reference': data.reference },
+            { status: 'completed' },
+        );
 
-//         return { authorizationUrl: paystackResponse.authorizationUrl };
-//     }
+        await this.orderService.updateOrderStatus({
+            orderId: data.metadata.order_id,
+            restaurantId: data.metadata.restaurant_id,
+            status: 'processing',
+        });
 
-//     private async handleSuccessfulCharge(reference: string): Promise<void> {
-//         const verification = await this.verifyPayment(reference);
+        // Send email confirmation
+        const order = await this.orderService.getOrderById(
+            data.metadata.order_id,
+        );
+        const user = await this.userService.getUserById(
+            order.userId.toString(),
+        );
 
-//         if (verification.status === 'completed') {
-//             const order =
-//                 await this.orderService.findByPaymentReference(reference);
+        if (user && order) {
+            const emailOptions = orderConfirmationEmail(
+                { name: user.name, email: user.email },
+                order as IOrder,
+            );
+            await EmailQueueService.addEmailToQueue(emailOptions);
+        }
+    }
 
-//             if (order) {
-//                 await this.orderService.updateOrderStatus(order._id, {
-//                     status: 'processing',
-//                     'payment.status': 'completed',
-//                 });
+    async processPayment(params: paymentProcess): Promise<PaymentResponse> {
+        const { userId, orderId, paymentMethod, userEmail } = params;
+        const order = await this.userService.getUserOrder(userId, orderId);
+        if (!order) {
+            throw new ResourceNotFound('Order not found');
+        }
 
-//                 // Send confirmation email
-//                 const user = await this.userService.getUserById(
-//                     order.userId.toString(),
-//                 );
-//                 const emailOptions = orderConfirmationEmail(
-//                     { name: user.name, email: user.email },
-//                     order,
-//                 );
-//                 await EmailQueueService.addEmailToQueue(emailOptions);
-//             }
-//         }
-//     }
+        const payment = await this.paymentModel.create({
+            userId,
+            orderId: order._id.toString(),
+            amount: order.total_price,
+            paymentMethod,
+            status: 'processing',
+        });
 
-//     private verifyPaystackSignature(
-//         secret: string,
-//         body: any,
-//         signature: string,
-//     ): boolean {
-//         // Implement signature verification logic
-//         return true; // Placeholder
-//     }
+        if (paymentMethod === 'cash_on_delivery') {
+            return await this.processCashOnDelivery(payment, order as IOrder);
+        }
 
-//     async initiatePayment(
-//         paymentData: PaymentInitiateDTO,
-//     ): Promise<PaymentResponse> {
-//         try {
-//             const { orderId, userId, amount, method, email } = paymentData;
+        return await this.processPaystackPayment(
+            payment,
+            order as IOrder,
+            userEmail,
+        );
+    }
 
-//             if (method === 'cash') {
-//                 return await this.handleCashPayment(paymentData);
-//             }
+    async verifyPayment(reference: string): Promise<boolean> {
+        try {
+            const response = await axios.get(
+                `https://api.paystack.co/transaction/verify/${reference}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${this.PAYSTACK_SECRET}`,
+                    },
+                },
+            );
 
-//             if (method === 'paystack') {
-//                 return await this.handlePaystackPayment(paymentData);
-//             }
-//             throw new BadRequest('Invalid payment method');
-//         } catch (error) {
-//             throw new ServerError('Payment initialization failed');
-//         }
-//     }
+            return response.data.data.status === 'success';
+        } catch (error) {
+            console.error('Payment verification error:', error);
+            return false;
+        }
+    }
+    private verifyWebhookSignature(data: any, signature: string): boolean {
+        const hash = crypto
+            .createHmac('sha512', this.PAYSTACK_SECRET)
+            .update(JSON.stringify(data))
+            .digest('hex');
 
-//     async handleWebhook(
-//         event: string,
-//         data: any,
-//         signature: string,
-//     ): Promise<void> {
-//         try {
-//             const secret = config.PAYSTACK_SECRET_KEY;
-//             const signature = req.headers['x-paystack-signature'];
+        return hash === signature;
+    }
 
-//             if (
-//                 !signature ||
-//                 !this.verifyPaystackSignature(secret, req.body, signature)
-//             ) {
-//                 throw new Unauthorized('Invalid signature');
-//             }
+    async handleWebhookEvent(
+        event: string,
+        data: any,
+        signature: string,
+    ): Promise<boolean> {
+        const isValidSignature = this.verifyWebhookSignature(data, signature);
+        if (!isValidSignature) {
+            return false;
+        }
 
-//             const { event, data } = req.body;
+        if (event === 'charge.success') {
+            const isVerified = await this.verifyPayment(data.reference);
+            if (isVerified) {
+                await this.processSuccessfulPayment(data);
+                return true;
+            }
+        }
 
-//             if (event === 'charge.success') {
-//                 await this.handleSuccessfulCharge(data.reference);
-//             }
-
-//             res.status(200).json({ status: 'success' });
-//         } catch (error) {
-//             throw new ServerError('Webhook processing failed');
-//         }
-//     }
-// }
+        return false;
+    }
+}

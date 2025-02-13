@@ -23,7 +23,6 @@ export async function getPaginatedAndCachedResults<T extends Document>(
         return cachedResults;
     }
 
-    // Ensure `res.paginatedResults` exists
     const totalItems = await model.countDocuments({});
     const totalPages = Math.ceil(totalItems / limit);
 

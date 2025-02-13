@@ -29,20 +29,39 @@ export class UserService {
     private user = UserModel;
     private order = OrderModel;
 
-    private async checkDuplicateEmail(email: string): Promise<void> {
-        const existingUser = await this.user.findOne({ email });
+    private async checkDuplicate(
+        field: 'email' | 'phone',
+        value: string,
+    ): Promise<void> {
+        const existingUser = await this.user.findOne({ [field]: value });
         if (existingUser) {
-            throw new Conflict('Email already registered!');
+            throw new Conflict(
+                `${field === 'email' ? 'Email' : 'Phone Number'} already registered!`,
+            );
         }
     }
-    private async checkDuplicatePhone(phone: string): Promise<void> {
-        const existingUser = await this.user.findOne({ phone });
-        if (existingUser) {
-            throw new Conflict('Phone Number already registered!');
-        }
+    private async findUserByEmail(email: string) {
+        return this.user.findOne({
+            email: email.toLowerCase().trim(),
+        });
     }
 
-    private sanitizeUser(user: IUser): Partial<IUser> {
+    private async findUserById(userId: string): Promise<IUser> {
+        const user = await this.user.findById(userId).lean();
+        if (!user) {
+            throw new ResourceNotFound('User not found');
+        }
+        return user;
+    }
+
+    private async findUserByVerificationToken(verificationToken: string) {
+        return this.user.findOne({
+            'emailVerificationOTP.verificationToken': verificationToken,
+            'emailVerificationOTP.expiresAt': { $gt: new Date() },
+        });
+    }
+
+    private userData(user: IUser): Partial<IUser> {
         return {
             _id: user._id,
             name: user.name,
@@ -55,9 +74,9 @@ export class UserService {
         };
     }
 
-    private sanitizeOrder(order: IOrder): Partial<IOrder> {
+    private orderData(order: IOrder): Partial<IOrder> {
         return {
-            orderId: order.orderId,
+            _id: order._id,
             status: order.status,
             total_price: order.total_price,
             userId: order.userId,
@@ -76,8 +95,8 @@ export class UserService {
         userData: RegisterUserto,
     ): Promise<RegistrationResponse> {
         await Promise.all([
-            this.checkDuplicateEmail(userData.email),
-            this.checkDuplicatePhone(userData.phone),
+            this.checkDuplicate('email', userData.email),
+            this.checkDuplicate('phone', userData.phone),
         ]);
 
         const user = await this.user.create({
@@ -93,7 +112,7 @@ export class UserService {
         await EmailQueueService.addEmailToQueue(emailOptions);
 
         return {
-            user: this.sanitizeUser(user),
+            user: this.userData(user),
             verificationToken: verificationToken,
         };
     }
@@ -139,9 +158,7 @@ export class UserService {
     }
 
     public async forgotPassword(email: string): Promise<string> {
-        const user = await this.user.findOne({
-            email: email.toLowerCase().trim(),
-        });
+        const user = await this.findUserByEmail(email);
         if (!user) {
             throw new ResourceNotFound('User not found');
         }
@@ -160,11 +177,7 @@ export class UserService {
         verificationToken: string,
         otp: string,
     ): Promise<IUser> {
-        const user = await this.user.findOne({
-            'emailVerificationOTP.verificationToken': verificationToken,
-            'emailVerificationOTP.expiresAt': { $gt: new Date() },
-        });
-
+        const user = await this.findUserByVerificationToken(verificationToken);
         if (!user) {
             throw new BadRequest('Invalid or expired reset token');
         }
@@ -192,11 +205,7 @@ export class UserService {
         verificationToken: string,
         newPassword: string,
     ): Promise<void> {
-        const user = await this.user.findOne({
-            'emailVerificationOTP.verificationToken': verificationToken,
-            'emailVerificationOTP.expiresAt': { $gt: new Date() },
-        });
-
+        const user = await this.findUserByVerificationToken(verificationToken);
         if (!user) {
             throw new BadRequest('Invalid or expired reset token');
         }
@@ -237,7 +246,7 @@ export class UserService {
     }
 
     public async login(credentials: LoginCredentials): Promise<loginResponse> {
-        const user = await this.user.findOne({ email: credentials.email });
+        const user = await this.findUserByEmail(credentials.email);
         if (!user) {
             throw new ResourceNotFound('Invalid email or password');
         }
@@ -276,19 +285,14 @@ export class UserService {
         });
 
         return {
-            user: this.sanitizeUser(user),
+            user: this.userData(user),
             token,
         };
     }
 
     public async getUserById(userId: string): Promise<Partial<IUser>> {
-        const user = await this.user.findById(userId).lean();
-
-        if (!user) {
-            throw new ResourceNotFound('User not found');
-        }
-
-        return this.sanitizeUser(user);
+        const user = await this.findUserById(userId);
+        return this.userData(user);
     }
 
     public async updateUserById(
@@ -308,10 +312,7 @@ export class UserService {
         userId: string,
         addressData: Address,
     ): Promise<IUser> {
-        const user = await this.user.findById(userId);
-        if (!user) {
-            throw new ResourceNotFound('User not found');
-        }
+        const user = await this.findUserById(userId);
 
         user.addresses = user.addresses || [];
         const isDuplicate = user.addresses.some(
@@ -352,10 +353,7 @@ export class UserService {
         userId: string,
         addressId: string,
     ): Promise<void> {
-        const user = await this.user.findById(userId);
-        if (!user) {
-            throw new ResourceNotFound('User not found');
-        }
+        await this.findUserById(userId);
 
         const result = await this.user.findOneAndUpdate(
             { _id: userId, 'addresses._id': addressId },
@@ -369,17 +367,34 @@ export class UserService {
     }
 
     public async getUserOrders(userId: string): Promise<Partial<IOrder>[]> {
-        const user = await this.user.findById(userId);
-        if (!user) {
-            throw new ResourceNotFound('User not found');
-        }
+        await this.findUserById(userId);
 
-        // Find and return all orders for the user
         const orders = await this.order
             .find({ userId })
             .sort({ createdAt: -1 })
             .lean();
 
-        return orders.map((order) => this.sanitizeOrder(order));
+        return orders.map((order) => this.orderData(order));
+    }
+
+    public async getUserOrder(
+        userId: string,
+        orderId: string,
+    ): Promise<Partial<IOrder>> {
+        const order = await this.order
+            .findOne({
+                _id: orderId,
+                userId: userId,
+            })
+            .lean();
+        console.log('Finding order with:', { _id: orderId, userId });
+
+        if (!order) {
+            throw new ResourceNotFound(
+                'Order not found or does not belong to this user',
+            );
+        }
+
+        return this.orderData(order);
     }
 }

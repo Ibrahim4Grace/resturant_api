@@ -1,4 +1,4 @@
-import { Router, Request, Response, NextFunction } from 'express';
+import { Router, Request, Response } from 'express';
 import { Controller } from '@/types/index';
 import validate from '@/resources/order/order-validation';
 import { OrderService } from '@/resources/order/order-service';
@@ -9,7 +9,6 @@ import {
     sendJsonResponse,
     asyncHandler,
     ResourceNotFound,
-    Unauthorized,
     authMiddleware,
     authorization,
 } from '@/middlewares/index';
@@ -58,18 +57,12 @@ export default class OrderController implements Controller {
             this.getOrderById,
         );
 
-        // this.router.get(
-        //     `${this.path}`,
-        //     authMiddleware(),
-        //     authorization(UserModel, ['user']),
-        //     this.getUserOrders,
-        // );
-        // this.router.get(
-        //     `${this.path}/restaurant/:restaurantId`,
-        //     authMiddleware(),
-        //     authorization(UserModel, ['user']),
-        //     this.getOrdersByRestaurant,
-        // );
+        this.router.get(
+            `${this.path}`,
+            authMiddleware(),
+            authorization(RestaurantModel, ['restaurant_owner']),
+            this.getUsersOrders,
+        );
     }
 
     private placeOrder = asyncHandler(async (req: Request, res: Response) => {
@@ -79,7 +72,6 @@ export default class OrderController implements Controller {
         }
 
         const orderData = req.body;
-        console.log('controller orderData', orderData);
         const order = await this.orderService.placeOrder(userId, orderData);
 
         sendJsonResponse(res, 201, 'Order placed successfully', order);
@@ -150,14 +142,18 @@ export default class OrderController implements Controller {
         sendJsonResponse(res, 200, 'Order retrieved successfully', order);
     });
 
-    private getUserOrders = asyncHandler(
+    private getUsersOrders = asyncHandler(
         async (req: Request, res: Response) => {
-            const userId = req.currentUser?._id;
-            if (!userId) {
+            const restaurantId = req.currentUser?._id;
+            if (!restaurantId) {
                 throw new ResourceNotFound('Restaurant owner not found');
             }
 
-            const orders = await this.orderService.getUserOrders(userId);
+            const orders = await this.orderService.fecthUserOrders(
+                req,
+                res,
+                restaurantId,
+            );
 
             sendJsonResponse(
                 res,
@@ -167,19 +163,4 @@ export default class OrderController implements Controller {
             );
         },
     );
-
-    // private getOrdersByRestaurant = asyncHandler(
-    //     async (req: Request, res: Response) => {
-    //         const restaurant = req.params.restaurantId;
-    //         const restaurantId = req.currentUser?._id;
-    //         if (!restaurantId) {
-    //             throw new ResourceNotFound('Restaurant owner not found');
-    //         }
-    //         const orders = await this.orderService.getOrdersByRestaurant({
-    //             restaurant,
-    //             restaurantId,
-    //         });
-    //         sendJsonResponse(res, 200, 'Orders retrieved successfully', orders);
-    //     },
-    // );
 }

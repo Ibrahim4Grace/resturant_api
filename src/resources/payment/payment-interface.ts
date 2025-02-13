@@ -5,11 +5,9 @@ export interface IPayment {
     userId: Types.ObjectId;
     orderId: string;
     amount: number;
-    reference?: string;
-    status: 'pending' | 'completed' | 'failed';
-    method: PaymentMethod;
+    status: 'processing' | 'completed' | 'failed';
+    paymentMethod: 'paystack' | 'cash_on_delivery';
     transactionDetails?: {
-        provider: string;
         reference: string;
         authorizationUrl?: string;
     };
@@ -17,8 +15,6 @@ export interface IPayment {
     updatedAt?: Date;
 }
 
-export type PaymentMethod = 'paystack' | 'cash';
-export type PaymentStatus = 'pending' | 'processing' | 'completed' | 'failed';
 export type OrderStatus =
     | 'pending'
     | 'processing'
@@ -27,24 +23,28 @@ export type OrderStatus =
     | 'delivered'
     | 'cancelled';
 
-export interface PaymentInitiateDTO {
-    orderId: string;
-    userId: string;
-    amount: number;
-    method: PaymentMethod;
-    email?: string;
+export interface PaystackResponse {
+    status: boolean;
+    message: string;
+    data: {
+        authorization_url: string;
+        access_code: string;
+        reference: string;
+    };
 }
 
 export interface PaymentResponse {
-    id: string;
-    status: PaymentStatus;
-    method: PaymentMethod;
-    amount: number;
-    authorizationUrl?: string;
-    reference?: string;
+    success: boolean;
+    message: string;
+    data?: {
+        authorization_url?: string;
+        reference?: string;
+    };
 }
 
-export interface PaymentInitialization {
-    authorizationUrl: string;
-    reference: string;
+export interface paymentProcess {
+    userId: string;
+    orderId: string;
+    paymentMethod: string;
+    userEmail: string;
 }

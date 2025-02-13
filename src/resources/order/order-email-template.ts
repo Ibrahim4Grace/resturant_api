@@ -4,9 +4,9 @@ import { EmailData } from '@/types/index';
 
 export const orderConfirmationEmail = (
     user: Pick<IUser, 'name' | 'email'>,
-    newOrder: IOrder,
+    order: IOrder,
 ): EmailData => {
-    const orderedItemsList = newOrder.items
+    const orderedItemsList = order.items
         .map(
             (item) => `
         <tr>
@@ -22,10 +22,10 @@ export const orderConfirmationEmail = (
     return {
         from: process.env.nodemailerEmail as string,
         to: user.email,
-        subject: `Order Confirmation - ${newOrder.orderId}`,
+        subject: `Order Confirmation - ${order.order_number}`,
         html: `
             <p>Dear ${user.name},</p>
-            <p>Your order (#${newOrder.orderId}) has been placed successfully.</p>
+            <p>Your order (#${order.order_number}) has been placed successfully.</p>
             <p>Here are the details of your order:</p>
             <table border="1" cellpadding="5" cellspacing="0">
                 <thead>
@@ -40,10 +40,10 @@ export const orderConfirmationEmail = (
                     ${orderedItemsList}
                 </tbody>
             </table>
-            <p><strong>Subtotal:</strong> $${newOrder.subtotal.toFixed(2)}</p>
-            <p><strong>Tax:</strong> $${newOrder.tax.toFixed(2)}</p>
-            <p><strong>Delivery Fee:</strong> $${newOrder.delivery_fee.toFixed(2)}</p>
-            <p><strong>Total Price:</strong> $${newOrder.total_price.toFixed(2)}</p>
+            <p><strong>Subtotal:</strong> $${order.subtotal.toFixed(2)}</p>
+            <p><strong>Tax:</strong> $${order.tax.toFixed(2)}</p>
+            <p><strong>Delivery Fee:</strong> $${order.delivery_fee.toFixed(2)}</p>
+            <p><strong>Total Price:</strong> $${order.total_price.toFixed(2)}</p>
             <p>Thank you for choosing us!</p>
             <p>Best regards,<br>The Chef-kay Restaurant Team</p>
         `,

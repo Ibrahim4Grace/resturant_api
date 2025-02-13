@@ -1,96 +1,93 @@
-// import express, { Router, Request, Response } from 'express';
-// import { PaymentService } from '@/resources/payment/payment-service';
-// import { config } from '@/config/index';
-// import { OrderService } from '@/resources/order/order-service';
-// import { UserService } from '@/resources/user/user-service';
-// import { PaystackSignature } from '@/resources/payment/payment-utils';
-// import { EmailQueueService } from '@/utils/index';
-// import { orderConfirmationEmail } from '@/resources/order/order-email-template';
-// import { Controller } from '@/types/index';
-// import UserModel from '@/resources/user/user-model';
-// import {
-//     Unauthorized,
-//     ServerError,
-//     asyncHandler,
-//     ResourceNotFound,
-//     authMiddleware,
-//     authorization,
-// } from '@/middlewares/index';
+import express, { Router, Request, Response } from 'express';
+import { PaymentService } from '@/resources/payment/payment-service';
+import { OrderService } from '@/resources/order/order-service';
+import { UserService } from '@/resources/user/user-service';
+import { paymentProcess } from '@/resources/payment/payment-interface';
+import { Controller } from '@/types/index';
+import UserModel from '@/resources/user/user-model';
+import validate from '@/resources/payment/payment-validation';
+import {
+    validateData,
+    asyncHandler,
+    ResourceNotFound,
+    authMiddleware,
+    authorization,
+    sendJsonResponse,
+} from '@/middlewares/index';
 
-// export default class PaymentController implements Controller {
-//     public path = '/payment';
-//     public router = Router();
-//     private paymentService: PaymentService;
-//     private orderService: OrderService;
-//     private userService: UserService;
+export default class PaymentController implements Controller {
+    public path = '/payments';
+    public router = Router();
+    private paymentService: PaymentService;
+    private orderService: OrderService;
+    private userService: UserService;
 
-//     constructor() {
-//         this.paymentService = new PaymentService(this.orderService);
-//         this.orderService = new OrderService();
-//         this.userService = new UserService();
-//         this.initializeRoutes();
-//     }
+    constructor() {
+        this.initializeRoutes();
+        this.orderService = new OrderService();
+        this.userService = new UserService();
+        this.paymentService = new PaymentService(
+            this.orderService,
+            this.userService,
+        );
+    }
 
-//     private initializeRoutes(): void {
-//         this.router.post(
-//             `${this.path}/initialize`,
-//             authMiddleware(),
-//      authorization(UserModel, ['user']),
+    private initializeRoutes(): void {
+        this.router.post(
+            `${this.path}/initialize`,
+            authMiddleware(),
+            authorization(UserModel, ['user']),
+            validateData(validate.paymentSchema),
+            this.processPayment,
+        );
 
-//             this.initiatePayment,
-//         );
+        this.router.post(
+            `${this.path}/webhook`,
+            express.raw({ type: 'application/json' }),
+            this.handleWebhook,
+        );
+    }
 
-//         this.router.post(
-//             `${this.path}/webhook`,
-//             express.raw({ type: 'application/json' }),
-//             this.handleWebhook,
-//         );
-//     }
+    private processPayment = asyncHandler(
+        async (req: Request, res: Response) => {
+            const { orderId, paymentMethod } = req.body;
+            const userId = req.currentUser?._id;
 
-//     private initiatePayment = asyncHandler(
-//         async (req: Request, res: Response) => {
-//             const userId = req.currentUser?._id;
-//             if (!userId) {
-//                 throw new ResourceNotFound('User not found');
-//             }
+            if (!userId) {
+                throw new ResourceNotFound('User not found');
+            }
+            console.log('Request Body:', req.body);
 
-//             const { orderId, method, email } = req.body;
+            const params: paymentProcess = {
+                userId: userId.toString(),
+                orderId,
+                paymentMethod,
+                userEmail: req.currentUser.email,
+            };
 
-//             if (!['paystack', 'cash'].includes(method)) {
-//                 throw new Error('Invalid payment method');
-//             }
+            const result = await this.paymentService.processPayment(params);
 
-//             const order = await this.orderService.getOrderById(orderId);
-//             if (!order) {
-//                 throw new ResourceNotFound('Order not found');
-//             }
+            return sendJsonResponse(res, 200, result.message, result.data);
+        },
+    );
 
-//             if (order.payment?.status === 'completed') {
-//                 throw new Error('Order has already been paid for');
-//             }
+    private handleWebhook = asyncHandler(
+        async (req: Request, res: Response) => {
+            const { event, data } = req.body;
+            const signature = req.headers['x-paystack-signature'] as string;
 
-//             const payment = await this.paymentService.initiatePayment({
-//                 orderId,
-//                 userId,
-//                 amount: order.total_price,
-//                 method,
-//                 email,
-//             });
+            const success = await this.paymentService.handleWebhookEvent(
+                event,
+                data,
+                signature,
+            );
 
-//             const emailOptions = orderConfirmationEmail(req.currentUser, order);
-//             await EmailQueueService.addEmailToQueue(emailOptions);
-
-//             res.status(200).json({
-//                 status: 'success',
-//                 message: 'Payment initiated successfully',
-//                 data: payment,
-//             });
-//         },
-//     );
-
-//     private handleWebhook = asyncHandler(
-//         async (req: Request, res: Response) => {
-//             await this.paymentService.handleWebhook(req, res);
-//         },
-//     );
-// }
+            return res.status(success ? 200 : 400).json({
+                success,
+                message: success
+                    ? 'Webhook processed successfully'
+                    : 'Webhook processing failed',
+            });
+        },
+    );
+}

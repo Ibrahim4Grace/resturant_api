@@ -14,7 +14,7 @@ export const generateOTP = async () => {
 
 export const generateOrderId = async (): Promise<string> => {
     let isUnique = false;
-    let orderId = '';
+    let order_number = '';
 
     while (!isUnique) {
         const otp = otpGenerator.generate(8, {
@@ -22,13 +22,13 @@ export const generateOrderId = async (): Promise<string> => {
             lowerCaseAlphabets: false,
             specialChars: false,
         });
-        orderId = `CR${otp}`;
+        order_number = `CR${otp}`;
 
-        const existingOrder = await OrderModel.findOne({ orderId });
+        const existingOrder = await OrderModel.findOne({ order_number });
         if (!existingOrder) {
             isUnique = true;
         }
     }
 
-    return orderId;
+    return order_number;
 };

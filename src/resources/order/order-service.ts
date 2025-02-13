@@ -1,10 +1,10 @@
+import { Request, Response } from 'express';
 import UserModel from '@/resources/user/user-model';
 import OrderModel from '@/resources/order/order-model';
-import axios from 'axios';
+import { IOrderPaginatedResponse } from '@/types/index';
 import { config } from '@/config/index';
 import MenuModel from '@/resources/menu/menu-model';
 import RiderModel from '@/resources/rider/rider-model';
-import RestaurantModel from '@/resources/restaurant/model';
 import {
     IOrder,
     DeliveryInfo,
@@ -15,6 +15,7 @@ import {
     withCachedData,
     CACHE_TTL,
     generateOrderId,
+    getPaginatedAndCachedResults,
 } from '@/utils/index';
 import {
     orderStatusUpdateEmail,
@@ -32,6 +33,10 @@ export class OrderService {
     private rider = RiderModel;
     private user = UserModel;
     private menu = MenuModel;
+    private readonly CACHE_KEYS = {
+        ALL_USER_ORDER: (restaurantId: string) =>
+            `all_user_order${restaurantId}`,
+    };
     private async validateUser(userId: string) {
         const user = await this.user.findById(userId);
         if (!user) {
@@ -95,7 +100,7 @@ export class OrderService {
     }
     private sanitizeOrder(order: IOrder): Partial<IOrder> {
         return {
-            orderId: order.orderId,
+            order_number: order.order_number,
             status: order.status,
             total_price: order.total_price,
             userId: order.userId,
@@ -118,11 +123,9 @@ export class OrderService {
             address: string;
         },
     ): Promise<Partial<IOrder>> {
-        console.log('service orderData', orderData);
         const user = await this.validateUser(userId);
-        console.log('User validated:', { userId: user._id });
 
-        const orderId = await generateOrderId();
+        const order_number = await generateOrderId();
 
         const {
             itemsWithPrices,
@@ -131,12 +134,11 @@ export class OrderService {
             roundedTotalPrice,
             delivery_fee,
         } = await this.calculateOrderAmounts(orderData.items);
-        console.log('Calculated total price:', roundedTotalPrice);
 
         const delivery_info: DeliveryInfo = { address: orderData.address };
 
         const newOrder = await this.order.create({
-            orderId,
+            order_number,
             userId,
             delivery_info,
             restaurantId: orderData.restaurantId,
@@ -250,39 +252,40 @@ export class OrderService {
         );
     }
 
-    public async getUserOrders(
-        params: UpdateOrderStatusParams,
-    ): Promise<Partial<IOrder>[]> {
-        // await this.checkOrderOwnership(orderId, userId);
-        const cacheKey = `user_orders:${userId}`;
-        return withCachedData<Partial<IOrder>[]>(
-            cacheKey,
-            async () => {
-                const orders = await this.order
-                    .find({ userId })
-                    .sort({ createdAt: -1 })
-                    .lean();
-                return orders.map((order) => this.sanitizeOrder(order));
+    public async fecthUserOrders(
+        req: Request,
+        res: Response,
+        restaurantId: string,
+    ): Promise<IOrderPaginatedResponse> {
+        const paginatedResults = await getPaginatedAndCachedResults<IOrder>(
+            req,
+            res,
+            this.order,
+            this.CACHE_KEYS.ALL_USER_ORDER(restaurantId),
+            { restaurantId },
+            {
+                orderId: 1,
+                status: 1,
+                total_price: 1,
+                userId: 1,
+                restaurantId: 1,
+                items: 1,
+                subtotal: 1,
+                tax: 1,
+                delivery_fee: 1,
+                delivery_info: 1,
+                createdAt: 1,
+                updatedAt: 1,
             },
-            CACHE_TTL.FIVE_MINUTES,
         );
-    }
 
-    // public async getOrdersByRestaurant(
-    //     restaurantId: string,
-    // ): Promise<Partial<IOrder>[]> {
-    //     await this.checkOrderOwnership(orderId, restaurantId);
-    //     const cacheKey = `restaurant_orders:${restaurantId}`;
-    //     return withCachedData<Partial<IOrder>[]>(
-    //         cacheKey,
-    //         async () => {
-    //             const orders = await this.order
-    //                 .find({ restaurantId })
-    //                 .sort({ createdAt: -1 })
-    //                 .lean();
-    //             return orders.map((order) => this.sanitizeOrder(order));
-    //         },
-    //         CACHE_TTL.FIVE_MINUTES,
-    //     );
-    // }
+        return {
+            results: paginatedResults.results,
+            pagination: {
+                currentPage: paginatedResults.currentPage,
+                totalPages: paginatedResults.totalPages,
+                limit: paginatedResults.limit,
+            },
+        };
+    }
 }

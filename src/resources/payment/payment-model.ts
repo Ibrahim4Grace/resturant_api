@@ -19,21 +19,15 @@ const paymentSchema = new Schema<IPayment>(
         },
         status: {
             type: String,
-            enum: ['pending', 'processing', 'completed', 'failed'],
-            default: 'pending',
+            enum: ['processing', 'completed', 'failed'],
+            default: 'processing',
         },
-        reference: {
+        paymentMethod: {
             type: String,
-            sparse: true,
-            unique: true,
-        },
-        method: {
-            type: String,
-            enum: ['paystack', 'cash'],
+            enum: ['paystack', 'cash_on_delivery'],
             required: true,
         },
         transactionDetails: {
-            provider: String,
             reference: String,
             authorizationUrl: String,
             metadata: Schema.Types.Mixed,

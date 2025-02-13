@@ -63,20 +63,19 @@ export class AdminService {
         ORDER_BY_ID: (id: string) => `order:${id}`,
     };
 
-    private async checkDuplicateEmail(email: string): Promise<void> {
-        const existingUser = await this.admin.findOne({ email });
+    private async checkDuplicate(
+        field: 'email' | 'phone',
+        value: string,
+    ): Promise<void> {
+        const existingUser = await this.admin.findOne({ [field]: value });
         if (existingUser) {
-            throw new Conflict('Email already registered!');
-        }
-    }
-    private async checkDuplicatePhone(phone: string): Promise<void> {
-        const existingUser = await this.admin.findOne({ phone });
-        if (existingUser) {
-            throw new Conflict('Phone Number already registered!');
+            throw new Conflict(
+                `${field === 'email' ? 'Email' : 'Phone Number'} already registered!`,
+            );
         }
     }
 
-    private sanitizeAdmin(admin: IAdmin): Partial<IAdmin> {
+    private adminData(admin: IAdmin): Partial<IAdmin> {
         return {
             _id: admin._id,
             name: admin.name,
@@ -93,8 +92,8 @@ export class AdminService {
         adminData: RegisterAdminto,
     ): Promise<RegistrationResponse> {
         await Promise.all([
-            this.checkDuplicateEmail(adminData.email),
-            this.checkDuplicatePhone(adminData.phone),
+            this.checkDuplicate('email', adminData.email),
+            this.checkDuplicate('phone', adminData.phone),
         ]);
 
         const admin = await this.admin.create({
@@ -110,7 +109,7 @@ export class AdminService {
         await EmailQueueService.addEmailToQueue(emailOptions);
 
         return {
-            admin: this.sanitizeAdmin(admin),
+            admin: this.adminData(admin),
             verificationToken: verificationToken,
         };
     }
@@ -275,7 +274,7 @@ export class AdminService {
         });
 
         return {
-            admin: this.sanitizeAdmin(admin),
+            admin: this.adminData(admin),
             token,
         };
     }

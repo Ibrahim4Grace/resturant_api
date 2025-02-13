@@ -8,6 +8,7 @@ import RiderController from '@/resources/rider/rider-controller';
 import RestaurantController from '@/resources/restaurant/controller';
 import OrderController from '@/resources/order/order-controller';
 import MenuController from '@/resources/menu/menu-controller';
+import PaymentController from '@/resources/payment/payment-controller';
 
 const app = new App(
     [
@@ -17,6 +18,7 @@ const app = new App(
         new RiderController(),
         new RestaurantController(),
         new MenuController(),
+        new PaymentController(),
     ],
     Number(config.PORT),
 );
