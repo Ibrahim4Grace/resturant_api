@@ -4,7 +4,7 @@
     "description": "",
     "main": "index.ts",
     "scripts": {
-        "start": "node src/index",
+        "start": "ts-node src/index",
         "dev": "ts-node-dev --respawn --transpile-only src/index",
         "build": "tsc",
         "docker": "docker-compose up"
