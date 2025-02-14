@@ -4,8 +4,8 @@
     "description": "",
     "main": "index.ts",
     "scripts": {
-        "start": "node src/index.ts",
-        "dev": "ts-node-dev --respawn --transpile-only ./src/index",
+        "start": "node src/index",
+        "dev": "ts-node-dev --respawn --transpile-only src/index",
         "build": "tsc",
         "docker": "docker-compose up"
     },
@@ -67,10 +67,10 @@
         "zod": "^3.24.1"
     },
     "_moduleAliases": {
-        "@/resources": "dist/resources",
-        "@/config": "dist/config",
-        "@/utils": "dist/utils",
-        "@/types": "dist/types",
-        "@/middlewares": "dist/middlewares"
+        "@/resources": "src/resources",
+        "@/config": "src/config",
+        "@/utils": "src/utils",
+        "@/types": "src/types",
+        "@/middlewares": "src/middlewares"
     }
 }
