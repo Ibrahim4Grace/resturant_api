@@ -1,5 +1,5 @@
 import { redis } from '../config/index';
-import { log } from '../utils/index';
+// import { console } from '../utils/index';
 
 // Define TTL constants
 export const CACHE_TTL = {
@@ -21,9 +21,9 @@ export async function cacheData<T>(
 ): Promise<void> {
     try {
         await redis.set(key, JSON.stringify(data), 'EX', expirationInSeconds);
-        log.info(`Cached data for key: ${key}`);
+        console.info(`Cached data for key: ${key}`);
     } catch (error) {
-        log.error(`Error caching data for key ${key}:`, error);
+        console.error(`Error caching data for key ${key}:`, error);
     }
 }
 
@@ -32,13 +32,13 @@ export async function getCachedData<T>(key: string): Promise<T | null> {
     try {
         const cachedData = await redis.get(key);
         if (cachedData) {
-            log.info(`Cache hit for key: ${key}`);
+            console.info(`Cache hit for key: ${key}`);
             return JSON.parse(cachedData);
         }
-        log.info(`Cache miss for key: ${key}`);
+        console.info(`Cache miss for key: ${key}`);
         return null;
     } catch (error) {
-        log.error(`Error getting cached data for key ${key}:`, error);
+        console.error(`Error getting cached data for key ${key}:`, error);
         return null;
     }
 }
@@ -47,9 +47,9 @@ export async function getCachedData<T>(key: string): Promise<T | null> {
 export async function deleteCacheData(key: string): Promise<void> {
     try {
         await redis.del(key);
-        log.info(`Deleted cache for key: ${key}`);
+        console.info(`Deleted cache for key: ${key}`);
     } catch (error) {
-        log.error(`Error deleting cache for key ${key}:`, error);
+        console.error(`Error deleting cache for key ${key}:`, error);
     }
 }
 

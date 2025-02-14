@@ -1,5 +1,5 @@
 import Redis from 'ioredis';
-import { log } from '../utils/index';
+// import { log } from '../utils/index';
 
 // Use the Redis URL in production or fallback to local Redis configuration
 export const redis = process.env.REDIS_URL
@@ -16,9 +16,9 @@ export const redis = process.env.REDIS_URL
       });
 
 redis.on('connect', () => {
-    log.info('Connected to Redis');
+    console.info('Connected to Redis');
 });
 
 redis.on('error', (err) => {
-    log.error('Redis error:', err);
+    console.error('Redis error:', err);
 });

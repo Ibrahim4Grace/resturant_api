@@ -4,7 +4,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import swaggerUi from 'swagger-ui-express';
 import morgan from 'morgan';
-import { log, EmailQueueService } from '../src/utils/index';
+import { EmailQueueService } from '../src/utils/index';
 import { Controller } from '../src/types/index';
 import { errorHandler, routeNotFound } from '../src/middlewares/index';
 import {
@@ -54,9 +54,9 @@ class App {
         try {
             await EmailQueueService.initializeEmailQueue();
             await EmailQueueService.consumeEmails();
-            log.info('RabbitMQ initialized successfully');
+            console.info('RabbitMQ initialized successfully');
         } catch (error) {
-            log.error('Failed to initialize RabbitMQ:', error);
+            console.error('Failed to initialize RabbitMQ:', error);
             process.exit(1);
         }
     }
@@ -81,13 +81,13 @@ class App {
 
     private setupGracefulShutdown(): void {
         const shutdown = async (signal: string) => {
-            log.info(`${signal} received. Shutting down gracefully...`);
+            console.info(`${signal} received. Shutting down gracefully...`);
             try {
                 await closeRabbitMQ();
-                log.info('RabbitMQ connection closed');
+                console.info('RabbitMQ connection closed');
                 process.exit(0);
             } catch (error) {
-                log.error('Error during shutdown:', error);
+                console.error('Error during shutdown:', error);
                 process.exit(1);
             }
         };
@@ -99,7 +99,7 @@ class App {
 
     public listen(): void {
         this.express.listen(this.port, () => {
-            log.info(`App listening on the port ${this.port}`);
+            console.info(`App listening on the port ${this.port}`);
         });
     }
 }

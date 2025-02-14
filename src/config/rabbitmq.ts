@@ -1,5 +1,5 @@
 import amqplib, { Connection, Channel } from 'amqplib';
-import { log } from '../utils/index';
+// import { log } from '../utils/index';
 import { config } from '../config/index';
 
 let connection: Connection;
@@ -15,10 +15,10 @@ export const connectRabbitMQ = async (): Promise<Channel> => {
             config.RABBITMQ_URL || 'amqp://localhost',
         );
         channel = await connection.createChannel();
-        log.info('RabbitMQ connected');
+        console.info('RabbitMQ connected');
         return channel;
     } catch (error) {
-        log.error('Failed to connect to RabbitMQ:', error);
+        console.error('Failed to connect to RabbitMQ:', error);
         process.exit(1);
     }
 };
@@ -27,8 +27,8 @@ export const closeRabbitMQ = async (): Promise<void> => {
     try {
         if (channel) await channel.close();
         if (connection) await connection.close();
-        log.info('RabbitMQ connection closed');
+        console.info('RabbitMQ connection closed');
     } catch (error) {
-        log.error('Failed to close RabbitMQ connection:', error);
+        console.error('Failed to close RabbitMQ connection:', error);
     }
 };

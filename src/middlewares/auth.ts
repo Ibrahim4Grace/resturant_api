@@ -3,7 +3,7 @@ import Admin from '../resources/admin/admin-model';
 import User from '../resources/user/user-model';
 import Rider from '../resources/rider/rider-model';
 import Restaurant from '../resources/restaurant/model';
-import { TokenService, log } from '../utils/index';
+import { TokenService } from '../utils/index';
 import { ValidUser } from '../types/index';
 import {
     asyncHandler,
@@ -73,7 +73,7 @@ export const authMiddleware = () => {
 
                 next();
             } catch (error) {
-                log.error('Authentication errors:', error);
+                console.error('Authentication errors:', error);
                 if (error instanceof Unauthorized) {
                     return res.status(401).json({
                         status_code: '401',
