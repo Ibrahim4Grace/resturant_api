@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { Model, Document } from 'mongoose';
-import { IPaginationResponse } from '@/types/index';
-import { CACHE_TTL, cacheData, getCachedData } from '@/utils/index';
+import { IPaginationResponse } from '../types/index';
+import { CACHE_TTL, cacheData, getCachedData } from '../utils/index';
 
 export async function getPaginatedAndCachedResults<T extends Document>(
     req: Request,

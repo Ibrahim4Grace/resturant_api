@@ -1,10 +1,10 @@
 import { Router, Request, Response, NextFunction } from 'express';
-import { Controller } from '@/types/index';
-import validate from '@/resources/user/user-validation';
-import { UserService } from '@/resources/user/user-service';
-import UserModel from '@/resources/user/user-model';
-import { RegisterUserto, Address } from '@/resources/user/user-interface';
-import { TokenService } from '@/utils/index';
+import { Controller } from '../../types/index';
+import validate from '../../resources/user/user-validation';
+import { UserService } from '../../resources/user/user-service';
+import UserModel from '../../resources/user/user-model';
+import { RegisterUserto, Address } from '../../resources/user/user-interface';
+import { TokenService } from '../../utils/index';
 import {
     validateData,
     sendJsonResponse,
@@ -13,7 +13,7 @@ import {
     BadRequest,
     authMiddleware,
     authorization,
-} from '@/middlewares/index';
+} from '../../middlewares/index';
 
 export default class UserController implements Controller {
     public authPath = '/auth/users';

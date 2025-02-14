@@ -1,9 +1,9 @@
 import { Schema, model } from 'mongoose';
-import { config } from '@/config/index';
-import { IRestaurant } from '@/resources/restaurant/interface';
-import { TokenService } from '@/utils/index';
+import { config } from '../../config/index';
+import { IRestaurant } from '../../resources/restaurant/interface';
+import { TokenService } from '../../utils/index';
 import bcrypt from 'bcryptjs';
-import { generateOTP } from '@/utils/index';
+import { generateOTP } from '../../utils/index';
 
 const restaurantSchema = new Schema<IRestaurant>(
     {

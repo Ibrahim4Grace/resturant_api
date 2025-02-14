@@ -2,7 +2,7 @@
     "name": "chef-kay",
     "version": "1.0.0",
     "description": "",
-    "main": "index.ts",
+    "main": "index.js",
     "scripts": {
         "start": "ts-node src/index",
         "dev": "ts-node-dev --respawn --transpile-only src/index",
@@ -50,7 +50,6 @@
         "helmet": "^8.0.0",
         "ioredis": "^5.4.2",
         "jsonwebtoken": "^9.0.2",
-        "module-alias": "^2.2.3",
         "mongoose": "^8.9.2",
         "morgan": "^1.10.0",
         "multer": "^1.4.5-lts.1",
@@ -65,12 +64,5 @@
         "ts-node": "^10.9.2",
         "ts-node-dev": "^2.0.0",
         "zod": "^3.24.1"
-    },
-    "_moduleAliases": {
-        "@/resources": "src/resources",
-        "@/config": "src/config",
-        "@/utils": "src/utils",
-        "@/types": "src/types",
-        "@/middlewares": "src/middlewares"
     }
 }

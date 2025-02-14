@@ -1,5 +1,5 @@
-import { redis } from '@/config/index';
-import { log } from '@/utils/index';
+import { redis } from '../config/index';
+import { log } from '../utils/index';
 
 // Define TTL constants
 export const CACHE_TTL = {

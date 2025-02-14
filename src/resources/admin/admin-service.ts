@@ -1,19 +1,19 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
-import AdminModel from '@/resources/admin/admin-model';
-import UserModel from '@/resources/user/user-model';
-import RestaurantModel from '@/resources/restaurant/model';
-import RiderModel from '@/resources/rider/rider-model';
-import OrderModel from '@/resources/order/order-model';
-import { IOrder } from '@/resources/order/order-interface';
-import { IUser } from '@/resources/user/user-interface';
-import { IRestaurant } from '@/resources/restaurant/interface';
-import { IRider } from '@/resources/rider/rider-interface';
+import AdminModel from '../../resources/admin/admin-model';
+import UserModel from '../../resources/user/user-model';
+import RestaurantModel from '../../resources/restaurant/model';
+import RiderModel from '../../resources/rider/rider-model';
+import OrderModel from '../../resources/order/order-model';
+import { IOrder } from '../../resources/order/order-interface';
+import { IUser } from '../../resources/user/user-interface';
+import { IRestaurant } from '../../resources/restaurant/interface';
+import { IRider } from '../../resources/rider/rider-interface';
 import {
     sendOTPByEmail,
     welcomeEmail,
     PasswordResetEmail,
-} from '@/resources/admin/admin-email-template';
+} from '../../resources/admin/admin-email-template';
 import {
     TokenService,
     EmailQueueService,
@@ -21,20 +21,20 @@ import {
     deleteCacheData,
     getPaginatedAndCachedResults,
     withCachedData,
-} from '@/utils/index';
+} from '../../utils/index';
 import {
     IAdmin,
     RegisterAdminto,
     loginResponse,
     RegistrationResponse,
-} from '@/resources/admin/admin-interface';
+} from '../../resources/admin/admin-interface';
 import {
     Conflict,
     ResourceNotFound,
     BadRequest,
     Forbidden,
     Unauthorized,
-} from '@/middlewares/index';
+} from '../../middlewares/index';
 import {
     LoginCredentials,
     IAdminPaginatedResponse,
@@ -42,7 +42,7 @@ import {
     IRestaurantPaginatedResponse,
     IRiderPaginatedResponse,
     IOrderPaginatedResponse,
-} from '@/types/index';
+} from '../../types/index';
 
 export class AdminService {
     private admin = AdminModel;

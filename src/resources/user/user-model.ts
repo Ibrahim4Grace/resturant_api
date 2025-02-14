@@ -1,9 +1,9 @@
 import { Schema, model } from 'mongoose';
-import { config } from '@/config/index';
-import { IUser } from '@/resources/user/user-interface';
+import { config } from '../../config/index';
+import { IUser } from '../../resources/user/user-interface';
 import bcrypt from 'bcryptjs';
-import { generateOTP } from '@/utils/index';
-import { TokenService } from '@/utils/index';
+import { generateOTP } from '../../utils/index';
+import { TokenService } from '../../utils/index';
 
 const userSchema = new Schema<IUser>(
     {

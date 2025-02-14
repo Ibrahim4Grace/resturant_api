@@ -1,13 +1,12 @@
-import RiderModel from '@/resources/rider/rider-model';
-import { EmailQueueService } from '@/utils/index';
-import { IRider, RegisterRiderto } from '@/resources/rider/rider-interface';
-import { UserRoles } from '@/types/index';
+import RiderModel from '../../resources/rider/rider-model';
+import { EmailQueueService } from '../../utils/index';
+import { IRider, RegisterRiderto } from '../../resources/rider/rider-interface';
 import bcrypt from 'bcryptjs';
 import {
     sendOTPByEmail,
     welcomeEmail,
     PasswordResetEmail,
-} from '@/resources/rider/rider-email-template';
+} from '../../resources/rider/rider-email-template';
 import {
     asyncHandler,
     Conflict,
@@ -16,7 +15,7 @@ import {
     Forbidden,
     Unauthorized,
     authMiddleware,
-} from '@/middlewares/index';
+} from '../../middlewares/index';
 
 export class RiderService {
     private rider = RiderModel;

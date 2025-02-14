@@ -1,5 +1,5 @@
-import { EmailData } from "@/types/index";
-import { IUser, Address } from "@/resources/user/user-interface";
+import { EmailData } from '../../types/index';
+import { IUser, Address } from '../../resources/user/user-interface';
 
 export const sendOTPByEmail = (
     user: { name: string; email: string },
@@ -10,7 +10,7 @@ export const sendOTPByEmail = (
     return {
         from: process.env.nodemailerEmail as string,
         to: user.email,
-        subject: "Your 6-digit Verification Code",
+        subject: 'Your 6-digit Verification Code',
         html: `  <p>Dear ${user.name}, </p>
           <p>Use the 6-digit Code provided below to verify your email:</p>
           <p>Your verification code is: <b>${otp}</b></p>
@@ -27,7 +27,7 @@ export const welcomeEmail = (user: {
     return {
         from: process.env.nodemailerEmail as string,
         to: user.email,
-        subject: "Welcome to Chef-kay restaurant",
+        subject: 'Welcome to Chef-kay restaurant',
         html: `  <p>Dear ${user.name}, </p>
            
         <p>Your account has been successfully created, granting you access to our platform's exciting features.</p>
@@ -43,7 +43,7 @@ export const PasswordResetEmail = (user: {
     return {
         from: process.env.nodemailerEmail as string,
         to: user.email,
-        subject: "Password Reset Confirmation",
+        subject: 'Password Reset Confirmation',
         html: `
             <p>Hello ${user.name},</p>
             <p>Your password has been successfully reset. If you did not perform this action, please contact our support team immediately.</p>
@@ -58,7 +58,7 @@ export const newAddressAdded = (
     return {
         from: process.env.nodemailerEmail as string,
         to: user.email,
-        subject: "New address added to your account!",
+        subject: 'New address added to your account!',
         html: `
             <p>Hello ${user.name},</p>
             <p>Your new address at ${addressData.street}, ${addressData.city}, ${addressData.state} has been successfully added..</p>

@@ -1,6 +1,6 @@
-import { IOrder } from '@/resources/order/order-interface';
-import { IUser } from '@/resources/user/user-interface';
-import { EmailData } from '@/types/index';
+import { IOrder } from '../../resources/order/order-interface';
+import { IUser } from '../../resources/user/user-interface';
+import { EmailData } from '../../types/index';
 
 export const orderConfirmationEmail = (
     user: Pick<IUser, 'name' | 'email'>,

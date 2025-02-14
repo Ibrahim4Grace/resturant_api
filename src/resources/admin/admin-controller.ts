@@ -1,10 +1,13 @@
 import { Router, Request, Response, NextFunction } from 'express';
-import { Controller } from '@/types/index';
-import validate from '@/resources/admin/admin-validation';
-import { AdminService } from '@/resources/admin/admin-service';
-import { TokenService } from '@/utils/index';
-import AdminModel from '@/resources/admin/admin-model';
-import { RegisterAdminto, Address } from '@/resources/admin/admin-interface';
+import { Controller } from '../../types/index';
+import validate from '../../resources/admin/admin-validation';
+import { AdminService } from '../../resources/admin/admin-service';
+import { TokenService } from '../../utils/index';
+import AdminModel from '../../resources/admin/admin-model';
+import {
+    RegisterAdminto,
+    Address,
+} from '../../resources/admin/admin-interface';
 import {
     validateData,
     sendJsonResponse,
@@ -16,7 +19,7 @@ import {
     Unauthorized,
     authMiddleware,
     authorization,
-} from '@/middlewares/index';
+} from '../../middlewares/index';
 
 export default class AdminController implements Controller {
     public authPath = '/auth/admins';

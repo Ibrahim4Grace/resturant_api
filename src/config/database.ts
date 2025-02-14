@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { log } from '@/utils/index';
+import { log } from '../utils/index';
 
 export const initializeDatabase = async (): Promise<void> => {
     const { MONGODB_URI } = process.env;

@@ -1,32 +1,32 @@
 import { Request, Response } from 'express';
-import UserModel from '@/resources/user/user-model';
-import OrderModel from '@/resources/order/order-model';
-import { IOrderPaginatedResponse } from '@/types/index';
-import { config } from '@/config/index';
-import MenuModel from '@/resources/menu/menu-model';
-import RiderModel from '@/resources/rider/rider-model';
+import UserModel from '../../resources/user/user-model';
+import OrderModel from '../../resources/order/order-model';
+import { IOrderPaginatedResponse } from '../../types/index';
+import { config } from '../../config/index';
+import MenuModel from '../../resources/menu/menu-model';
+import RiderModel from '../../resources/rider/rider-model';
 import {
     IOrder,
     DeliveryInfo,
     UpdateOrderStatusParams,
-} from '@/resources/order/order-interface';
+} from '../../resources/order/order-interface';
 import {
     EmailQueueService,
     withCachedData,
     CACHE_TTL,
     generateOrderId,
     getPaginatedAndCachedResults,
-} from '@/utils/index';
+} from '../../utils/index';
 import {
     orderStatusUpdateEmail,
     orderCancellationEmail,
     riderAssignedEmail,
-} from '@/resources/order/order-email-template';
+} from '../../resources/order/order-email-template';
 import {
     ResourceNotFound,
     BadRequest,
     Unauthorized,
-} from '@/middlewares/index';
+} from '../../middlewares/index';
 
 export class OrderService {
     private order = OrderModel;

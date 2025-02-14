@@ -1,5 +1,5 @@
-import { EmailData } from '@/types/index';
-import { config } from '@/config/index';
+import { EmailData } from '../../types/index';
+import { config } from '../../config/index';
 
 export const sendOTPByEmail = (
     admin: { name: string; email: string },

@@ -1,6 +1,6 @@
 import otpGenerator from 'otp-generator';
 import bcrypt from 'bcryptjs';
-import OrderModel from '@/resources/order/order-model';
+import OrderModel from '../resources/order/order-model';
 
 export const generateOTP = async () => {
     const otp = otpGenerator.generate(6, {

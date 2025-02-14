@@ -1,9 +1,9 @@
 import { Schema, model } from 'mongoose';
-import { IAdmin } from '@/resources/admin/admin-interface';
-import { TokenService } from '@/utils/index';
-import { config } from '@/config/index';
+import { IAdmin } from '../../resources/admin/admin-interface';
+import { TokenService } from '../../utils/index';
+import { config } from '../../config/index';
 import bcrypt from 'bcryptjs';
-import { generateOTP } from '@/utils/index';
+import { generateOTP } from '../../utils/index';
 
 const adminSchema = new Schema<IAdmin>(
     {

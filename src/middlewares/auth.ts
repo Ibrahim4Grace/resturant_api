@@ -1,17 +1,17 @@
 import { NextFunction, Request, Response } from 'express';
-import Admin from '@/resources/admin/admin-model';
-import User from '@/resources/user/user-model';
-import Rider from '@/resources/rider/rider-model';
-import Restaurant from '@/resources/restaurant/model';
-import { TokenService, log } from '@/utils/index';
-import { ValidUser } from '@/types/index';
+import Admin from '../resources/admin/admin-model';
+import User from '../resources/user/user-model';
+import Rider from '../resources/rider/rider-model';
+import Restaurant from '../resources/restaurant/model';
+import { TokenService, log } from '../utils/index';
+import { ValidUser } from '../types/index';
 import {
     asyncHandler,
     ResourceNotFound,
     ServerError,
     Unauthorized,
     Forbidden,
-} from '@/middlewares/index';
+} from '../middlewares/index';
 
 export const extractToken = (req: Request): string | null => {
     const authHeader = req.headers.authorization;

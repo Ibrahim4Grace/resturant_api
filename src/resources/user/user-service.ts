@@ -1,29 +1,29 @@
-import UserModel from '@/resources/user/user-model';
-import OrderModel from '@/resources/order/order-model';
-import { TokenService, EmailQueueService } from '@/utils/index';
+import UserModel from '../../resources/user/user-model';
+import OrderModel from '../../resources/order/order-model';
+import { TokenService, EmailQueueService } from '../../utils/index';
 import bcrypt from 'bcryptjs';
-import { LoginCredentials } from '@/types/index';
-import { IOrder } from '@/resources/order/order-interface';
+import { LoginCredentials } from '../../types/index';
+import { IOrder } from '../../resources/order/order-interface';
 import {
     IUser,
     RegisterUserto,
     Address,
     RegistrationResponse,
     loginResponse,
-} from '@/resources/user/user-interface';
+} from '../../resources/user/user-interface';
 import {
     sendOTPByEmail,
     welcomeEmail,
     PasswordResetEmail,
     newAddressAdded,
-} from '@/resources/user/user-email-template';
+} from '../../resources/user/user-email-template';
 import {
     Conflict,
     ResourceNotFound,
     BadRequest,
     Forbidden,
     Unauthorized,
-} from '@/middlewares/index';
+} from '../../middlewares/index';
 
 export class UserService {
     private user = UserModel;

@@ -1,6 +1,6 @@
 import amqplib, { Connection, Channel } from 'amqplib';
-import { log } from '@/utils/index';
-import { config } from '@/config/index';
+import { log } from '../utils/index';
+import { config } from '../config/index';
 
 let connection: Connection;
 let channel: Channel;

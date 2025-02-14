@@ -1,14 +1,14 @@
 import { Router, Request, Response, NextFunction } from 'express';
-import { Controller } from '@/types/index';
-import validate from '@/resources/restaurant/validation';
-import { RestaurantService } from '@/resources/restaurant/service';
-import { TokenService } from '@/utils/index';
-import { upload } from '@/config/index';
-import RestaurantModel from '@/resources/restaurant/model';
+import { Controller } from '../../types/index';
+import validate from '../../resources/restaurant/validation';
+import { RestaurantService } from '../../resources/restaurant/service';
+import { TokenService } from '../../utils/index';
+import { upload } from '../../config/index';
+import RestaurantModel from '../../resources/restaurant/model';
 import {
     RegisterRestaurantto,
     Address,
-} from '@/resources/restaurant/interface';
+} from '../../resources/restaurant/interface';
 import {
     validateData,
     sendJsonResponse,
@@ -20,7 +20,7 @@ import {
     Unauthorized,
     authMiddleware,
     authorization,
-} from '@/middlewares/index';
+} from '../../middlewares/index';
 
 export default class RestaurantController implements Controller {
     public authPath = '/auth/restaurants';

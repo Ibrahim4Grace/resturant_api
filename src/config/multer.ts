@@ -1,6 +1,6 @@
 import multer from 'multer';
 import { Request } from 'express';
-import { BadRequest } from '@/middlewares/index';
+import { BadRequest } from '../middlewares/index';
 
 export const multerConfig = {
     storage: multer.memoryStorage(),

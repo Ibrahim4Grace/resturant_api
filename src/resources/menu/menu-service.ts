@@ -1,17 +1,21 @@
 import { Request, Response } from 'express';
-import MenuModel from '@/resources/menu/menu-model';
-import RestaurantModel from '@/resources/restaurant/model';
-import { ResourceNotFound, Conflict, Unauthorized } from '@/middlewares/index';
-import { IMenu, MenuItem } from '@/resources/menu/menu-interface';
-import { UploadedImage, IMenuPaginatedResponse } from '@/types/index';
-import { CloudinaryService } from '@/config/index';
-import { newMenuConfirmationEmail } from '@/resources/menu/menu-email-template';
+import MenuModel from '../../resources/menu/menu-model';
+import RestaurantModel from '../../resources/restaurant/model';
+import {
+    ResourceNotFound,
+    Conflict,
+    Unauthorized,
+} from '../../middlewares/index';
+import { IMenu, MenuItem } from '../../resources/menu/menu-interface';
+import { UploadedImage, IMenuPaginatedResponse } from '../../types/index';
+import { CloudinaryService } from '../../config/index';
+import { newMenuConfirmationEmail } from '../../resources/menu/menu-email-template';
 import {
     CACHE_TTL,
     getPaginatedAndCachedResults,
     withCachedData,
     EmailQueueService,
-} from '@/utils/index';
+} from '../../utils/index';
 
 export class MenuService {
     private menu = MenuModel;

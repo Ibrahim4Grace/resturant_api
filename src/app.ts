@@ -4,16 +4,16 @@ import cors from 'cors';
 import helmet from 'helmet';
 import swaggerUi from 'swagger-ui-express';
 import morgan from 'morgan';
-import { log, EmailQueueService } from '@/utils/index';
-import { Controller } from '@/types/index';
-import { errorHandler, routeNotFound } from '@/middlewares/index';
+import { log, EmailQueueService } from '../src/utils/index';
+import { Controller } from '../src/types/index';
+import { errorHandler, routeNotFound } from '../src/middlewares/index';
 import {
     corsOptions,
     config,
     specs,
     initializeDatabase,
     closeRabbitMQ,
-} from '@/config/index';
+} from '../src/config/index';
 
 class App {
     public express: Application;

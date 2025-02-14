@@ -1,9 +1,9 @@
-import { IUser } from '@/resources/user/user-interface';
-import { IRestaurant } from '@/resources/restaurant/interface';
-import { IRider } from '@/resources/rider/rider-interface';
-import { IAdmin } from '@/resources/admin/admin-interface';
-import { IOrder } from '@/resources/order/order-interface';
-import { IMenu } from '@/resources/menu/menu-interface';
+import { IUser } from '../resources/user/user-interface';
+import { IRestaurant } from '../resources/restaurant/interface';
+import { IRider } from '../resources/rider/rider-interface';
+import { IAdmin } from '../resources/admin/admin-interface';
+import { IOrder } from '../resources/order/order-interface';
+import { IMenu } from '../resources/menu/menu-interface';
 
 export const UserRoles = {
     User: 'user',

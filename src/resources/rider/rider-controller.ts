@@ -1,23 +1,21 @@
-import { Router, Request, Response, NextFunction } from "express";
-import { Controller } from "@/types/index";
-import validate from "@/resources/rider/rider-validation";
-import { RiderService } from "@/resources/rider/rider-service";
-import { TokenService } from "@/utils/index";
+import { Router, Request, Response, NextFunction } from 'express';
+import { Controller } from '../../types/index';
+import validate from '../../resources/rider/rider-validation';
+import { RiderService } from '../../resources/rider/rider-service';
+import { TokenService } from '../../utils/index';
 import {
     validateData,
     sendJsonResponse,
     asyncHandler,
-    Conflict,
-    ResourceNotFound,
     BadRequest,
     Forbidden,
     Unauthorized,
     authMiddleware,
-} from "@/middlewares/index";
+} from '../../middlewares/index';
 
 export default class RiderController implements Controller {
-    public authPath = "/auth/riders";
-    public path = "/riders";
+    public authPath = '/auth/riders';
+    public path = '/riders';
     public router = Router();
     private riderService = new RiderService();
 
@@ -70,7 +68,7 @@ export default class RiderController implements Controller {
         sendJsonResponse(
             res,
             201,
-            "Registration initiated. Please verify your email with the OTP sent.",
+            'Registration initiated. Please verify your email with the OTP sent.',
             result,
         );
     };
@@ -83,15 +81,15 @@ export default class RiderController implements Controller {
         const { otp } = req.body;
         const authHeader = req.headers.authorization;
 
-        if (!authHeader || !authHeader.startsWith("Bearer ")) {
-            throw new BadRequest("Authorization token is required");
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            throw new BadRequest('Authorization token is required');
         }
 
         if (!otp) {
-            throw new BadRequest("OTP code is required");
+            throw new BadRequest('OTP code is required');
         }
 
-        const token = authHeader.split(" ")[1];
+        const token = authHeader.split(' ')[1];
 
         const decoded = await TokenService.verifyEmailToken(token);
 
@@ -103,7 +101,7 @@ export default class RiderController implements Controller {
         sendJsonResponse(
             res,
             200,
-            "Email verified successfully. You can now log in.",
+            'Email verified successfully. You can now log in.',
         );
     };
 
@@ -117,7 +115,7 @@ export default class RiderController implements Controller {
         sendJsonResponse(
             res,
             200,
-            "Reset token generated and OTP sent to your email.",
+            'Reset token generated and OTP sent to your email.',
             resetToken,
         );
     };
@@ -128,22 +126,22 @@ export default class RiderController implements Controller {
         next: NextFunction,
     ): Promise<void> => {
         const authHeader = req.headers.authorization;
-        if (!authHeader || !authHeader.startsWith("Bearer ")) {
-            throw new BadRequest("Authorization token is required");
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            throw new BadRequest('Authorization token is required');
         }
 
-        const resetToken = authHeader.split(" ")[1];
+        const resetToken = authHeader.split(' ')[1];
         const { otp } = req.body;
 
         if (!otp) {
-            throw new BadRequest("OTP is required");
+            throw new BadRequest('OTP is required');
         }
 
         await this.riderService.verifyResetPasswordOTP(resetToken, otp);
         sendJsonResponse(
             res,
             200,
-            "OTP verified successfully. You can now reset your password.",
+            'OTP verified successfully. You can now reset your password.',
         );
     };
 
@@ -153,18 +151,18 @@ export default class RiderController implements Controller {
         next: NextFunction,
     ): Promise<void> => {
         const authHeader = req.headers.authorization;
-        if (!authHeader || !authHeader.startsWith("Bearer ")) {
-            throw new BadRequest("Authorization token is required");
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            throw new BadRequest('Authorization token is required');
         }
 
-        const resetToken = authHeader.split(" ")[1];
+        const resetToken = authHeader.split(' ')[1];
         const { newPassword } = req.body;
 
         if (!newPassword) {
-            throw new BadRequest("New password is required");
+            throw new BadRequest('New password is required');
         }
 
         await this.riderService.resetPassword(resetToken, newPassword);
-        sendJsonResponse(res, 200, "Password reset successfully.");
+        sendJsonResponse(res, 200, 'Password reset successfully.');
     };
 }

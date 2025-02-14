@@ -1,8 +1,8 @@
-import RestaurantModel from '@/resources/restaurant/model';
-import UserModel from '@/resources/user/user-model';
-import { CloudinaryService } from '@/config/index';
+import RestaurantModel from '../../resources/restaurant/model';
+import UserModel from '../../resources/user/user-model';
+import { CloudinaryService } from '../../config/index';
 import bcrypt from 'bcryptjs';
-import { LoginCredentials, UploadedImage } from '@/types/index';
+import { LoginCredentials, UploadedImage } from '../../types/index';
 import {
     IRestaurant,
     RegisterRestaurantto,
@@ -10,25 +10,25 @@ import {
     RegistrationResponse,
     RestaurantCreationResponse,
     ISanitizedRestaurant,
-} from '@/resources/restaurant/interface';
+} from '../../resources/restaurant/interface';
 import {
     sendOTPByEmail,
     pendingVerificationEmail,
     PasswordResetEmail,
-} from '@/resources/restaurant/email-template';
+} from '../../resources/restaurant/email-template';
 import {
     TokenService,
     EmailQueueService,
     withCachedData,
     CACHE_TTL,
-} from '@/utils/index';
+} from '../../utils/index';
 import {
     Conflict,
     ResourceNotFound,
     BadRequest,
     Forbidden,
     Unauthorized,
-} from '@/middlewares/index';
+} from '../../middlewares/index';
 
 export class RestaurantService {
     private restaurant = RestaurantModel;

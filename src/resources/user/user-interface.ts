@@ -1,5 +1,5 @@
 import { Document } from 'mongoose';
-import { UserRole } from '@/types/index';
+import { UserRole } from '../../types/index';
 
 export interface IUser extends Document {
     _id: string;

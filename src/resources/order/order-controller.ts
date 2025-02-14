@@ -1,9 +1,9 @@
 import { Router, Request, Response } from 'express';
-import { Controller } from '@/types/index';
-import validate from '@/resources/order/order-validation';
-import { OrderService } from '@/resources/order/order-service';
-import UserModel from '@/resources/user/user-model';
-import RestaurantModel from '@/resources/restaurant/model';
+import { Controller } from '../../types/index';
+import validate from '../../resources/order/order-validation';
+import { OrderService } from '../../resources/order/order-service';
+import UserModel from '../../resources/user/user-model';
+import RestaurantModel from '../../resources/restaurant/model';
 import {
     validateData,
     sendJsonResponse,
@@ -11,7 +11,7 @@ import {
     ResourceNotFound,
     authMiddleware,
     authorization,
-} from '@/middlewares/index';
+} from '../../middlewares/index';
 
 export default class OrderController implements Controller {
     public path = '/orders';

@@ -1,9 +1,9 @@
 import { Schema, model } from 'mongoose';
-import { IRider } from '@/resources/rider/rider-interface';
+import { IRider } from '../../resources/rider/rider-interface';
 import bcrypt from 'bcryptjs';
-import { config } from '@/config/index';
-import { TokenService } from '@/utils/index';
-import { generateOTP } from '@/utils/index';
+import { config } from '../../config/index';
+import { TokenService } from '../../utils/index';
+import { generateOTP } from '../../utils/index';
 
 const riderSchema = new Schema<IRider>(
     {

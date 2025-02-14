@@ -1,5 +1,5 @@
 import Redis from 'ioredis';
-import { log } from '@/utils/index';
+import { log } from '../utils/index';
 
 // Use the Redis URL in production or fallback to local Redis configuration
 export const redis = process.env.REDIS_URL

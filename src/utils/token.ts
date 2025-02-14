@@ -1,11 +1,11 @@
 import jwt from 'jsonwebtoken';
-import { Unauthorized } from '@/middlewares/index';
-import { config } from '@/config/index';
+import { Unauthorized } from '../middlewares/index';
+import { config } from '../config/index';
 import {
     UserRole,
     AuthJwtPayload,
     EmailVerificationPayload,
-} from '@/types/index';
+} from '../types/index';
 
 export class TokenService {
     // Authentication token methods

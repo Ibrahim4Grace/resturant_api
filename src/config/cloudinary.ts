@@ -1,5 +1,5 @@
 import { v2 as cloudinary } from 'cloudinary';
-import { config } from '@/config/index';
+import { config } from '../config/index';
 
 export class CloudinaryService {
     constructor() {

@@ -1,4 +1,4 @@
-import { EmailData } from '@/types/index';
+import { EmailData } from '../../types/index';
 
 const supportEmail = process.env.SUPPORT_EMAIL as string;
 const supportPhone = process.env.SUPPORT_PHONE as string;

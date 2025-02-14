@@ -1,4 +1,4 @@
-import { EmailData } from "@/types/index";
+import { EmailData } from '../../types/index';
 
 export const sendOTPByEmail = (
     rider: { name: string; email: string },
@@ -9,7 +9,7 @@ export const sendOTPByEmail = (
     return {
         from: process.env.nodemailerEmail as string,
         to: rider.email,
-        subject: "Your 6-digit Verification Code",
+        subject: 'Your 6-digit Verification Code',
         html: `  <p>Dear ${rider.name}, </p>
           <p>Use the 6-digit Code provided below to verify your email:</p>
           <p>Your verification code is: <b>${otp}</b></p>
@@ -26,7 +26,7 @@ export const welcomeEmail = (rider: {
     return {
         from: process.env.nodemailerEmail as string,
         to: rider.email,
-        subject: "Welcome to Chef-kay restaurant",
+        subject: 'Welcome to Chef-kay restaurant',
         html: `  <p>Dear ${rider.name}, </p>
            
         <p>Your account has been successfully created, granting you access to our platform's exciting features.</p>
@@ -42,7 +42,7 @@ export const PasswordResetEmail = (rider: {
     return {
         from: process.env.nodemailerEmail as string,
         to: rider.email,
-        subject: "Password Reset Confirmation",
+        subject: 'Password Reset Confirmation',
         html: `
             <p>Hello ${rider.name},</p>
             <p>Your password has been successfully reset. If you did not perform this action, please contact our support team immediately.</p>

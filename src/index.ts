@@ -1,14 +1,13 @@
 import 'dotenv/config';
-import 'module-alias/register';
-import { config } from '@/config/index';
+import { config } from '../src/config/index';
 import App from './app';
-import UserController from '@/resources/user/user-controller';
-import AdminController from '@/resources/admin/admin-controller';
-import RiderController from '@/resources/rider/rider-controller';
-import RestaurantController from '@/resources/restaurant/controller';
-import OrderController from '@/resources/order/order-controller';
-import MenuController from '@/resources/menu/menu-controller';
-import PaymentController from '@/resources/payment/payment-controller';
+import UserController from '../src/resources/user/user-controller';
+import AdminController from '../src/resources/admin/admin-controller';
+import RiderController from '../src/resources/rider/rider-controller';
+import RestaurantController from '../src/resources/restaurant/controller';
+import OrderController from '../src/resources/order/order-controller';
+import MenuController from '../src/resources/menu/menu-controller';
+import PaymentController from '../src/resources/payment/payment-controller';
 
 const app = new App(
     [

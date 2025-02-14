@@ -1,9 +1,9 @@
 import { Router, Request, Response } from 'express';
-import { Controller } from '@/types/index';
-import { MenuService } from '@/resources/menu/menu-service';
-import RestaurantModel from '@/resources/restaurant/model';
-import { upload } from '@/config/index';
-import validate from '@/resources/menu/menu-validation';
+import { Controller } from '../../types/index';
+import { MenuService } from '../../resources/menu/menu-service';
+import RestaurantModel from '../../resources/restaurant/model';
+import { upload } from '../../config/index';
+import validate from '../../resources/menu/menu-validation';
 import {
     sendJsonResponse,
     asyncHandler,
@@ -11,7 +11,7 @@ import {
     authMiddleware,
     authorization,
     validateData,
-} from '@/middlewares/index';
+} from '../../middlewares/index';
 
 export default class MenuController implements Controller {
     public path = '/menu';
