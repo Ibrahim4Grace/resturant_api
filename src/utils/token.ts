@@ -18,7 +18,7 @@ export class TokenService {
         }
 
         const options: SignOptions = {
-            expiresIn: config.JWT_AUTH_EXPIRY || '1d',
+            expiresIn: config.JWT_AUTH_EXPIRY as string,
         };
 
         return jwt.sign(payload, config.JWT_AUTH_SECRET, options);
@@ -50,7 +50,7 @@ export class TokenService {
             throw new Error('JWT_EMAIL_SECRET is not defined');
         }
         const options: SignOptions = {
-            expiresIn: config.EMAIL_TOKEN_EXPIRY,
+            expiresIn: config.EMAIL_TOKEN_EXPIRY as string,
         };
 
         return jwt.sign(payload, config.JWT_EMAIL_SECRET, options);
