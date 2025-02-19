@@ -78,53 +78,26 @@ export default class PaymentController implements Controller {
     private handleWebhook = asyncHandler(
         async (req: Request, res: Response) => {
             try {
-                console.log('🔔 Webhook received');
-                console.log('Headers:', JSON.stringify(req.headers, null, 2));
-                console.log('Raw Body Type:', typeof req.body);
-                console.log('Is Buffer?', req.body instanceof Buffer);
-
-                let parsedBody;
-                try {
-                    parsedBody =
-                        req.body instanceof Buffer
-                            ? JSON.parse(req.body.toString())
-                            : req.body;
-                    console.log(
-                        'Parsed Webhook Body:',
-                        JSON.stringify(parsedBody, null, 2),
-                    );
-                } catch (error) {
-                    console.error('⚠️ Error parsing webhook body:', error);
-                    return res.status(400).json({
-                        success: false,
-                        message: 'Invalid webhook payload',
-                    });
-                }
-
-                const { event, data } = parsedBody;
+                const rawBody = req.body.toString('utf8'); // Get the raw body as a string
                 const signature = req.headers['x-paystack-signature'] as string;
 
                 if (!signature) {
-                    console.error('⚠️ No Paystack signature found in headers');
                     return res.status(400).json({
                         success: false,
                         message: 'Missing Paystack signature',
                     });
                 }
 
-                console.log('Event Type:', event);
-                console.log('Signature:', signature);
-                console.log('Payload Data:', JSON.stringify(data, null, 2));
+                // Parse the raw body to JSON
+                const parsedBody = JSON.parse(rawBody);
+                const { event, data } = parsedBody;
 
+                // Process the webhook event in the service layer
                 const success = await this.paymentService.handleWebhookEvent(
                     event,
                     data,
                     signature,
-                );
-
-                console.log(
-                    'Webhook processing result:',
-                    success ? 'Success ✅' : 'Failed ❌',
+                    rawBody, // Pass the raw body for logging or further processing
                 );
 
                 return res.status(success ? 200 : 400).json({

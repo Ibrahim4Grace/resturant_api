@@ -172,10 +172,11 @@ export class PaymentService {
             return false;
         }
     }
-    private verifyWebhookSignature(data: any, signature: string): boolean {
+
+    private verifyWebhookSignature(data: string, signature: string): boolean {
         const hash = crypto
             .createHmac('sha512', this.PAYSTACK_SECRET)
-            .update(JSON.stringify(data))
+            .update(data) // Use the raw body directly
             .digest('hex');
 
         return hash === signature;
@@ -185,21 +186,71 @@ export class PaymentService {
         event: string,
         data: any,
         signature: string,
+        rawBody: string, // Accept raw body for logging
     ): Promise<boolean> {
-        const isValidSignature = this.verifyWebhookSignature(data, signature);
+        console.log('🔔 Webhook received');
+        console.log('Event Type:', event);
+        console.log('Payload Data:', JSON.stringify(data, null, 2));
+        console.log('Signature:', signature);
+
+        // Verify the webhook signature
+        const isValidSignature = this.verifyWebhookSignature(
+            rawBody,
+            signature,
+        );
         if (!isValidSignature) {
-            console.error('Invalid webhook signature');
+            console.error('⚠️ Invalid webhook signature');
             return false;
         }
 
+        // Handle specific events
         if (event === 'charge.success') {
+            console.log('Processing charge.success event...');
             const isVerified = await this.verifyPayment(data.reference);
             if (isVerified) {
+                console.log(
+                    'Payment verified. Processing successful payment...',
+                );
                 await this.processSuccessfulPayment(data);
                 return true;
+            } else {
+                console.error('⚠️ Payment verification failed');
+                return false;
             }
         }
 
+        console.warn(`⚠️ Unhandled event type: ${event}`);
         return false;
     }
+
+    // private verifyWebhookSignature(data: string, signature: string): boolean {
+    //     const hash = crypto
+    //         .createHmac('sha512', this.PAYSTACK_SECRET)
+    //         .update(data) // Use the raw body directly
+    //         .digest('hex');
+
+    //     return hash === signature;
+    // }
+
+    // async handleWebhookEvent(
+    //     event: string,
+    //     data: any,
+    //     signature: string,
+    // ): Promise<boolean> {
+    //     const isValidSignature = this.verifyWebhookSignature(data, signature);
+    //     if (!isValidSignature) {
+    //         console.error('Invalid webhook signature');
+    //         return false;
+    //     }
+
+    //     if (event === 'charge.success') {
+    //         const isVerified = await this.verifyPayment(data.reference);
+    //         if (isVerified) {
+    //             await this.processSuccessfulPayment(data);
+    //             return true;
+    //         }
+    //     }
+
+    //     return false;
+    // }
 }
