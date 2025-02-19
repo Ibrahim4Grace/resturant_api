@@ -58,10 +58,7 @@ export const authMiddleware = () => {
                 }
 
                 const payload = await TokenService.verifyAuthToken(token);
-                console.log('Full Payload:', payload);
-
                 const user = await validateUser(payload.userId);
-                console.log('Validated user:', user);
 
                 req.user = {
                     id: user.id,
@@ -69,11 +66,9 @@ export const authMiddleware = () => {
                     role: user.role,
                     name: user.name,
                 };
-                console.log('Set req.user to:', req.user);
 
                 next();
             } catch (error) {
-                console.error('Authentication errors:', error);
                 if (error instanceof Unauthorized) {
                     return res.status(401).json({
                         status_code: '401',
@@ -95,7 +90,6 @@ export const authorization = (model: any, roles: string[]) =>
         }
 
         const currentUser = await model.findById(userId);
-        console.log('Found current user:', currentUser);
         if (!currentUser) {
             throw new ResourceNotFound('User not found');
         }
