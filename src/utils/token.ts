@@ -18,7 +18,8 @@ export class TokenService {
         }
 
         return jwt.sign(payload, config.JWT_AUTH_SECRET, {
-            expiresIn: config.JWT_AUTH_EXPIRY,
+            // expiresIn: config.JWT_AUTH_EXPIRY,
+            expiresIn: '1d',
         });
     }
 
@@ -49,7 +50,8 @@ export class TokenService {
         }
 
         return jwt.sign(payload, config.JWT_EMAIL_SECRET, {
-            expiresIn: config.EMAIL_TOKEN_EXPIRY,
+            // expiresIn: config.EMAIL_TOKEN_EXPIRY,
+            expiresIn: '1h',
         });
     }
 
