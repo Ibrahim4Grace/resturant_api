@@ -5,7 +5,7 @@ const regex =
 
 const registerSchema = z.object({
     name: z.string().min(1, 'Name is required').max(30),
-    email: z.string().email().trim().min(1, 'Email is required'),
+    email: z.string().email().trim().toLowerCase().min(1, 'Email is required'),
     street: z.string().min(1, 'Street is required'),
     city: z.string().min(1, 'City is required'),
     state: z.string().min(1, 'State is required'),

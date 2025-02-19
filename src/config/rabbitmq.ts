@@ -19,7 +19,7 @@ export const connectRabbitMQ = async (): Promise<Channel> => {
         return channel;
     } catch (error) {
         console.error('Failed to connect to RabbitMQ:', error);
-        process.exit(1);
+        return null;
     }
 };
 

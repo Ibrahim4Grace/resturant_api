@@ -32,7 +32,7 @@ export interface OrderItem {
 }
 
 export interface DeliveryInfo {
-    address: string;
+    delivery_address: string;
     riderId?: string;
     rider_name?: string;
     estimatedDeliveryTime?: Date;

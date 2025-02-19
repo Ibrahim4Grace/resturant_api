@@ -39,7 +39,7 @@ const orderSchema = new Schema<IOrder>(
             required: true,
         },
         delivery_info: {
-            address: String,
+            delivery_address: String,
             riderId: {
                 type: Schema.Types.ObjectId,
                 ref: 'Rider',

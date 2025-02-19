@@ -100,6 +100,7 @@ export class OrderService {
     }
     private sanitizeOrder(order: IOrder): Partial<IOrder> {
         return {
+            _id: order._id,
             order_number: order.order_number,
             status: order.status,
             total_price: order.total_price,
@@ -120,7 +121,7 @@ export class OrderService {
         orderData: {
             items: { menuId: string; quantity: number }[];
             restaurantId: string;
-            address: string;
+            delivery_address: string;
         },
     ): Promise<Partial<IOrder>> {
         const user = await this.validateUser(userId);
@@ -135,7 +136,9 @@ export class OrderService {
             delivery_fee,
         } = await this.calculateOrderAmounts(orderData.items);
 
-        const delivery_info: DeliveryInfo = { address: orderData.address };
+        const delivery_info: DeliveryInfo = {
+            delivery_address: orderData.delivery_address,
+        };
 
         const newOrder = await this.order.create({
             order_number,

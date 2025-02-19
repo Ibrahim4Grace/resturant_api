@@ -26,9 +26,10 @@ export const orderDocs = {
                                                     type: 'number',
                                                     example: 2,
                                                 },
-                                                price: {
-                                                    type: 'number',
-                                                    example: 10,
+                                                delivery_address: {
+                                                    type: 'string',
+                                                    example:
+                                                        '123 main st, Ajah, LA',
                                                 },
                                             },
                                         },
