@@ -18,7 +18,7 @@ export class TokenService {
         }
 
         return jwt.sign(payload, config.JWT_AUTH_SECRET, {
-            expiresIn: '1d',
+            expiresIn: config.JWT_AUTH_EXPIRY,
         });
     }
 
@@ -49,7 +49,7 @@ export class TokenService {
         }
 
         return jwt.sign(payload, config.JWT_EMAIL_SECRET, {
-            expiresIn: '1h',
+            expiresIn: config.EMAIL_TOKEN_EXPIRY,
         });
     }
 

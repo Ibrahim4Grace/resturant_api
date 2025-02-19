@@ -188,6 +188,7 @@ export class PaymentService {
     ): Promise<boolean> {
         const isValidSignature = this.verifyWebhookSignature(data, signature);
         if (!isValidSignature) {
+            console.error('Invalid webhook signature');
             return false;
         }
 
