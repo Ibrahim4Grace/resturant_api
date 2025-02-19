@@ -1,4 +1,4 @@
-import jwt, { SignOptions } from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
 import { Unauthorized } from '../middlewares/index';
 import { config } from '../config/index';
 import {
@@ -17,11 +17,9 @@ export class TokenService {
             throw new Error('JWT_AUTH_SECRET is not defined');
         }
 
-        const options: SignOptions = {
-            expiresIn: config.JWT_AUTH_EXPIRY as string | number,
-        };
-
-        return jwt.sign(payload, config.JWT_AUTH_SECRET, options);
+        return jwt.sign(payload, config.JWT_AUTH_SECRET, {
+            expiresIn: '1d',
+        });
     }
 
     static verifyAuthToken(token: string): Promise<AuthJwtPayload> {
@@ -49,11 +47,10 @@ export class TokenService {
         if (!config.JWT_EMAIL_SECRET) {
             throw new Error('JWT_EMAIL_SECRET is not defined');
         }
-        const options: SignOptions = {
-            expiresIn: config.EMAIL_TOKEN_EXPIRY as string | number,
-        };
 
-        return jwt.sign(payload, config.JWT_EMAIL_SECRET, options);
+        return jwt.sign(payload, config.JWT_EMAIL_SECRET, {
+            expiresIn: '1h',
+        });
     }
 
     static verifyEmailToken(token: string): Promise<EmailVerificationPayload> {
