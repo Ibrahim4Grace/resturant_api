@@ -78,7 +78,7 @@ export default class PaymentController implements Controller {
     private handleWebhook = asyncHandler(
         async (req: Request, res: Response) => {
             try {
-                const rawBody = req.body.toString('utf8'); // Get the raw body as a string
+                const rawBody = req.body.toString('utf8');
                 const signature = req.headers['x-paystack-signature'] as string;
 
                 if (!signature) {
@@ -88,16 +88,14 @@ export default class PaymentController implements Controller {
                     });
                 }
 
-                // Parse the raw body to JSON
                 const parsedBody = JSON.parse(rawBody);
                 const { event, data } = parsedBody;
 
-                // Process the webhook event in the service layer
                 const success = await this.paymentService.handleWebhookEvent(
                     event,
                     data,
                     signature,
-                    rawBody, // Pass the raw body for logging or further processing
+                    rawBody,
                 );
 
                 return res.status(success ? 200 : 400).json({

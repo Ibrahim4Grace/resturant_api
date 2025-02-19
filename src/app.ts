@@ -6,7 +6,6 @@ import swaggerUi from 'swagger-ui-express';
 import morgan from 'morgan';
 import { EmailQueueService } from '../src/utils/index';
 import { Controller } from '../src/types/index';
-import bodyParser from 'body-parser';
 import { errorHandler, routeNotFound } from '../src/middlewares/index';
 import {
     corsOptions,
@@ -39,7 +38,6 @@ class App {
         if (config.NODE_ENV === 'development') {
             this.express.use(morgan('dev'));
         }
-        this.express.use(bodyParser.raw({ type: 'application/json' }));
         this.express.use(express.json({ limit: '15mb' }));
         this.express.use(express.urlencoded({ limit: '15mb', extended: true }));
         this.express.use(compression());

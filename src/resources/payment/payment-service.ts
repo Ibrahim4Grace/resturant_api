@@ -176,7 +176,7 @@ export class PaymentService {
     private verifyWebhookSignature(data: string, signature: string): boolean {
         const hash = crypto
             .createHmac('sha512', this.PAYSTACK_SECRET)
-            .update(data) // Use the raw body directly
+            .update(data)
             .digest('hex');
 
         return hash === signature;
