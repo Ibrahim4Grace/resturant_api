@@ -1,11 +1,11 @@
 import axios from 'axios';
-import { config } from '../../config/index';
 import crypto from 'crypto';
+import { config } from '../../config/index';
 import PaymentModel from '../../resources/payment/payment-model';
 import { OrderService } from '../../resources/order/order-service';
 import { UserService } from '../../resources/user/user-service';
 import { IOrder } from '../../resources/order/order-interface';
-import { EmailQueueService } from '../../utils/index';
+import { EmailQueueService, log } from '../../utils/index';
 import { ServerError, ResourceNotFound } from '../../middlewares/index';
 import { orderConfirmationEmail } from '../../resources/order/order-email-template';
 import {
@@ -106,24 +106,24 @@ export class PaymentService {
             { status: 'completed' },
         );
 
-        await this.orderService.updateOrderStatus({
-            orderId: data.metadata.order_id,
-            restaurantId: data.metadata.restaurant_id,
+        // Store these values to reuse
+        const orderId = data.metadata.order_id;
+        const restaurantId = data.metadata.restaurant_id;
+        const updatedOrder = await this.orderService.updateOrderStatus({
+            orderId,
+            restaurantId,
             status: 'processing',
         });
 
-        // Send email confirmation
-        const order = await this.orderService.getOrderById(
-            data.metadata.order_id,
-        );
+        // Get user info using the updated order we already have
         const user = await this.userService.getUserById(
-            order.userId.toString(),
+            updatedOrder.userId.toString(),
         );
 
-        if (user && order) {
+        if (user && updatedOrder) {
             const emailOptions = orderConfirmationEmail(
                 { name: user.name, email: user.email },
-                order as IOrder,
+                updatedOrder as IOrder,
             );
             await EmailQueueService.addEmailToQueue(emailOptions);
         }
@@ -168,7 +168,7 @@ export class PaymentService {
 
             return response.data.data.status === 'success';
         } catch (error) {
-            console.error('Payment verification error:', error);
+            log.error('Payment verification error:', error);
             return false;
         }
     }
@@ -222,15 +222,6 @@ export class PaymentService {
         console.warn(`⚠️ Unhandled event type: ${event}`);
         return false;
     }
-
-    // private verifyWebhookSignature(data: string, signature: string): boolean {
-    //     const hash = crypto
-    //         .createHmac('sha512', this.PAYSTACK_SECRET)
-    //         .update(data) // Use the raw body directly
-    //         .digest('hex');
-
-    //     return hash === signature;
-    // }
 
     // async handleWebhookEvent(
     //     event: string,
