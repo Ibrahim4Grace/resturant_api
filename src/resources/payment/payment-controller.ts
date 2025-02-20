@@ -78,10 +78,18 @@ export default class PaymentController implements Controller {
     private handleWebhook = asyncHandler(
         async (req: Request, res: Response) => {
             try {
+                console.log('🔔 Webhook received in controller');
+                console.log('Request Body:', JSON.stringify(req.body, null, 2));
+                console.log(
+                    'Signature Header:',
+                    req.headers['x-paystack-signature'],
+                );
+
                 const parsedBody = req.body;
                 const signature = req.headers['x-paystack-signature'] as string;
 
                 if (!signature) {
+                    console.error('⚠️ Missing Paystack signature');
                     return res.status(400).json({
                         success: false,
                         message: 'Missing Paystack signature',
@@ -90,12 +98,17 @@ export default class PaymentController implements Controller {
 
                 const { event, data } = parsedBody;
 
+                console.log('Event:', event);
+                console.log('Data:', JSON.stringify(data, null, 2));
+
                 const success = await this.paymentService.handleWebhookEvent(
                     event,
                     data,
                     signature,
                     JSON.stringify(parsedBody),
                 );
+
+                console.log('Webhook processing result:', success);
 
                 return res.status(success ? 200 : 400).json({
                     success,
@@ -112,6 +125,44 @@ export default class PaymentController implements Controller {
             }
         },
     );
+
+    // private handleWebhook = asyncHandler(
+    //     async (req: Request, res: Response) => {
+    //         try {
+    //             const parsedBody = req.body;
+    //             const signature = req.headers['x-paystack-signature'] as string;
+
+    //             if (!signature) {
+    //                 return res.status(400).json({
+    //                     success: false,
+    //                     message: 'Missing Paystack signature',
+    //                 });
+    //             }
+
+    //             const { event, data } = parsedBody;
+
+    //             const success = await this.paymentService.handleWebhookEvent(
+    //                 event,
+    //                 data,
+    //                 signature,
+    //                 JSON.stringify(parsedBody),
+    //             );
+
+    //             return res.status(success ? 200 : 400).json({
+    //                 success,
+    //                 message: success
+    //                     ? 'Webhook processed successfully'
+    //                     : 'Webhook processing failed',
+    //             });
+    //         } catch (error) {
+    //             console.error('🚨 Webhook processing error:', error);
+    //             return res.status(500).json({
+    //                 success: false,
+    //                 message: 'Internal server error processing webhook',
+    //             });
+    //         }
+    //     },
+    // );
 
     // private handleWebhook = asyncHandler(
     //     async (req: Request, res: Response) => {

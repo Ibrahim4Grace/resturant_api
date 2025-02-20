@@ -186,7 +186,7 @@ export class PaymentService {
         event: string,
         data: any,
         signature: string,
-        rawBody: string, // Accept raw body for logging
+        rawBody: string,
     ): Promise<boolean> {
         console.log('🔔 Webhook received');
         console.log('Event Type:', event);
