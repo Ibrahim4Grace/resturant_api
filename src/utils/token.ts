@@ -16,10 +16,11 @@ export class TokenService {
         if (!config.JWT_AUTH_SECRET) {
             throw new Error('JWT_AUTH_SECRET is not defined');
         }
-
+        console.log('JWT_AUTH_EXPIRY', config.JWT_AUTH_EXPIRY);
+        const expiry = String(config.JWT_AUTH_EXPIRY).trim();
         return jwt.sign(payload, config.JWT_AUTH_SECRET, {
             // expiresIn: config.JWT_AUTH_EXPIRY,
-            expiresIn: '1d',
+            expiresIn: expiry,
         });
     }
 
@@ -48,10 +49,11 @@ export class TokenService {
         if (!config.JWT_EMAIL_SECRET) {
             throw new Error('JWT_EMAIL_SECRET is not defined');
         }
-
+        console.log('EMAIL_TOKEN_EXPIRY', config.EMAIL_TOKEN_EXPIRY);
+        const expiry = String(config.EMAIL_TOKEN_EXPIRY).trim();
         return jwt.sign(payload, config.JWT_EMAIL_SECRET, {
             // expiresIn: config.EMAIL_TOKEN_EXPIRY,
-            expiresIn: '1h',
+            expiresIn: expiry,
         });
     }
 

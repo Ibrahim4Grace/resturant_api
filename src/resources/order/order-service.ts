@@ -48,16 +48,12 @@ export class OrderService {
         orderId: string,
         restaurantId: string,
     ): Promise<void> {
-        console.log(
-            `Checking ownership - Order: ${orderId}, Restaurant: ${restaurantId}`,
-        );
         const order = await this.order
             .findOne({
                 _id: orderId,
                 restaurantId: restaurantId,
             })
             .lean();
-        console.log('Found order:', order);
 
         if (!order) {
             throw new Unauthorized(
