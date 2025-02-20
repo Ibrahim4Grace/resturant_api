@@ -25,7 +25,7 @@ const swaggerOptions: swaggerJsdoc.Options = {
                 description: 'Local server',
             },
             {
-                url: 'https://korex-restaurant.vercel.app/',
+                url: 'https://chefkayrestaurant.onrender.com/',
                 description: 'Live server',
             },
         ],
