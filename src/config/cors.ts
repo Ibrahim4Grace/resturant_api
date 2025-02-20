@@ -11,6 +11,6 @@ export const corsOptions = {
             callback(new Error('Not allowed by CORS'));
         }
     },
-    credentials: true, // Allow credentials (cookies, authorization headers, etc.)
-    optionsSuccessStatus: 201, // Some legacy browsers choke on 204
+    credentials: true,
+    optionsSuccessStatus: 201, 
 };
