@@ -1,5 +1,5 @@
 import { connectRabbitMQ } from '../config/index';
-import { sendMail } from '../utils/index';
+import { sendMail, log } from '../utils/index';
 import { EmailData } from '../types/index';
 
 const QUEUE_NAME = 'emailQueue';
@@ -10,9 +10,9 @@ export class EmailQueueService {
         try {
             const channel = await connectRabbitMQ();
             await channel.assertQueue(QUEUE_NAME, { durable: true });
-            console.info(`Queue "${QUEUE_NAME}" is ready`);
+            log.info(`Queue "${QUEUE_NAME}" is ready`);
         } catch (error) {
-            console.error('Failed to initialize email queue:', error);
+            log.error('Failed to initialize email queue:', error);
             throw error;
         }
     }
@@ -26,9 +26,9 @@ export class EmailQueueService {
                 Buffer.from(JSON.stringify(emailOptions)),
                 { persistent: true },
             );
-            console.info('Email added to queue:', emailOptions);
+            log.info('Email added to queue:', emailOptions);
         } catch (error) {
-            console.error('Failed to add email to queue:', error);
+            log.error('Failed to add email to queue:', error);
             throw error;
         }
     }
@@ -39,7 +39,7 @@ export class EmailQueueService {
             const channel = await connectRabbitMQ();
             await channel.assertQueue(QUEUE_NAME, { durable: true });
 
-            console.info(`Waiting for messages in queue: "${QUEUE_NAME}"`);
+            log.info(`Waiting for messages in queue: "${QUEUE_NAME}"`);
 
             channel.consume(
                 QUEUE_NAME,
@@ -52,11 +52,10 @@ export class EmailQueueService {
 
                             // Send the email
                             await sendMail(emailOptions);
-
-                            console.info(`Email sent to ${emailOptions.to}`);
+                            log.info(`Email sent to ${emailOptions.to}`);
                             channel.ack(msg);
                         } catch (error) {
-                            console.error('Failed to process email:', error);
+                            log.error('Failed to process email:', error);
                             channel.nack(msg, false, false); // Reject the message without requeueing
                         }
                     }
@@ -64,7 +63,7 @@ export class EmailQueueService {
                 { noAck: false },
             );
         } catch (error) {
-            console.error('Failed to consume emails:', error);
+            log.error('Failed to consume emails:', error);
             throw error;
         }
     }

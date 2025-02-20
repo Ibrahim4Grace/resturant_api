@@ -13,6 +13,8 @@ import {
     authMiddleware,
     authorization,
     sendJsonResponse,
+    BadRequest,
+    ServerError,
 } from '../../middlewares/index';
 
 export default class PaymentController implements Controller {
@@ -44,10 +46,6 @@ export default class PaymentController implements Controller {
         this.router.post(
             `${this.path}/webhook`,
             express.raw({ type: 'application/json' }),
-            (req, res, next) => {
-                console.log('Webhook route hit:', new Date().toISOString());
-                next();
-            },
             this.handleWebhook,
         );
     }
@@ -60,7 +58,6 @@ export default class PaymentController implements Controller {
             if (!userId) {
                 throw new ResourceNotFound('User not found');
             }
-            console.log('Payment Initialize Request Body:', req.body);
 
             const params: paymentProcess = {
                 userId: userId.toString(),
@@ -77,110 +74,28 @@ export default class PaymentController implements Controller {
 
     private handleWebhook = asyncHandler(
         async (req: Request, res: Response) => {
-            try {
-                console.log('🔔 Webhook received in controller');
-                console.log('Request Body:', JSON.stringify(req.body, null, 2));
-                console.log(
-                    'Signature Header:',
-                    req.headers['x-paystack-signature'],
-                );
+            const parsedBody = req.body;
+            const signature = req.headers['x-paystack-signature'] as string;
 
-                const parsedBody = req.body;
-                const signature = req.headers['x-paystack-signature'] as string;
-
-                if (!signature) {
-                    console.error('⚠️ Missing Paystack signature');
-                    return res.status(400).json({
-                        success: false,
-                        message: 'Missing Paystack signature',
-                    });
-                }
-
-                const { event, data } = parsedBody;
-
-                console.log('Event:', event);
-                console.log('Data:', JSON.stringify(data, null, 2));
-
-                const success = await this.paymentService.handleWebhookEvent(
-                    event,
-                    data,
-                    signature,
-                    JSON.stringify(parsedBody),
-                );
-
-                console.log('Webhook processing result:', success);
-
-                return res.status(success ? 200 : 400).json({
-                    success,
-                    message: success
-                        ? 'Webhook processed successfully'
-                        : 'Webhook processing failed',
-                });
-            } catch (error) {
-                console.error('🚨 Webhook processing error:', error);
-                return res.status(500).json({
-                    success: false,
-                    message: 'Internal server error processing webhook',
-                });
+            if (!signature) {
+                throw new BadRequest('Missing Paystack signature');
             }
+
+            const { event, data } = parsedBody;
+
+            const success = await this.paymentService.handleWebhookEvent(
+                event,
+                data,
+                signature,
+                JSON.stringify(parsedBody),
+            );
+
+            return res.status(success ? 200 : 400).json({
+                success,
+                message: success
+                    ? 'Webhook processed successfully'
+                    : 'Webhook processing failed',
+            });
         },
     );
-
-    // private handleWebhook = asyncHandler(
-    //     async (req: Request, res: Response) => {
-    //         try {
-    //             const parsedBody = req.body;
-    //             const signature = req.headers['x-paystack-signature'] as string;
-
-    //             if (!signature) {
-    //                 return res.status(400).json({
-    //                     success: false,
-    //                     message: 'Missing Paystack signature',
-    //                 });
-    //             }
-
-    //             const { event, data } = parsedBody;
-
-    //             const success = await this.paymentService.handleWebhookEvent(
-    //                 event,
-    //                 data,
-    //                 signature,
-    //                 JSON.stringify(parsedBody),
-    //             );
-
-    //             return res.status(success ? 200 : 400).json({
-    //                 success,
-    //                 message: success
-    //                     ? 'Webhook processed successfully'
-    //                     : 'Webhook processing failed',
-    //             });
-    //         } catch (error) {
-    //             console.error('🚨 Webhook processing error:', error);
-    //             return res.status(500).json({
-    //                 success: false,
-    //                 message: 'Internal server error processing webhook',
-    //             });
-    //         }
-    //     },
-    // );
-
-    // private handleWebhook = asyncHandler(
-    //     async (req: Request, res: Response) => {
-    //         const { event, data } = req.body;
-    //         const signature = req.headers['x-paystack-signature'] as string;
-
-    //         const success = await this.paymentService.handleWebhookEvent(
-    //             event,
-    //             data,
-    //             signature,
-    //         );
-
-    //         return res.status(success ? 200 : 400).json({
-    //             success,
-    //             message: success
-    //                 ? 'Webhook processed successfully'
-    //                 : 'Webhook processing failed',
-    //         });
-    //     },
-    // );
 }

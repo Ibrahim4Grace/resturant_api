@@ -4,7 +4,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import swaggerUi from 'swagger-ui-express';
 import morgan from 'morgan';
-import { EmailQueueService } from '../src/utils/index';
+import { EmailQueueService, log } from '../src/utils/index';
 import { Controller } from '../src/types/index';
 import { errorHandler, routeNotFound } from '../src/middlewares/index';
 import {
@@ -13,6 +13,7 @@ import {
     specs,
     initializeDatabase,
     closeRabbitMQ,
+    keepAlive,
 } from '../src/config/index';
 
 class App {
@@ -30,6 +31,7 @@ class App {
         this.initializeDefaultRoute();
         this.initializeErrorHandling();
         this.setupGracefulShutdown();
+        this.initializeKeepAlive();
     }
 
     private initializeMiddlewares(): void {
@@ -54,9 +56,9 @@ class App {
         try {
             await EmailQueueService.initializeEmailQueue();
             await EmailQueueService.consumeEmails();
-            console.info('RabbitMQ initialized successfully');
+            log.info('RabbitMQ initialized successfully');
         } catch (error) {
-            console.error('Failed to initialize RabbitMQ:', error);
+            log.error('Failed to initialize RabbitMQ:', error);
             process.exit(1);
         }
     }
@@ -81,14 +83,13 @@ class App {
 
     private setupGracefulShutdown(): void {
         const shutdown = async (signal: string) => {
-            console.info(`${signal} received. Shutting down gracefully...`);
+            log.info(`${signal} received. Shutting down gracefully...`);
             try {
                 await closeRabbitMQ();
-                console.info('RabbitMQ connection closed');
+                log.info('RabbitMQ connection closed');
                 process.exit(0);
             } catch (error) {
-                console.error('Error during shutdown:', error);
-                process.exit(1);
+                log.error('Error during shutdown:', error);
             }
         };
 
@@ -97,9 +98,14 @@ class App {
         );
     }
 
+    private initializeKeepAlive(): void {
+        log.info('Initializing server cron job...');
+        keepAlive(config.PROD_URL);
+    }
+
     public listen(): void {
         this.express.listen(this.port, () => {
-            console.info(`App listening on the port ${this.port}`);
+            log.info(`App listening on the port ${this.port}`);
         });
     }
 }

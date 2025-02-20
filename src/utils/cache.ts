@@ -1,16 +1,12 @@
 import { redis } from '../config/index';
-// import { console } from '../utils/index';
+import { log } from '../utils/index';
 
 // Define TTL constants
 export const CACHE_TTL = {
     ONE_MINUTE: 60,
-    FIVE_MINUTES: 60,
-    ONE_HOUR: 60,
-    ONE_DAY: 60,
-
-    // FIVE_MINUTES: 300,
-    // ONE_HOUR: 3600,
-    // ONE_DAY: 86400,
+    FIVE_MINUTES: 300,
+    ONE_HOUR: 3600,
+    ONE_DAY: 86400,
 } as const;
 
 // Generic cache data function
@@ -21,9 +17,9 @@ export async function cacheData<T>(
 ): Promise<void> {
     try {
         await redis.set(key, JSON.stringify(data), 'EX', expirationInSeconds);
-        console.info(`Cached data for key: ${key}`);
+        log.info(`Cached data for key: ${key}`);
     } catch (error) {
-        console.error(`Error caching data for key ${key}:`, error);
+        log.error(`Error caching data for key ${key}:`, error);
     }
 }
 
@@ -32,13 +28,13 @@ export async function getCachedData<T>(key: string): Promise<T | null> {
     try {
         const cachedData = await redis.get(key);
         if (cachedData) {
-            console.info(`Cache hit for key: ${key}`);
+            log.info(`Cache hit for key: ${key}`);
             return JSON.parse(cachedData);
         }
-        console.info(`Cache miss for key: ${key}`);
+        log.info(`Cache miss for key: ${key}`);
         return null;
     } catch (error) {
-        console.error(`Error getting cached data for key ${key}:`, error);
+        log.error(`Error getting cached data for key ${key}:`, error);
         return null;
     }
 }
@@ -47,9 +43,9 @@ export async function getCachedData<T>(key: string): Promise<T | null> {
 export async function deleteCacheData(key: string): Promise<void> {
     try {
         await redis.del(key);
-        console.info(`Deleted cache for key: ${key}`);
+        log.info(`Deleted cache for key: ${key}`);
     } catch (error) {
-        console.error(`Error deleting cache for key ${key}:`, error);
+        log.error(`Error deleting cache for key ${key}:`, error);
     }
 }
 

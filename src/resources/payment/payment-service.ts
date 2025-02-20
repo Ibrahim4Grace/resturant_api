@@ -6,8 +6,12 @@ import { OrderService } from '../../resources/order/order-service';
 import { UserService } from '../../resources/user/user-service';
 import { IOrder } from '../../resources/order/order-interface';
 import { EmailQueueService, log } from '../../utils/index';
-import { ServerError, ResourceNotFound } from '../../middlewares/index';
 import { orderConfirmationEmail } from '../../resources/order/order-email-template';
+import {
+    ServerError,
+    ResourceNotFound,
+    BadRequest,
+} from '../../middlewares/index';
 import {
     PaystackResponse,
     PaymentResponse,
@@ -33,12 +37,22 @@ export class PaymentService {
             status: 'processing',
         });
 
-        await this.orderService.updateOrderStatus({
+        const updatedOrder = await this.orderService.updateOrderStatus({
             orderId: order._id.toString(),
             restaurantId: order.restaurantId.toString(),
             status: 'processing',
         });
+        const user = await this.userService.getUserById(
+            order.userId.toString(),
+        );
 
+        if (user && updatedOrder) {
+            const emailOptions = orderConfirmationEmail(
+                { name: user.name, email: user.email },
+                updatedOrder as IOrder,
+            );
+            await EmailQueueService.addEmailToQueue(emailOptions);
+        }
         return {
             success: true,
             message: 'Order confirmed for cash on delivery',
@@ -188,60 +202,24 @@ export class PaymentService {
         signature: string,
         rawBody: string,
     ): Promise<boolean> {
-        console.log('🔔 Webhook received');
-        console.log('Event Type:', event);
-        console.log('Payload Data:', JSON.stringify(data, null, 2));
-        console.log('Signature:', signature);
-
-        // Verify the webhook signature
         const isValidSignature = this.verifyWebhookSignature(
             rawBody,
             signature,
         );
         if (!isValidSignature) {
-            console.error('⚠️ Invalid webhook signature');
-            return false;
+            throw new BadRequest('Invalid webhook signature');
         }
 
         // Handle specific events
         if (event === 'charge.success') {
-            console.log('Processing charge.success event...');
             const isVerified = await this.verifyPayment(data.reference);
             if (isVerified) {
-                console.log(
-                    'Payment verified. Processing successful payment...',
-                );
                 await this.processSuccessfulPayment(data);
                 return true;
             } else {
-                console.error('⚠️ Payment verification failed');
                 return false;
             }
         }
-
-        console.warn(`⚠️ Unhandled event type: ${event}`);
         return false;
     }
-
-    // async handleWebhookEvent(
-    //     event: string,
-    //     data: any,
-    //     signature: string,
-    // ): Promise<boolean> {
-    //     const isValidSignature = this.verifyWebhookSignature(data, signature);
-    //     if (!isValidSignature) {
-    //         console.error('Invalid webhook signature');
-    //         return false;
-    //     }
-
-    //     if (event === 'charge.success') {
-    //         const isVerified = await this.verifyPayment(data.reference);
-    //         if (isVerified) {
-    //             await this.processSuccessfulPayment(data);
-    //             return true;
-    //         }
-    //     }
-
-    //     return false;
-    // }
 }
