@@ -1,7 +1,9 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { Model, Document } from 'mongoose';
-import { IPaginationResponse } from '../types/index';
+import { IPaginationResponse, IPaginatedEntityResponse } from '../types/index';
+import { asyncHandler } from '../middlewares/index';
 import { CACHE_TTL, cacheData, getCachedData } from '../utils/index';
+type FilterFunction = (req: Request) => Record<string, any>;
 
 export async function getPaginatedAndCachedResults<T extends Document>(
     req: Request,
@@ -45,3 +47,40 @@ export async function getPaginatedAndCachedResults<T extends Document>(
 
     return paginatedResults;
 }
+
+export const paginatedResults = <T extends Document>(
+    model: Model<T>,
+    getFilter: FilterFunction = () => ({}),
+    sort: Record<string, 1 | -1> = { createdAt: -1 },
+) => {
+    return asyncHandler(
+        async (req: Request, res: Response, next: NextFunction) => {
+            const page = parseInt(req.query.page as string) || 1;
+            const perPage = parseInt(req.query.limit as string) || 10;
+
+            const filter = getFilter(req);
+
+            const totalItems = await model.countDocuments(filter);
+            const totalPages = Math.ceil(totalItems / perPage);
+
+            const results = await model
+                .find(filter)
+                .sort(sort)
+                .skip((page - 1) * perPage)
+                .limit(perPage)
+                .lean()
+                .exec();
+
+            const paginatedResults: IPaginatedEntityResponse<T> = {
+                results: results as T[],
+                pagination: {
+                    currentPage: page,
+                    totalPages,
+                    limit: perPage,
+                },
+            };
+            res.paginatedResults = paginatedResults;
+            next();
+        },
+    );
+};
