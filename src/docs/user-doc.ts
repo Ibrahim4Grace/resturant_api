@@ -358,14 +358,19 @@ export const authUserDocs = {
                 },
             },
         },
-        '/api/v1/user': {
+    },
+};
+
+export const userDocs = {
+    paths: {
+        '/api/v1/user/profile': {
             get: {
-                summary: 'Retrieve current user profile',
-                tags: ['User - Profile'],
+                summary: 'Get user profile',
+                tags: ['User'],
                 security: [{ BearerAuth: [] }],
                 responses: {
-                    '200': {
-                        description: 'User profile retrieved successfully.',
+                    200: {
+                        description: 'User profile retrieved successfully',
                         content: {
                             'application/json': {
                                 schema: {
@@ -378,139 +383,94 @@ export const authUserDocs = {
                                         message: {
                                             type: 'string',
                                             example:
-                                                'User profile retrieved successfully.',
+                                                'User retrieved successfully',
                                         },
                                         data: {
-                                            type: 'object',
-                                            properties: {
-                                                name: {
-                                                    type: 'string',
-                                                    example: 'John Doe',
-                                                },
-                                                email: {
-                                                    type: 'string',
-                                                    example:
-                                                        'john.doe@example.com',
-                                                },
-                                                isEmailVerified: {
-                                                    type: 'boolean',
-                                                    example: true,
-                                                },
-                                            },
+                                            $ref: '#/components/schemas/User',
                                         },
                                     },
                                 },
                             },
                         },
                     },
-                    '401': {
-                        description:
-                            'Unauthorized. Bearer token is missing or invalid.',
-                    },
-                    '500': {
-                        description: 'Server error',
-                    },
+                    404: { description: 'User not found' },
                 },
             },
             put: {
-                summary: 'Update current user profile',
-                tags: ['User - Profile'],
-                security: [
-                    {
-                        BearerAuth: [],
-                    },
-                ],
+                summary: 'Update user profile',
+                tags: ['User'],
+                security: [{ BearerAuth: [] }],
                 requestBody: {
                     required: true,
                     content: {
                         'application/json': {
-                            schema: {
-                                type: 'object',
-                                properties: {
-                                    name: {
-                                        type: 'string',
-                                        example: 'Jane Doe',
-                                    },
-                                    email: {
-                                        type: 'string',
-                                        example: 'jane.doe@example.com',
-                                    },
-                                    phone: {
-                                        type: 'string',
-                                        example: '+1234567890',
-                                    },
-                                    addresses: {
-                                        type: 'object',
-                                        properties: {
-                                            street: {
-                                                type: 'string',
-                                                example: '123 Main St',
-                                            },
-                                            city: {
-                                                type: 'string',
-                                                example: 'New York',
-                                            },
-                                            state: {
-                                                type: 'string',
-                                                example: 'NY',
-                                            },
-                                        },
-                                    },
-                                },
-                            },
+                            schema: { $ref: '#/components/schemas/UserUpdate' },
                         },
                     },
                 },
                 responses: {
-                    '200': {
-                        description: 'User profile updated successfully.',
+                    200: { description: 'User updated successfully' },
+                    404: { description: 'User not found' },
+                },
+            },
+        },
+        '/api/v1/user/address': {
+            post: {
+                summary: 'Add new address',
+                tags: ['User'],
+                security: [{ BearerAuth: [] }],
+                requestBody: {
+                    required: true,
+                    content: {
+                        'application/json': {
+                            schema: { $ref: '#/components/schemas/Address' },
+                        },
+                    },
+                },
+                responses: {
+                    201: { description: 'Address added successfully' },
+                    409: { description: 'Duplicate address' },
+                },
+            },
+            get: {
+                summary: 'Get user addresses',
+                tags: ['User'],
+                security: [{ BearerAuth: [] }],
+                parameters: [
+                    {
+                        in: 'query',
+                        name: 'page',
+                        schema: { type: 'integer', default: 1 },
+                        description: 'Page number for pagination',
+                    },
+                    {
+                        in: 'query',
+                        name: 'limit',
+                        schema: { type: 'integer', default: 10 },
+                        description: 'Number of items per page',
+                    },
+                ],
+                responses: {
+                    200: {
+                        description: 'Addresses retrieved successfully',
                         content: {
                             'application/json': {
                                 schema: {
                                     type: 'object',
                                     properties: {
-                                        status: {
-                                            type: 'number',
-                                            example: 200,
-                                        },
-                                        message: {
-                                            type: 'string',
-                                            example:
-                                                'User profile updated successfully.',
-                                        },
-                                        data: {
-                                            type: 'object',
-                                            properties: {
-                                                name: {
-                                                    type: 'string',
-                                                    example: 'Jane Doe',
-                                                },
-                                                email: {
-                                                    type: 'string',
-                                                    example:
-                                                        'jane.doe@example.com',
-                                                },
-                                                phone: {
-                                                    type: 'string',
-                                                    example: '+1234567890',
-                                                },
-                                                addresses: {
-                                                    type: 'object',
-                                                    properties: {
-                                                        street: {
-                                                            type: 'string',
-                                                            example:
-                                                                '123 Main St',
-                                                        },
-                                                        city: {
-                                                            type: 'string',
-                                                            example: 'New York',
-                                                        },
-                                                        state: {
-                                                            type: 'string',
-                                                            example: 'NY',
-                                                        },
-                                                    },
+                                        total: { type: 'integer' },
+                                        page: { type: 'integer' },
+                                        limit: { type: 'integer' },
+                                        addresses: {
+                                            type: 'array',
+                                            items: {
+                                                type: 'object',
+                                                properties: {
+                                                    id: { type: 'string' },
+                                                    street: { type: 'string' },
+                                                    city: { type: 'string' },
+                                                    state: { type: 'string' },
+                                                    zip: { type: 'string' },
                                                 },
                                             },
                                         },
@@ -519,20 +479,139 @@ export const authUserDocs = {
                             },
                         },
                     },
-                    '400': {
-                        description:
-                            'Bad request. Validation failed for one or more fields.',
+                    404: { description: 'User not found' },
+                },
+            },
+        },
+        '/api/v1/user/address/{addressId}': {
+            get: {
+                summary: 'Get address by ID',
+                tags: ['User'],
+                security: [{ BearerAuth: [] }],
+                parameters: [
+                    {
+                        in: 'path',
+                        name: 'addressId',
+                        required: true,
+                        schema: { type: 'string' },
                     },
-                    '401': {
-                        description:
-                            'Unauthorized. Bearer token is missing or invalid.',
+                ],
+                responses: {
+                    200: { description: 'Address retrieved successfully' },
+                    404: { description: 'Address not found' },
+                },
+            },
+            delete: {
+                summary: 'Delete address',
+                tags: ['User'],
+                security: [{ BearerAuth: [] }],
+                parameters: [
+                    {
+                        in: 'path',
+                        name: 'addressId',
+                        required: true,
+                        schema: { type: 'string' },
                     },
-                    '404': {
-                        description: 'User not found.',
+                ],
+                responses: {
+                    200: { description: 'Address deleted successfully' },
+                    404: { description: 'Address not found' },
+                },
+            },
+        },
+        '/api/v1/user/orders': {
+            get: {
+                summary: 'Get user orders',
+                tags: ['User'],
+                security: [{ BearerAuth: [] }],
+                parameters: [
+                    {
+                        in: 'query',
+                        name: 'page',
+                        schema: { type: 'integer', default: 1 },
+                        description: 'Page number for pagination',
                     },
-                    '500': {
-                        description: 'Server error',
+                    {
+                        in: 'query',
+                        name: 'limit',
+                        schema: { type: 'integer', default: 10 },
+                        description: 'Number of items per page',
                     },
+                ],
+                responses: {
+                    200: {
+                        description: 'Orders retrieved successfully',
+                        content: {
+                            'application/json': {
+                                schema: {
+                                    type: 'object',
+                                    properties: {
+                                        total: { type: 'integer' },
+                                        page: { type: 'integer' },
+                                        limit: { type: 'integer' },
+                                        addresses: {
+                                            type: 'array',
+                                            items: {
+                                                type: 'object',
+                                                properties: {
+                                                    id: { type: 'string' },
+                                                    street: { type: 'string' },
+                                                    city: { type: 'string' },
+                                                    state: { type: 'string' },
+                                                    zip: { type: 'string' },
+                                                },
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    404: { description: 'Order not found' },
+                },
+            },
+        },
+        '/api/v1/user/orders/{orderId}': {
+            get: {
+                summary: 'Get user order by ID',
+                tags: ['User'],
+                security: [{ BearerAuth: [] }],
+                parameters: [
+                    {
+                        in: 'path',
+                        name: 'orderId',
+                        required: true,
+                        schema: { type: 'string' },
+                    },
+                ],
+                responses: {
+                    200: { description: 'Order retrieved successfully' },
+                    404: { description: 'Order not found' },
+                },
+            },
+        },
+    },
+    components: {
+        schemas: {
+            User: {
+                type: 'object',
+                properties: {
+                    full_name: { type: 'string', example: 'John Doe' },
+                    email: { type: 'string', example: 'john.doe@example.com' },
+                },
+            },
+            UserUpdate: {
+                type: 'object',
+                properties: {
+                    full_name: { type: 'string', example: 'John Doe' },
+                },
+            },
+            Address: {
+                type: 'object',
+                properties: {
+                    street: { type: 'string', example: '123 Main St' },
+                    city: { type: 'string', example: 'New York' },
+                    state: { type: 'string', example: 'NY' },
                 },
             },
         },
@@ -542,5 +621,6 @@ export const authUserDocs = {
 export const allUserDocs = {
     paths: {
         ...authUserDocs.paths,
+        ...userDocs.paths,
     },
 };
