@@ -1,5 +1,5 @@
 import { EmailData } from '../../types/index';
-import { IUser, Address } from '../../resources/user/user-interface';
+import { IUser, IAddress } from '../../resources/user/user-interface';
 
 export const sendOTPByEmail = (
     user: { name: string; email: string },
@@ -53,7 +53,7 @@ export const PasswordResetEmail = (user: {
 
 export const newAddressAdded = (
     user: IUser,
-    addressData: Address,
+    addressData: IAddress,
 ): EmailData => {
     return {
         from: process.env.nodemailerEmail as string,

@@ -145,7 +145,7 @@ export class PaymentService {
 
     async processPayment(params: paymentProcess): Promise<PaymentResponse> {
         const { userId, orderId, paymentMethod, userEmail } = params;
-        const order = await this.userService.getUserOrder(userId, orderId);
+        const order = await this.userService.getUserOrderById(userId, orderId);
         if (!order) {
             throw new ResourceNotFound('Order not found');
         }
