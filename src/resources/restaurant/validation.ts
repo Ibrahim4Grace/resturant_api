@@ -16,7 +16,7 @@ const registerSchema = z.object({
             regex,
             'Password must include at least one uppercase letter, one lowercase letter, one number, and one special character',
         ),
-    images: z.any(),
+    businessLicense: z.any(),
 });
 
 const createSchema = z.object({
@@ -31,7 +31,7 @@ const createSchema = z.object({
             regex,
             'Password must include at least one uppercase letter, one lowercase letter, one number, and one special character',
         ),
-    images: z.any(),
+    businessLicense: z.any(),
 });
 
 // Create update schema with additional fields specific to restaurant updates and omit password

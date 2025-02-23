@@ -7,25 +7,26 @@ export interface IRider extends Document {
     name: string;
     email: string;
     password: string;
-    roles: UserRole[];
+    role: UserRole;
     address?: Address;
     phone: string;
     vehicleType?: string;
     vehicleNumber?: string;
-    licenseNumber?: string;
-    documents: documents[];
+    licenseImage: { imageId?: string; imageUrl?: string };
     currentLocation: Location;
     image?: ImageInfo;
     status?: 'available' | 'busy' | 'offline';
     rating?: number;
     bankInfo?: BankInfo;
     isEmailVerified: boolean;
+    isLocked: boolean;
+    failedLoginAttempts: number;
     googleId?: string;
-    createdAt: Date;
-    updatedAt: Date;
     lastPasswordChange?: Date;
     emailVerificationOTP?: emailVerificationOTP;
     passwordHistory?: IPasswordHistoryEntry[];
+    createdAt: Date;
+    updatedAt: Date;
 
     comparePassword(password: string): Promise<boolean>;
     generateEmailVerificationOTP(): Promise<{
@@ -35,19 +36,13 @@ export interface IRider extends Document {
 }
 
 export interface Address {
-    street?: string;
-    city?: string;
-    state?: string;
+    street: string;
+    city: string;
+    state: string;
 }
 export interface ImageInfo {
     imageId: string;
     imageUrl: string;
-}
-
-export interface documents {
-    type: string; // 'license', 'insurance', 'identity'
-    url: string;
-    verificationStatus: string;
 }
 
 export interface Location {
@@ -73,11 +68,23 @@ export interface RegisterRiderto {
     name: string;
     email: string;
     password: string;
-    role?: string;
+    phone: string;
+    address: Address;
+    licenseImage?: { imageId: string; imageUrl: string };
 }
 
 export interface emailVerificationOTP {
     otp: String;
     expiresAt: Date;
     verificationToken: String;
+}
+export interface loginResponse {
+    rider: Partial<IRider>;
+    token: string;
+}
+
+export interface UpdateOrderStatusParams {
+    riderId: string;
+    orderId: string;
+    status: string;
 }

@@ -1,4 +1,6 @@
 import { EmailData } from '../../types/index';
+import { IOrder } from '../../resources/order/order-interface';
+import { IUser } from '../../resources/user/user-interface';
 
 export const sendOTPByEmail = (
     rider: { name: string; email: string },
@@ -47,5 +49,15 @@ export const PasswordResetEmail = (rider: {
             <p>Hello ${rider.name},</p>
             <p>Your password has been successfully reset. If you did not perform this action, please contact our support team immediately.</p>
             <p>Best regards,<br>The Chef-kay restaurant Team</p>`,
+    };
+};
+
+export const riderAssignedEmail = (user: IUser, order: IOrder): EmailData => {
+    return {
+        from: process.env.nodemailerEmail as string,
+        to: user.email,
+        subject: 'Rider Assigned',
+        html: `<p>Hi ${user.name}, a rider has been assigned to your order (#${order.order_number}).</p>
+        <p>Best regards,<br>The Chef-kay restaurant Team</p>`,
     };
 };

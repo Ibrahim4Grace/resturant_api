@@ -73,6 +73,13 @@ export class RestaurantService {
         }
     }
 
+    private async findRestaurantByVerificationToken(verificationToken: string) {
+        return this.restaurant.findOne({
+            'emailVerificationOTP.verificationToken': verificationToken,
+            'emailVerificationOTP.expiresAt': { $gt: new Date() },
+        });
+    }
+
     private sanitizeRestaurant(restaurant: IRestaurant): ISanitizedRestaurant {
         return {
             _id: restaurant._id,
@@ -92,14 +99,12 @@ export class RestaurantService {
         restaurantData: RegisterRestaurantto,
         file?: Express.Multer.File,
     ): Promise<RegistrationResponse> {
-        // Validate unique constraints
         await Promise.all([
             this.checkDuplicateEmail(restaurantData.email),
             this.checkDuplicatePhone(restaurantData.phone),
             this.checkDuplicateAddress(restaurantData.address),
         ]);
 
-        // Create a user account for the unauthenticated user
         const user = await this.user.create({
             name: restaurantData.name,
             email: restaurantData.email,
@@ -204,11 +209,8 @@ export class RestaurantService {
         verificationToken: string,
         otp: string,
     ): Promise<IRestaurant> {
-        const restaurant = await this.restaurant.findOne({
-            'emailVerificationOTP.verificationToken': verificationToken,
-            'emailVerificationOTP.expiresAt': { $gt: new Date() },
-        });
-
+        const restaurant =
+            await this.findRestaurantByVerificationToken(verificationToken);
         if (!restaurant) {
             throw new BadRequest('Invalid or expired reset token');
         }
@@ -236,11 +238,8 @@ export class RestaurantService {
         verificationToken: string,
         newPassword: string,
     ): Promise<void> {
-        const restaurant = await this.restaurant.findOne({
-            'emailVerificationOTP.verificationToken': verificationToken,
-            'emailVerificationOTP.expiresAt': { $gt: new Date() },
-        });
-
+        const restaurant =
+            await this.findRestaurantByVerificationToken(verificationToken);
         if (!restaurant) {
             throw new BadRequest('Invalid or expired reset token');
         }

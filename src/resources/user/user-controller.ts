@@ -3,7 +3,7 @@ import { Controller } from '../../types/index';
 import validate from '../../resources/user/user-validation';
 import { UserService } from '../../resources/user/user-service';
 import UserModel from '../../resources/user/user-model';
-import { RegisterUserto, Address } from '../../resources/user/user-interface';
+import { RegisterUserto, IAddress } from '../../resources/user/user-interface';
 import { TokenService } from '../../utils/index';
 import {
     validateData,
@@ -56,20 +56,15 @@ export default class UserController implements Controller {
             validateData(validate.loginSchema),
             this.login,
         );
+
         this.router.get(
-            `${this.path}/address`,
-            authMiddleware(),
-            authorization(UserModel, ['user']),
-            this.getUserAddress,
-        );
-        this.router.get(
-            `${this.path}`,
+            `${this.path}/profile`,
             authMiddleware(),
             authorization(UserModel, ['user']),
             this.getUser,
         );
         this.router.put(
-            `${this.path}`,
+            `${this.path}/profile`,
             authMiddleware(),
             authorization(UserModel, ['user']),
             validateData(validate.updateUserSchema),
@@ -81,6 +76,18 @@ export default class UserController implements Controller {
             authorization(UserModel, ['user']),
             validateData(validate.addressesSchema),
             this.addNewAddress,
+        );
+        this.router.get(
+            `${this.path}/address`,
+            authMiddleware(),
+            authorization(UserModel, ['user']),
+            this.getUserAddress,
+        );
+        this.router.get(
+            `${this.path}/address/:addressId`,
+            authMiddleware(),
+            authorization(UserModel, ['user']),
+            this.getUserAddressById,
         );
         this.router.delete(
             `${this.path}/address/:id`,
@@ -98,7 +105,7 @@ export default class UserController implements Controller {
             `${this.path}/orders/:orderId`,
             authMiddleware(),
             authorization(UserModel, ['user']),
-            this.getUserOrder,
+            this.getUserOrderById,
         );
     }
 
@@ -107,7 +114,7 @@ export default class UserController implements Controller {
             const { name, email, password, phone, street, city, state } =
                 req.body;
 
-            const addresses: Address = { street, city, state };
+            const addresses: IAddress = { street, city, state };
 
             const registrationData: RegisterUserto = {
                 name,
@@ -288,7 +295,30 @@ export default class UserController implements Controller {
             const userId = req.currentUser?._id;
             if (!userId) throw new ResourceNotFound('User not found');
 
-            const addresses = await this.userService.getUserAddress(userId);
+            const addresses = await this.userService.getUserAddress(
+                req,
+                res,
+                userId,
+            );
+
+            sendJsonResponse(
+                res,
+                200,
+                'Addresses retrieved successfully',
+                addresses,
+            );
+        },
+    );
+    private getUserAddressById = asyncHandler(
+        async (req: Request, res: Response): Promise<void> => {
+            const userId = req.currentUser?._id;
+            const { addressId } = req.params;
+            if (!userId) throw new ResourceNotFound('User not found');
+
+            const addresses = await this.userService.getUserAddressById(
+                userId,
+                addressId,
+            );
 
             sendJsonResponse(
                 res,
@@ -318,6 +348,8 @@ export default class UserController implements Controller {
             }
 
             const orders = await this.userService.getUserOrders(
+                req,
+                res,
                 userId.toString(),
             );
             return sendJsonResponse(
@@ -329,14 +361,17 @@ export default class UserController implements Controller {
         },
     );
 
-    private getUserOrder = asyncHandler(
+    private getUserOrderById = asyncHandler(
         async (req: Request, res: Response): Promise<void> => {
             const userId = req.currentUser?._id;
             const orderId = req.params.orderId;
             if (!userId) {
                 throw new ResourceNotFound('User not foundw');
             }
-            const orders = await this.userService.getUserOrder(userId, orderId);
+            const orders = await this.userService.getUserOrderById(
+                userId,
+                orderId,
+            );
 
             sendJsonResponse(res, 200, 'Orders retrieved successfully', orders);
         },

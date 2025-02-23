@@ -6,7 +6,7 @@ import { OrderService } from '../../resources/order/order-service';
 import { UserService } from '../../resources/user/user-service';
 import { IOrder } from '../../resources/order/order-interface';
 import { EmailQueueService, log } from '../../utils/index';
-import { orderConfirmationEmail } from '../../resources/order/order-email-template';
+import { orderConfirmationEmail } from '../../resources/payment/payment-email-template';
 import {
     ServerError,
     ResourceNotFound,

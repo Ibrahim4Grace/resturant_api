@@ -43,13 +43,7 @@ export default class OrderController implements Controller {
             authorization(RestaurantModel, ['restaurant_owner']),
             this.cancelOrder,
         );
-        this.router.patch(
-            `${this.path}/:id/assign-rider`,
-            authMiddleware(),
-            authorization(RestaurantModel, ['restaurant_owner']),
-            validateData(validate.assignRiderSchema),
-            this.assignRiderToOrder,
-        );
+
         this.router.get(
             `${this.path}/:id`,
             authMiddleware(),
@@ -111,23 +105,6 @@ export default class OrderController implements Controller {
         });
         sendJsonResponse(res, 200, 'Order cancelled successfully', order);
     });
-
-    private assignRiderToOrder = asyncHandler(
-        async (req: Request, res: Response) => {
-            const orderId = req.params.id;
-            const { rider_name } = req.body;
-            const restaurantId = req.currentUser?._id;
-            if (!restaurantId) {
-                throw new ResourceNotFound('Restaurant owner not found');
-            }
-            const order = await this.orderService.assignRiderToOrder({
-                orderId,
-                rider_name,
-                restaurantId,
-            });
-            sendJsonResponse(res, 200, 'Rider assigned successfully', order);
-        },
-    );
 
     private getOrderById = asyncHandler(async (req: Request, res: Response) => {
         const orderId = req.params.id;

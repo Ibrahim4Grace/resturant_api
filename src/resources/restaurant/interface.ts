@@ -67,7 +67,7 @@ export interface Address {
 export interface RegisterRestaurantto {
     name: string;
     email: string;
-    businessLicense: string;
+    businessLicense?: { imageId: string; imageUrl: string };
     phone: string;
     password: string;
     address: Address;

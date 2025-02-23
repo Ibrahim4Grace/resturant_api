@@ -10,7 +10,7 @@ export interface IUser extends Document {
     isLocked: boolean;
     failedLoginAttempts: number;
     role: UserRole;
-    addresses?: Address[];
+    addresses?: IAddress[];
     phone?: string;
     status?: 'active' | 'suspended';
     paymentMethods?: paymentMethods;
@@ -31,10 +31,11 @@ export interface IUser extends Document {
     }>;
 }
 
-export interface Address {
-    street?: string;
-    city?: string;
-    state?: string;
+export interface IAddress {
+    _id?: string;
+    street: string;
+    city: string;
+    state: string;
 }
 
 export interface paymentMethods {
@@ -56,7 +57,7 @@ export interface RegisterUserto {
     password: string;
     role?: UserRole[];
     phone: string;
-    addresses: Address;
+    addresses: IAddress;
 }
 
 export interface emailVerificationOTP {

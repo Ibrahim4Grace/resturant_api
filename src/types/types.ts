@@ -1,4 +1,4 @@
-import { IUser } from '../resources/user/user-interface';
+import { IUser, IAddress } from '../resources/user/user-interface';
 import { IRestaurant } from '../resources/restaurant/interface';
 import { IRider } from '../resources/rider/rider-interface';
 import { IAdmin } from '../resources/admin/admin-interface';
@@ -61,6 +61,7 @@ export interface IPaginatedEntityResponse<T> {
 }
 
 // Entity-specific response types
+export type IAddressPaginatedResponse = IPaginatedEntityResponse<IAddress>;
 export type IAdminPaginatedResponse = IPaginatedEntityResponse<IAdmin>;
 export type IMenuPaginatedResponse = IPaginatedEntityResponse<IMenu>;
 export type IUserPaginatedResponse = IPaginatedEntityResponse<IUser>;
@@ -72,7 +73,11 @@ export type IRestaurantPaginatedResponse =
 declare global {
     namespace Express {
         interface Response {
-            paginatedResults?: IPaginationResponse;
+            // paginatedResults?: IPaginationResponse;
+            paginatedResults?: {
+                results: any[];
+                pagination: IPaginationResponse;
+            };
         }
 
         interface Request {

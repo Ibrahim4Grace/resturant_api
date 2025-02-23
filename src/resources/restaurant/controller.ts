@@ -35,7 +35,7 @@ export default class RestaurantController implements Controller {
     private initializeRoutes(): void {
         this.router.post(
             `${this.authPath}/register`,
-            upload.single('images'),
+            upload.single('businessLicense'),
             validateData(validate.registerSchema),
             this.register,
         );
@@ -67,7 +67,7 @@ export default class RestaurantController implements Controller {
         this.router.post(
             `${this.path}/register`,
             authMiddleware(),
-            upload.single('images'),
+            upload.single('businessLicense'),
             validateData(validate.createSchema),
             this.createRestaurant,
         );
@@ -100,7 +100,9 @@ export default class RestaurantController implements Controller {
                 password,
                 address,
                 phone,
-                businessLicense: '',
+                businessLicense: req.file
+                    ? { imageId: req.file.filename, imageUrl: req.file.path }
+                    : undefined,
             };
 
             const result = await this.restaurantService.register(
@@ -232,7 +234,9 @@ export default class RestaurantController implements Controller {
                 password,
                 ownerId: userId,
                 address,
-                businessLicense: '',
+                businessLicense: req.file
+                    ? { imageId: req.file.filename, imageUrl: req.file.path }
+                    : undefined,
                 isEmailVerified: true,
             };
 

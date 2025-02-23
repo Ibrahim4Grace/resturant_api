@@ -84,7 +84,7 @@ export const authMiddleware = () => {
 
 export const authorization = (model: any, roles: string[]) =>
     asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-        const userId = req.user?.id;
+        const userId = req.user.id;
         if (!userId) {
             throw new Unauthorized('User not authenticated');
         }

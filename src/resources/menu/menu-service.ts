@@ -1,15 +1,15 @@
 import { Request, Response } from 'express';
 import MenuModel from '../../resources/menu/menu-model';
 import RestaurantModel from '../../resources/restaurant/model';
+import { IMenu, MenuItem } from '../../resources/menu/menu-interface';
+import { UploadedImage, IMenuPaginatedResponse } from '../../types/index';
+import { CloudinaryService } from '../../config/index';
+import { newMenuConfirmationEmail } from '../../resources/menu/menu-email-template';
 import {
     ResourceNotFound,
     Conflict,
     Unauthorized,
 } from '../../middlewares/index';
-import { IMenu, MenuItem } from '../../resources/menu/menu-interface';
-import { UploadedImage, IMenuPaginatedResponse } from '../../types/index';
-import { CloudinaryService } from '../../config/index';
-import { newMenuConfirmationEmail } from '../../resources/menu/menu-email-template';
 import {
     CACHE_TTL,
     getPaginatedAndCachedResults,

@@ -1,13 +1,24 @@
+import { Request, Response } from 'express';
 import UserModel from '../../resources/user/user-model';
 import OrderModel from '../../resources/order/order-model';
-import { TokenService, EmailQueueService } from '../../utils/index';
 import bcrypt from 'bcryptjs';
-import { LoginCredentials } from '../../types/index';
 import { IOrder } from '../../resources/order/order-interface';
+import {
+    LoginCredentials,
+    IAddressPaginatedResponse,
+    IOrderPaginatedResponse,
+} from '../../types/index';
+import {
+    TokenService,
+    EmailQueueService,
+    withCachedData,
+    CACHE_TTL,
+    getPaginatedAndCachedResults,
+} from '../../utils/index';
 import {
     IUser,
     RegisterUserto,
-    Address,
+    IAddress,
     RegistrationResponse,
     loginResponse,
 } from '../../resources/user/user-interface';
@@ -28,6 +39,15 @@ import {
 export class UserService {
     private user = UserModel;
     private order = OrderModel;
+    private readonly CACHE_KEYS = {
+        USER_BY_ID: (id: string) => `user:${id}`,
+        USER_ADDRESSES: (userId: string) => `user:${userId}:addresses`,
+        USER_ADDRESS_BY_ID: (userId: string, addressId: string) =>
+            `user:${userId}:address:${addressId}`,
+        USER_ORDERS: (userId: string) => `user:${userId}:orders`,
+        USER_ORDER_BY_ID: (userId: string, orderId: string) =>
+            `user:${userId}:order:${orderId}`,
+    };
 
     private async checkDuplicate(
         field: 'email' | 'phone',
@@ -77,6 +97,7 @@ export class UserService {
     private orderData(order: IOrder): Partial<IOrder> {
         return {
             _id: order._id,
+            order_number: order.order_number,
             status: order.status,
             total_price: order.total_price,
             userId: order.userId,
@@ -310,7 +331,7 @@ export class UserService {
 
     public async addNewAddress(
         userId: string,
-        addressData: Address,
+        addressData: IAddress,
     ): Promise<IUser> {
         const user = await this.findUserById(userId);
 
@@ -336,17 +357,58 @@ export class UserService {
         return user;
     }
 
-    public async getUserAddress(userId: string): Promise<Address[]> {
-        const user = await this.user
-            .findById(userId)
-            .select('addresses')
-            .lean();
+    public async getUserAddress(
+        req: Request,
+        res: Response,
+        userId: string,
+    ): Promise<IAddressPaginatedResponse> {
+        const paginatedResults = await getPaginatedAndCachedResults<IUser>(
+            req,
+            res,
+            this.user,
+            this.CACHE_KEYS.USER_ADDRESSES(userId),
+            { _id: userId },
+            { addresses: 1 },
+        );
 
+        const user = paginatedResults.results[0];
         if (!user) {
             throw new ResourceNotFound('User not found');
         }
 
-        return user.addresses || [];
+        return {
+            results: user.addresses || [],
+            pagination: {
+                currentPage: paginatedResults.currentPage,
+                totalPages: paginatedResults.totalPages,
+                limit: paginatedResults.limit,
+            },
+        };
+    }
+
+    public async getUserAddressById(
+        userId: string,
+        addressId: string,
+    ): Promise<IAddress> {
+        return withCachedData(
+            this.CACHE_KEYS.USER_ADDRESS_BY_ID(userId, addressId),
+            async () => {
+                const user = await this.user
+                    .findOne({
+                        _id: userId,
+                        'addresses._id': addressId,
+                    })
+                    .select('-__v')
+                    .select('addresses.$');
+
+                if (!user || !user.addresses[0]) {
+                    throw new ResourceNotFound('Address not found');
+                }
+
+                return user.addresses[0];
+            },
+            CACHE_TTL.ONE_HOUR,
+        );
     }
 
     public async deleteAddress(
@@ -366,35 +428,56 @@ export class UserService {
         }
     }
 
-    public async getUserOrders(userId: string): Promise<Partial<IOrder>[]> {
+    public async getUserOrders(
+        req: Request,
+        res: Response,
+        userId: string,
+    ): Promise<IOrderPaginatedResponse> {
         await this.findUserById(userId);
 
-        const orders = await this.order
-            .find({ userId })
-            .sort({ createdAt: -1 })
-            .lean();
+        const paginatedResults = await getPaginatedAndCachedResults<IOrder>(
+            req,
+            res,
+            this.order,
+            this.CACHE_KEYS.USER_ORDERS(userId),
+            { userId },
+        );
 
-        return orders.map((order) => this.orderData(order));
+        return {
+            results: paginatedResults.results.map((order: IOrder) =>
+                this.orderData(order),
+            ) as IOrder[],
+            pagination: {
+                currentPage: paginatedResults.currentPage,
+                totalPages: paginatedResults.totalPages,
+                limit: paginatedResults.limit,
+            },
+        };
     }
 
-    public async getUserOrder(
+    public async getUserOrderById(
         userId: string,
         orderId: string,
     ): Promise<Partial<IOrder>> {
-        const order = await this.order
-            .findOne({
-                _id: orderId,
-                userId: userId,
-            })
-            .lean();
-        console.log('Finding order with:', { _id: orderId, userId });
+        return withCachedData(
+            this.CACHE_KEYS.USER_ORDER_BY_ID(userId, orderId),
+            async () => {
+                const order = await this.order
+                    .findOne({
+                        _id: orderId,
+                        userId: userId,
+                    })
+                    .lean();
 
-        if (!order) {
-            throw new ResourceNotFound(
-                'Order not found or does not belong to this user',
-            );
-        }
+                if (!order) {
+                    throw new ResourceNotFound(
+                        'Order not found or does not belong to this user',
+                    );
+                }
 
-        return this.orderData(order);
+                return this.orderData(order);
+            },
+            CACHE_TTL.ONE_HOUR,
+        );
     }
 }

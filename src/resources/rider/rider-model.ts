@@ -14,16 +14,15 @@ const riderSchema = new Schema<IRider>(
         email: {
             type: String,
             required: true,
-            unique: true,
             trim: true,
         },
         password: {
             type: String,
             required: true,
         },
-        roles: {
-            type: [String],
-            default: ['rider'],
+        role: {
+            type: String,
+            default: 'rider',
         },
         address: {
             street: { type: String, required: true },
@@ -32,18 +31,10 @@ const riderSchema = new Schema<IRider>(
         },
         phone: {
             type: String,
-            required: true,
         },
         vehicleType: String,
         vehicleNumber: String,
-        licenseNumber: String,
-        documents: [
-            {
-                type: String, // 'license', 'insurance', 'identity'
-                url: String,
-                verificationStatus: String,
-            },
-        ],
+        licenseImage: { imageId: String, imageUrl: String },
         currentLocation: {
             coordinates: {
                 latitude: Number,
@@ -51,7 +42,10 @@ const riderSchema = new Schema<IRider>(
             },
             lastUpdated: Date,
         },
-        status: String, // 'available', 'busy', 'offline'
+        status: {
+            type: String, // 'available', 'busy', 'offline'
+            default: 'available',
+        },
         rating: Number,
         bankInfo: {
             accountNumber: String,
@@ -61,6 +55,8 @@ const riderSchema = new Schema<IRider>(
         image: { imageId: String, imageUrl: String },
         isEmailVerified: { type: Boolean, default: false },
         googleId: { type: String, trim: true },
+        isLocked: { type: Boolean, default: false },
+        failedLoginAttempts: { type: Number, default: 0 },
         emailVerificationOTP: {
             otp: String,
             expiresAt: Date,

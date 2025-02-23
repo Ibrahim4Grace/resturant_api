@@ -21,12 +21,7 @@ const orderStatusSchema = z.object({
     ]),
 });
 
-const assignRiderSchema = z.object({
-    rider_name: z.string().min(1, 'Rider Name is required'),
-});
-
 export default {
     orderSchema,
     orderStatusSchema,
-    assignRiderSchema,
 };

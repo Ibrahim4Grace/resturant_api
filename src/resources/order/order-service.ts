@@ -4,7 +4,6 @@ import OrderModel from '../../resources/order/order-model';
 import { IOrderPaginatedResponse } from '../../types/index';
 import { config } from '../../config/index';
 import MenuModel from '../../resources/menu/menu-model';
-import RiderModel from '../../resources/rider/rider-model';
 import {
     IOrder,
     DeliveryInfo,
@@ -20,7 +19,6 @@ import {
 import {
     orderStatusUpdateEmail,
     orderCancellationEmail,
-    riderAssignedEmail,
 } from '../../resources/order/order-email-template';
 import {
     ResourceNotFound,
@@ -30,7 +28,6 @@ import {
 
 export class OrderService {
     private order = OrderModel;
-    private rider = RiderModel;
     private user = UserModel;
     private menu = MenuModel;
     private readonly CACHE_KEYS = {
@@ -200,40 +197,6 @@ export class OrderService {
         }
 
         return this.sanitizeOrder(updatedOrder!);
-    }
-
-    public async assignRiderToOrder(
-        params: UpdateOrderStatusParams,
-    ): Promise<Partial<IOrder>> {
-        const { restaurantId, orderId, rider_name } = params;
-        await this.checkOrderOwnership(orderId, restaurantId);
-
-        const rider = await this.rider.findOne({ name: rider_name });
-        if (!rider) {
-            throw new ResourceNotFound('Rider not found');
-        }
-
-        const order = await this.order
-            .findByIdAndUpdate(
-                orderId,
-                {
-                    'delivery_info.riderId': rider._id,
-                    'delivery_info.rider_name': rider_name,
-                },
-                { new: true },
-            )
-            .lean();
-        if (!order) {
-            throw new ResourceNotFound('Order not found');
-        }
-
-        const user = await this.user.findById(order.userId);
-        if (user) {
-            const emailOptions = riderAssignedEmail(user, order);
-            await EmailQueueService.addEmailToQueue(emailOptions);
-        }
-
-        return this.sanitizeOrder(order);
     }
 
     public async getOrderById(

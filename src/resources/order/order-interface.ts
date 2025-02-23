@@ -1,7 +1,7 @@
 import { Types, Document } from 'mongoose';
 
 export interface IOrder extends Document {
-    orderId: Types.ObjectId;
+    orderId?: Types.ObjectId;
     order_number: string;
     status: OrderStatus;
     total_price: number;
@@ -45,5 +45,5 @@ export interface BaseOrderParams {
 
 export interface UpdateOrderStatusParams extends BaseOrderParams {
     status?: string;
-    rider_name?: string;
+    riderId?: string;
 }
