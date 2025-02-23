@@ -92,6 +92,20 @@ export const orderDocs = {
                 summary: 'Get all orders for the current user',
                 tags: ['Orders'],
                 security: [{ BearerAuth: [] }],
+                parameters: [
+                    {
+                        in: 'query',
+                        name: 'page',
+                        schema: { type: 'integer', default: 1 },
+                        description: 'Page number for pagination',
+                    },
+                    {
+                        in: 'query',
+                        name: 'limit',
+                        schema: { type: 'integer', default: 10 },
+                        description: 'Number of items per page',
+                    },
+                ],
                 responses: {
                     200: {
                         description: 'Orders retrieved successfully',
@@ -108,6 +122,18 @@ export const orderDocs = {
                                             type: 'string',
                                             example:
                                                 'Orders retrieved successfully',
+                                        },
+                                        total: {
+                                            type: 'integer',
+                                            example: 50,
+                                        },
+                                        page: {
+                                            type: 'integer',
+                                            example: 1,
+                                        },
+                                        limit: {
+                                            type: 'integer',
+                                            example: 10,
                                         },
                                         data: {
                                             type: 'array',
@@ -141,67 +167,6 @@ export const orderDocs = {
             },
         },
         paths: {
-            '/api/v1/orders/{id}/assign-rider': {
-                patch: {
-                    summary: 'Assign a rider to an order',
-                    tags: ['Orders'],
-                    security: [{ BearerAuth: [] }],
-                    parameters: [
-                        {
-                            name: 'id',
-                            in: 'path',
-                            required: true,
-                            description: 'Order ID',
-                            schema: {
-                                type: 'string',
-                                example: '67a9d4c7dddd485a0a9e6684',
-                            },
-                        },
-                    ],
-                    requestBody: {
-                        required: true,
-                        content: {
-                            'application/json': {
-                                schema: {
-                                    type: 'object',
-                                    properties: {
-                                        rider_name: {
-                                            type: 'string',
-                                            example: 'John Rider',
-                                        },
-                                    },
-                                },
-                            },
-                        },
-                    },
-                    responses: {
-                        200: {
-                            description: 'Rider assigned successfully',
-                            content: {
-                                'application/json': {
-                                    schema: {
-                                        type: 'object',
-                                        properties: {
-                                            status: {
-                                                type: 'string',
-                                                example: 'success',
-                                            },
-                                            message: {
-                                                type: 'string',
-                                                example:
-                                                    'Rider assigned successfully',
-                                            },
-                                            data: { type: 'object' },
-                                        },
-                                    },
-                                },
-                            },
-                        },
-                        404: { description: 'Order or Rider not found' },
-                        500: { description: 'Server error' },
-                    },
-                },
-            },
             '/api/v1/orders/{id}/status': {
                 patch: {
                     summary: 'Update order status',
