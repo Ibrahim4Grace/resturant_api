@@ -1,5 +1,5 @@
 import { Schema, model } from 'mongoose';
-import { IAdmin } from '../../resources/admin/admin-interface';
+import { IAdmin } from '../admin/admin-interface';
 import { TokenService } from '../../utils/index';
 import { config } from '../../config/index';
 import bcrypt from 'bcryptjs';

@@ -1,9 +1,9 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { Controller } from '../../types/index';
-import validate from '../../resources/user/user-validation';
-import { UserService } from '../../resources/user/user-service';
-import UserModel from '../../resources/user/user-model';
-import { RegisterUserto, IAddress } from '../../resources/user/user-interface';
+import validate from '../user/user-validation';
+import { UserService } from '../user/user-service';
+import UserModel from '../user/user-model';
+import { RegisterUserto, IAddress } from '../user/user-interface';
 import { TokenService } from '../../utils/index';
 import {
     validateData,

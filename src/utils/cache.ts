@@ -7,6 +7,7 @@ export const CACHE_TTL = {
     FIVE_MINUTES: 300,
     ONE_HOUR: 3600,
     ONE_DAY: 86400,
+    FIFTEEN_MINUTES: 900,
 } as const;
 
 // Generic cache data function

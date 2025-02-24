@@ -1,7 +1,9 @@
+import bcrypt from 'bcryptjs';
+import { Types } from 'mongoose';
 import RestaurantModel from '../../resources/restaurant/model';
 import UserModel from '../../resources/user/user-model';
 import { CloudinaryService } from '../../config/index';
-import bcrypt from 'bcryptjs';
+import OrderModel from '../../resources/order/order-model';
 import { LoginCredentials, UploadedImage } from '../../types/index';
 import {
     IRestaurant,
@@ -10,6 +12,7 @@ import {
     RegistrationResponse,
     RestaurantCreationResponse,
     ISanitizedRestaurant,
+    RestaurantAnalytics,
 } from '../../resources/restaurant/interface';
 import {
     sendOTPByEmail,
@@ -33,8 +36,9 @@ import {
 export class RestaurantService {
     private restaurant = RestaurantModel;
     private user = UserModel;
-
+    private order = OrderModel;
     private cloudinaryService: CloudinaryService;
+
     constructor() {
         this.cloudinaryService = new CloudinaryService();
     }
@@ -42,6 +46,7 @@ export class RestaurantService {
     private readonly CACHE_KEYS = {
         ALL_RESTAURANTS: 'all_restaurants',
         RESTAURANT_BY_ID: (id: string) => `restaurant:${id}`,
+        RESTAURANT_ANALYTICS: (id: string) => `restaurant:${id}:analytics`,
     };
     private async checkDuplicateEmail(email: string): Promise<void> {
         const existingRestaurant = await this.restaurant.findOne({ email });
@@ -392,4 +397,80 @@ export class RestaurantService {
 
         return this.sanitizeRestaurant(restaurant);
     }
+
+    public async getRestaurantAnalytics(
+        restaurantId: string,
+    ): Promise<RestaurantAnalytics> {
+        const cacheKey = this.CACHE_KEYS.RESTAURANT_ANALYTICS(restaurantId);
+
+        return withCachedData<RestaurantAnalytics>(
+            cacheKey,
+            async () => {
+                const restaurant = await this.restaurant.findById(restaurantId);
+                if (!restaurant) {
+                    throw new ResourceNotFound('Restaurant not found');
+                }
+
+                const orders = await this.order.countDocuments({
+                    restaurantId,
+                });
+                const revenue = await this.order.aggregate([
+                    {
+                        $match: {
+                            restaurantId: new Types.ObjectId(restaurantId),
+                        },
+                    },
+                    {
+                        $group: {
+                            _id: null,
+                            total: { $sum: '$totalAmount' },
+                            average: { $avg: '$totalAmount' },
+                        },
+                    },
+                ]);
+
+                return {
+                    totalOrders: orders,
+                    revenue: {
+                        total: revenue[0]?.total || 0,
+                        average: revenue[0]?.average || 0,
+                    },
+                    ratings: {
+                        average: restaurant.reviewStats.averageRating,
+                        total: restaurant.reviewStats.totalReviews,
+                    },
+                };
+            },
+            CACHE_TTL.FIFTEEN_MINUTES,
+        );
+    }
+
+    // public async getRestaurantOrders(
+    //     restaurantId: string,
+    //     page: number = 1,
+    //     limit: number = 10
+    // ): Promise<PaginatedResponse<IOrder>> {
+    //     const skip = (page - 1) * limit;
+
+    //     const [orders, total] = await Promise.all([
+    //         this.order
+    //             .find({ restaurantId })
+    //             .sort({ createdAt: -1 })
+    //             .skip(skip)
+    //             .limit(limit)
+    //             .populate('customerId', 'name email')
+    //             .lean(),
+    //         this.order.countDocuments({ restaurantId })
+    //     ]);
+
+    //     return {
+    //         data: orders,
+    //         pagination: {
+    //             total,
+    //             page,
+    //             limit,
+    //             pages: Math.ceil(total / limit)
+    //         }
+    //     };
+    // }
 }

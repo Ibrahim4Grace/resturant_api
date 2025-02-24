@@ -1,9 +1,9 @@
 import { Router, Request, Response } from 'express';
 import { Controller } from '../../types/index';
-import validate from '../../resources/order/order-validation';
-import { OrderService } from '../../resources/order/order-service';
-import UserModel from '../../resources/user/user-model';
-import RestaurantModel from '../../resources/restaurant/model';
+import validate from '../order/order-validation';
+import { OrderService } from '../order/order-service';
+import UserModel from '../user/user-model';
+import RestaurantModel from '../restaurant/model';
 import {
     validateData,
     sendJsonResponse,

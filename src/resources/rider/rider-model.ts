@@ -1,5 +1,5 @@
 import { Schema, model } from 'mongoose';
-import { IRider } from '../../resources/rider/rider-interface';
+import { IRider } from '../rider/rider-interface';
 import bcrypt from 'bcryptjs';
 import { config } from '../../config/index';
 import { TokenService } from '../../utils/index';

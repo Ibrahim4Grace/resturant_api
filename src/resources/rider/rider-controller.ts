@@ -1,16 +1,13 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { Controller, IPaginatedEntityResponse } from '../../types/index';
-import validate from '../../resources/rider/rider-validation';
-import { RiderService } from '../../resources/rider/rider-service';
+import validate from '../rider/rider-validation';
+import { RiderService } from '../rider/rider-service';
 import { TokenService, paginatedResults } from '../../utils/index';
-import RiderModel from '../../resources/rider/rider-model';
-import OrderModel from '../../resources/order/order-model';
+import RiderModel from '../rider/rider-model';
+import OrderModel from '../order/order-model';
 import { upload } from '../../config/index';
-import { IOrder } from '../../resources/order/order-interface';
-import {
-    Address,
-    RegisterRiderto,
-} from '../../resources/rider/rider-interface';
+import { IOrder } from '../order/order-interface';
+import { Address, RegisterRiderto } from '../rider/rider-interface';
 
 import {
     validateData,

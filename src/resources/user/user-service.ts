@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
-import UserModel from '../../resources/user/user-model';
-import OrderModel from '../../resources/order/order-model';
+import UserModel from '../user/user-model';
+import OrderModel from '../order/order-model';
 import bcrypt from 'bcryptjs';
-import { IOrder } from '../../resources/order/order-interface';
+import { IOrder } from '../order/order-interface';
 import {
     LoginCredentials,
     IAddressPaginatedResponse,
@@ -21,13 +21,13 @@ import {
     IAddress,
     RegistrationResponse,
     loginResponse,
-} from '../../resources/user/user-interface';
+} from '../user/user-interface';
 import {
     sendOTPByEmail,
     welcomeEmail,
     PasswordResetEmail,
     newAddressAdded,
-} from '../../resources/user/user-email-template';
+} from '../user/user-email-template';
 import {
     Conflict,
     ResourceNotFound,

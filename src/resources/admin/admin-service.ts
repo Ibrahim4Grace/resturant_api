@@ -1,19 +1,19 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
-import AdminModel from '../../resources/admin/admin-model';
-import UserModel from '../../resources/user/user-model';
-import RestaurantModel from '../../resources/restaurant/model';
-import RiderModel from '../../resources/rider/rider-model';
-import OrderModel from '../../resources/order/order-model';
-import { IOrder } from '../../resources/order/order-interface';
-import { IUser } from '../../resources/user/user-interface';
-import { IRestaurant } from '../../resources/restaurant/interface';
-import { IRider } from '../../resources/rider/rider-interface';
+import AdminModel from '../admin/admin-model';
+import UserModel from '../user/user-model';
+import RestaurantModel from '../restaurant/model';
+import RiderModel from '../rider/rider-model';
+import OrderModel from '../order/order-model';
+import { IOrder } from '../order/order-interface';
+import { IUser } from '../user/user-interface';
+import { IRestaurant } from '../restaurant/interface';
+import { IRider } from '../rider/rider-interface';
 import {
     sendOTPByEmail,
     welcomeEmail,
     PasswordResetEmail,
-} from '../../resources/admin/admin-email-template';
+} from '../admin/admin-email-template';
 import {
     TokenService,
     EmailQueueService,
@@ -27,7 +27,7 @@ import {
     RegisterAdminto,
     loginResponse,
     RegistrationResponse,
-} from '../../resources/admin/admin-interface';
+} from '../admin/admin-interface';
 import {
     Conflict,
     ResourceNotFound,

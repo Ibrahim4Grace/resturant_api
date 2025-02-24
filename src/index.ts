@@ -8,6 +8,7 @@ import RestaurantController from '../src/resources/restaurant/controller';
 import OrderController from '../src/resources/order/order-controller';
 import MenuController from '../src/resources/menu/menu-controller';
 import PaymentController from '../src/resources/payment/payment-controller';
+import ReviewController from '../src/resources/review/review-controller';
 
 const app = new App(
     [
@@ -18,6 +19,7 @@ const app = new App(
         new RestaurantController(),
         new MenuController(),
         new PaymentController(),
+        new ReviewController(),
     ],
     Number(config.PORT),
 );

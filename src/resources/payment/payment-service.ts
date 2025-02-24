@@ -1,12 +1,12 @@
 import axios from 'axios';
 import crypto from 'crypto';
 import { config } from '../../config/index';
-import PaymentModel from '../../resources/payment/payment-model';
-import { OrderService } from '../../resources/order/order-service';
-import { UserService } from '../../resources/user/user-service';
-import { IOrder } from '../../resources/order/order-interface';
+import PaymentModel from '../payment/payment-model';
+import { OrderService } from '../order/order-service';
+import { UserService } from '../user/user-service';
+import { IOrder } from '../order/order-interface';
 import { EmailQueueService, log } from '../../utils/index';
-import { orderConfirmationEmail } from '../../resources/payment/payment-email-template';
+import { orderConfirmationEmail } from '../payment/payment-email-template';
 import {
     ServerError,
     ResourceNotFound,
@@ -17,7 +17,7 @@ import {
     PaymentResponse,
     IPayment,
     paymentProcess,
-} from '../../resources/payment/payment-interface';
+} from '../payment/payment-interface';
 
 export class PaymentService {
     private readonly PAYSTACK_SECRET = config.PAYSTACK_SECRET_KEY;

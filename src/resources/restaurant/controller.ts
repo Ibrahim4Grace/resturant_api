@@ -1,14 +1,11 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { Controller } from '../../types/index';
-import validate from '../../resources/restaurant/validation';
-import { RestaurantService } from '../../resources/restaurant/service';
+import validate from '../restaurant/validation';
+import { RestaurantService } from '../restaurant/service';
 import { TokenService } from '../../utils/index';
 import { upload } from '../../config/index';
-import RestaurantModel from '../../resources/restaurant/model';
-import {
-    RegisterRestaurantto,
-    Address,
-} from '../../resources/restaurant/interface';
+import RestaurantModel from '../restaurant/model';
+import { RegisterRestaurantto, Address } from '../restaurant/interface';
 import {
     validateData,
     sendJsonResponse,
@@ -74,7 +71,6 @@ export default class RestaurantController implements Controller {
         this.router.get(
             `${this.path}`,
             authMiddleware(),
-            authMiddleware(),
             authorization(RestaurantModel, ['restaurant_owner']),
             this.getRestaurant,
         );
@@ -85,6 +81,18 @@ export default class RestaurantController implements Controller {
             validateData(validate.updateSchema),
             this.updateRestaurant,
         );
+        this.router.get(
+            `${this.path}/analytics`,
+            authMiddleware(),
+            authorization(RestaurantModel, ['restaurant_owner']),
+            this.getRestaurantAnalytics,
+        );
+        // this.router.get(
+        //     `${this.path}/orders`,
+        //     authMiddleware(),
+        //     authorization(RestaurantModel, ['restaurant_owner']),
+        //     this.getRestaurantOrders,
+        // );
     }
 
     public register = asyncHandler(
@@ -306,4 +314,47 @@ export default class RestaurantController implements Controller {
             );
         },
     );
+
+    private getRestaurantAnalytics = asyncHandler(
+        async (req: Request, res: Response): Promise<void> => {
+            const restaurantId = req.currentUser?._id;
+            if (!restaurantId) {
+                throw new ResourceNotFound('Restaurant not found');
+            }
+
+            const analytics =
+                await this.restaurantService.getRestaurantAnalytics(
+                    restaurantId,
+                );
+
+            sendJsonResponse(
+                res,
+                200,
+                'Restaurant analytics retrieved successfully',
+                analytics,
+            );
+        },
+    );
+
+    // private getRestaurantOrders = asyncHandler(
+    //     async (req: Request, res: Response): Promise<void> => {
+    //         const restaurantId = req.currentUser?._id;
+    //         if (!restaurantId) {
+    //             throw new ResourceNotFound('Restaurant not found');
+    //         }
+
+    //         const orders = await this.restaurantService.getRestaurantOrders(
+    //             req,
+    //             res,
+    //             restaurantId,
+    //         );
+
+    //         sendJsonResponse(
+    //             res,
+    //             200,
+    //             'Restaurant orders retrieved successfully',
+    //             orders,
+    //         );
+    //     },
+    // );
 }

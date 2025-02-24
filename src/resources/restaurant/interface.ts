@@ -10,7 +10,6 @@ export interface IRestaurant extends Document {
     cuisine: string[];
     operatingHours?: operatingHours;
     deliveryRadius: number;
-    rating?: number;
     phone?: string;
     ownerId: Types.ObjectId;
     status: 'active' | 'pending' | 'suspended';
@@ -29,14 +28,20 @@ export interface IRestaurant extends Document {
     createdAt: Date;
     updatedAt: Date;
     lastPasswordChange?: Date;
+    reviewStats: IReviewStats;
     emailVerificationOTP?: emailVerificationOTP;
     passwordHistory?: IPasswordHistoryEntry[];
-
+    updateReviewStats: () => Promise<void>;
     comparePassword(password: string): Promise<boolean>;
     generateEmailVerificationOTP(): Promise<{
         otp: string;
         verificationToken: string;
     }>;
+}
+
+export interface IReviewStats {
+    totalReviews: number;
+    averageRating: number;
 }
 
 export interface IPasswordHistoryEntry {
@@ -96,4 +101,16 @@ export interface ISanitizedRestaurant {
     operatingHours?: operatingHours;
     createdAt: Date;
     updatedAt: Date;
+}
+
+export interface RestaurantAnalytics {
+    totalOrders: number;
+    revenue: {
+        total: number;
+        average: number;
+    };
+    ratings: {
+        average: number;
+        total: number;
+    };
 }

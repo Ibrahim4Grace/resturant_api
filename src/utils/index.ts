@@ -5,3 +5,4 @@ export * from './emailQueue';
 export * from './otp-generator';
 export * from './cache';
 export * from './pagination';
+export * from './firebase';

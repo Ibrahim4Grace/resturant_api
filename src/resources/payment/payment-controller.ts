@@ -1,11 +1,11 @@
 import express, { Router, Request, Response } from 'express';
-import { PaymentService } from '../../resources/payment/payment-service';
-import { OrderService } from '../../resources/order/order-service';
-import { UserService } from '../../resources/user/user-service';
-import { paymentProcess } from '../../resources/payment/payment-interface';
+import { PaymentService } from '../payment/payment-service';
+import { OrderService } from '../order/order-service';
+import { UserService } from '../user/user-service';
+import { paymentProcess } from '../payment/payment-interface';
 import { Controller } from '../../types/index';
-import UserModel from '../../resources/user/user-model';
-import validate from '../../resources/payment/payment-validation';
+import UserModel from '../user/user-model';
+import validate from '../payment/payment-validation';
 import {
     validateData,
     asyncHandler,
@@ -14,7 +14,6 @@ import {
     authorization,
     sendJsonResponse,
     BadRequest,
-    ServerError,
 } from '../../middlewares/index';
 
 export default class PaymentController implements Controller {

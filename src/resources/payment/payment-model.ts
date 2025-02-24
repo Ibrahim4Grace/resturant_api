@@ -1,5 +1,5 @@
 import { Schema, model } from 'mongoose';
-import { IPayment } from '../../resources/payment/payment-interface';
+import { IPayment } from '../payment/payment-interface';
 
 const paymentSchema = new Schema<IPayment>(
     {

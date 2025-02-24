@@ -1,14 +1,14 @@
 import { Request, Response } from 'express';
-import UserModel from '../../resources/user/user-model';
-import OrderModel from '../../resources/order/order-model';
+import UserModel from '../user/user-model';
+import OrderModel from '../order/order-model';
 import { IOrderPaginatedResponse } from '../../types/index';
 import { config } from '../../config/index';
-import MenuModel from '../../resources/menu/menu-model';
+import MenuModel from '../menu/menu-model';
 import {
     IOrder,
     DeliveryInfo,
     UpdateOrderStatusParams,
-} from '../../resources/order/order-interface';
+} from '../order/order-interface';
 import {
     EmailQueueService,
     withCachedData,
@@ -19,7 +19,7 @@ import {
 import {
     orderStatusUpdateEmail,
     orderCancellationEmail,
-} from '../../resources/order/order-email-template';
+} from '../order/order-email-template';
 import {
     ResourceNotFound,
     BadRequest,

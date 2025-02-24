@@ -7,6 +7,8 @@ import morgan from 'morgan';
 import { EmailQueueService, log } from '../src/utils/index';
 import { Controller } from '../src/types/index';
 import { errorHandler, routeNotFound } from '../src/middlewares/index';
+import { EmailListener, FirebaseListener } from '../src/events/index';
+
 import {
     corsOptions,
     config,
@@ -25,6 +27,7 @@ class App {
         this.port = port;
 
         this.initializeDatabase();
+        this.initializeEventListeners();
         this.initializeMiddlewares();
         this.initializeControllers(controllers);
         this.initializeRabbitMQ();
@@ -79,6 +82,16 @@ class App {
 
     private async initializeDatabase(): Promise<void> {
         await initializeDatabase();
+    }
+
+    private async initializeEventListeners(): Promise<void> {
+        try {
+            await EmailListener.listen();
+            // await FirebaseListener.listen();
+            log.info('Event listeners initialized successfully');
+        } catch (error) {
+            log.error('Failed to initialize event listeners:', error);
+        }
     }
 
     private setupGracefulShutdown(): void {

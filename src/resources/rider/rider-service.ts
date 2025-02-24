@@ -1,11 +1,11 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
-import RiderModel from '../../resources/rider/rider-model';
-import OrderModel from '../../resources/order/order-model';
-import UserModel from '../../resources/user/user-model';
-import { IOrder } from '../../resources/order/order-interface';
-import { orderStatusUpdateEmail } from '../../resources/order/order-email-template';
-import { riderAssignedEmail } from '../../resources/rider/rider-email-template';
+import RiderModel from '../rider/rider-model';
+import OrderModel from '../order/order-model';
+import UserModel from '../user/user-model';
+import { IOrder } from '../order/order-interface';
+import { orderStatusUpdateEmail } from '../order/order-email-template';
+import { riderAssignedEmail } from '../rider/rider-email-template';
 import { CloudinaryService } from '../../config/index';
 import {
     EmailQueueService,

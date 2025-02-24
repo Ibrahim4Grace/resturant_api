@@ -6,21 +6,27 @@ export interface IMenu extends Document {
     name: string;
     description?: string;
     price: number;
-    quantity: Number,
+    quantity: Number;
     category?: string;
     image: { imageId?: string; imageUrl?: string };
     availability: boolean;
     createdAt?: Date;
     updatedAt?: Date;
+    reviewStats: IReviewStats;
+    updateReviewStats: () => Promise<void>;
 }
 
+export interface IReviewStats {
+    totalReviews: number;
+    averageRating: number;
+}
 export interface MenuItem {
     _id: string;
     restaurantId: string;
     name: string;
     description?: string;
     price: number;
-    quantity: Number,
+    quantity: Number;
     category?: string;
     image?: { imageId?: string; imageUrl?: string };
     createdAt?: Date;

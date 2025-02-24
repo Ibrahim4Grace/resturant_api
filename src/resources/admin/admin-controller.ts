@@ -1,22 +1,15 @@
-import { Router, Request, Response, NextFunction } from 'express';
+import { Router, Request, Response } from 'express';
 import { Controller } from '../../types/index';
-import validate from '../../resources/admin/admin-validation';
-import { AdminService } from '../../resources/admin/admin-service';
+import validate from '../admin/admin-validation';
+import { AdminService } from '../admin/admin-service';
 import { TokenService } from '../../utils/index';
-import AdminModel from '../../resources/admin/admin-model';
-import {
-    RegisterAdminto,
-    Address,
-} from '../../resources/admin/admin-interface';
+import AdminModel from '../admin/admin-model';
+import { RegisterAdminto, Address } from '../admin/admin-interface';
 import {
     validateData,
     sendJsonResponse,
     asyncHandler,
-    Conflict,
-    ResourceNotFound,
     BadRequest,
-    Forbidden,
-    Unauthorized,
     authMiddleware,
     authorization,
 } from '../../middlewares/index';

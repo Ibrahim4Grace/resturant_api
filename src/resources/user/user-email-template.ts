@@ -1,5 +1,5 @@
 import { EmailData } from '../../types/index';
-import { IUser, IAddress } from '../../resources/user/user-interface';
+import { IUser, IAddress } from '../user/user-interface';
 
 export const sendOTPByEmail = (
     user: { name: string; email: string },
