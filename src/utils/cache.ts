@@ -64,29 +64,3 @@ export async function withCachedData<T>(
     await cacheData(key, data, ttl);
     return data;
 }
-
-// public async fetchAdminsById(userId: string): Promise<IAdmin> {
-//     const cacheKey = this.CACHE_KEYS.ADMIN_BY_ID(userId);
-//     const cachedAdmin = await getCachedData<IAdmin>(cacheKey);
-//     if (cachedAdmin) {
-//         return cachedAdmin;
-//     }
-//     const admin = await this.admin.findById(userId);
-//     if (!admin) {
-//         throw new ResourceNotFound('Admin not found');
-//     }
-
-//     await cacheData(cacheKey, admin, CACHE_TTL.ONE_HOUR);
-//     return admin;
-// }
-// public async fetchUserById(userId: string): Promise<IUser> {
-//     return withCachedData(
-//         this.CACHE_KEYS.USER_BY_ID(userId),
-//         async () => {
-//             const user = await this.user.findById(userId);
-//             if (!user) throw new ResourceNotFound('User not found');
-//             return user;
-//         },
-//         CACHE_TTL.ONE_HOUR
-//     );
-// }
