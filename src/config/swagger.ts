@@ -8,6 +8,7 @@ import {
     allOrderDocs,
     allMenuDocs,
     allpaymentDocs,
+    allreviewDocs,
 } from '../docs/index';
 
 const swaggerOptions: swaggerJsdoc.Options = {
@@ -52,6 +53,7 @@ const swaggerOptions: swaggerJsdoc.Options = {
             ...allOrderDocs.paths,
             ...allMenuDocs.paths,
             ...allpaymentDocs.paths,
+            ...allreviewDocs.paths,
         },
     },
     apis: ['./src/resources/**/*.ts'],

@@ -5,3 +5,4 @@ export * from './restaurant-doc';
 export * from './order-doc';
 export * from './menu-doc';
 export * from './payment-doc';
+export * from './review-doc';
