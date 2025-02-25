@@ -21,11 +21,7 @@ import {
 export class MenuService {
     private menu = MenuModel;
     private restaurant = RestaurantModel;
-    // private readonly CACHE_KEYS = {
-    //     ALL_MENUS: (userId: string) => `all_menus_${userId}`,
-    //     MENU_BY_ID: (menuId: string, restaurantId: string) =>
-    //         `menu_by_restaurant_${menuId}_${restaurantId}`,
-    // };
+
     private cloudinaryService: CloudinaryService;
     constructor() {
         this.cloudinaryService = new CloudinaryService();
