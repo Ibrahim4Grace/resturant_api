@@ -29,7 +29,7 @@ export const CACHE_KEYS = {
 
     // Order-related keys
     ALL_ORDERS: 'all_orders',
-    // ORDER_BY_ID: (id: string) => `order:${id}`,
+    ORDER_BY_ID: (id: string) => `user:${id}`,
     ALL_USER_ORDER: (restaurantId: string) => `all_user_order${restaurantId}`,
 
     // Menu-related keys
@@ -41,4 +41,5 @@ export const CACHE_KEYS = {
     // Review-related keys
     TARGET_REVIEWS: (targetType: string, targetId: string) =>
         `reviews:${targetType.toLowerCase()}:${targetId}`,
+    ALL_REVIEWS: 'all_reviews',
 } as const;
