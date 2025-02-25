@@ -10,7 +10,7 @@ const reviewSchema = new Schema(
         },
         targetType: {
             type: String,
-            enum: ['Restaurant', 'Menu'],
+            enum: ['restaurant', 'menu'],
             required: true,
         },
         targetId: {
@@ -35,4 +35,4 @@ const reviewSchema = new Schema(
 reviewSchema.index({ targetType: 1, targetId: 1 });
 reviewSchema.index({ userId: 1, targetType: 1, targetId: 1 }, { unique: true });
 
-export default model<IReview>('ReviewModel', reviewSchema);
+export default model<IReview>('Reviews', reviewSchema);

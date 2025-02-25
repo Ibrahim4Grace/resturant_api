@@ -33,23 +33,21 @@ export default class ReviewController implements Controller {
             `${this.path}/:reviewId`,
             authMiddleware(),
             authorization(UserModel, ['user']),
-            validateData(validate.reviewSchema),
+            validateData(validate.updateReview),
             this.updateReview,
         );
-
         this.router.delete(
             `${this.path}/:reviewId`,
             authMiddleware(),
+            authorization(UserModel, ['user']),
             this.deleteReview,
         );
-
-        // Get reviews for a target (restaurant or menu)
         this.router.get(
             `${this.path}/target/:targetType/:targetId`,
             this.getTargetReviews,
         );
 
-        this.router.get(`${this.path}`, authMiddleware(), this.getUserReviews);
+        this.router.get(`${this.path}`, this.getUserReviews);
     }
 
     public createReview = asyncHandler(
@@ -111,7 +109,7 @@ export default class ReviewController implements Controller {
     public getTargetReviews = asyncHandler(
         async (req: Request, res: Response): Promise<void> => {
             const { targetType, targetId } = req.params;
-            if (targetType !== 'Restaurant' && targetType !== 'Menu') {
+            if (targetType !== 'restaurant' && targetType !== 'menu') {
                 throw new Error('Invalid target type');
             }
 
@@ -131,12 +129,7 @@ export default class ReviewController implements Controller {
 
     public getUserReviews = asyncHandler(
         async (req: Request, res: Response): Promise<void> => {
-            const userId = req.currentUser._id;
-            if (!userId) {
-                throw new ResourceNotFound('User not authenticated');
-            }
-
-            const reviews = await this.reviewService.getUserReviews(userId);
+            const reviews = await this.reviewService.getReviews(req, res);
 
             sendJsonResponse(
                 res,

@@ -1,13 +1,17 @@
 import { Types } from 'mongoose';
+import { Request, Response } from 'express';
 import ReviewModel from './review-model';
 import RestaurantModel from '../restaurant/model';
 import MenuModel from '../menu/menu-model';
 import { ResourceNotFound } from '../../middlewares/index';
+import { IReview } from './review-interface';
+import { IReviewPaginatedResponse } from '../../types/index';
 import {
     withCachedData,
     CACHE_TTL,
     deleteCacheData,
     CACHE_KEYS,
+    getPaginatedAndCachedResults,
 } from '../../utils/index';
 
 export class ReviewService {
@@ -15,21 +19,34 @@ export class ReviewService {
     private restaurant = RestaurantModel;
     private menu = MenuModel;
 
+    private reviewData(review: IReview) {
+        return {
+            _id: review._id,
+            userId: review.userId,
+            targetType: review.targetType,
+            targetId: review.targetId,
+            rating: review.rating,
+            comment: review.comment,
+            createdAt: review.createdAt,
+            updatedAt: review.updatedAt,
+        };
+    }
+
     public async createReview(reviewData: {
         userId: string;
-        targetType: 'Restaurant' | 'Menu';
+        targetType: 'restaurant' | 'menu';
         targetId: string;
         rating: number;
         comment?: string;
     }) {
-        if (reviewData.targetType === 'Restaurant') {
+        if (reviewData.targetType === 'restaurant') {
             const restaurant = await this.restaurant.findById(
                 reviewData.targetId,
             );
             if (!restaurant) {
                 throw new ResourceNotFound('Restaurant not found');
             }
-        } else if (reviewData.targetType === 'Menu') {
+        } else if (reviewData.targetType === 'menu') {
             const menu = await this.menu.findById(reviewData.targetId);
             if (!menu) {
                 throw new ResourceNotFound('Menu item not found');
@@ -38,13 +55,12 @@ export class ReviewService {
 
         const review = await this.review.create(reviewData);
 
-        // Update stats for the target
         await this.updateReviewStats(
             reviewData.targetType,
             reviewData.targetId,
         );
 
-        return review;
+        return this.reviewData(review);
     }
 
     public async updateReview(
@@ -67,7 +83,7 @@ export class ReviewService {
             review.targetId.toString(),
         );
 
-        return review;
+        return this.reviewData(review);
     }
 
     public async deleteReview(reviewId: string, userId: string) {
@@ -85,26 +101,26 @@ export class ReviewService {
     }
 
     public async getReviewsForTarget(
-        targetType: 'Restaurant' | 'Menu',
+        targetType: 'restaurant' | 'menu',
         targetId: string,
     ) {
         const cacheKey = CACHE_KEYS.TARGET_REVIEWS(targetType, targetId);
         return withCachedData(
             cacheKey,
             async () => {
-                const reviews = await this.review
-                    .find({ targetType, targetId })
-                    .populate('userId', 'name avatar')
-                    .sort({ createdAt: -1 });
+                const reviews = await this.review.find({
+                    targetType,
+                    targetId,
+                });
 
-                return reviews;
+                return reviews.map((review) => this.reviewData(review));
             },
             CACHE_TTL.FIVE_MINUTES,
         );
     }
 
     private async updateReviewStats(
-        targetType: 'Restaurant' | 'Menu',
+        targetType: 'restaurant' | 'menu',
         targetId: string,
     ) {
         // Calculate new stats
@@ -130,12 +146,12 @@ export class ReviewService {
                 : { totalReviews: 0, averageRating: 0 };
 
         // Update the target entity
-        if (targetType === 'Restaurant') {
+        if (targetType === 'restaurant') {
             await this.restaurant.updateOne(
                 { _id: targetId },
                 { $set: { reviewStats: newStats } },
             );
-        } else if (targetType === 'Menu') {
+        } else if (targetType === 'menu') {
             await this.menu.updateOne(
                 { _id: targetId },
                 { $set: { reviewStats: newStats } },
@@ -150,12 +166,34 @@ export class ReviewService {
         );
     }
 
-    // Get a user's reviews
-    public async getUserReviews(userId: string) {
-        return this.review
-            .find({ userId })
-            .select('__v')
-            .sort({ createdAt: -1 })
-            .populate('targetId');
+    public async getReviews(
+        req: Request,
+        res: Response,
+    ): Promise<IReviewPaginatedResponse> {
+        const paginatedResults = await getPaginatedAndCachedResults<IReview>(
+            req,
+            res,
+            this.review,
+            CACHE_KEYS.ALL_REVIEWS,
+            {
+                userId: 1,
+                targetType: 1,
+                targetId: 1,
+                rating: 1,
+                comment: 1,
+                createdAt: 1,
+            },
+        );
+
+        return {
+            results: paginatedResults.results.map((review) =>
+                this.reviewData(review),
+            ) as IReview[],
+            pagination: {
+                currentPage: paginatedResults.currentPage,
+                totalPages: paginatedResults.totalPages,
+                limit: paginatedResults.limit,
+            },
+        };
     }
 }

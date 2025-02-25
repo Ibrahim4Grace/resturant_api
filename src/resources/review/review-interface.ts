@@ -1,8 +1,9 @@
-import { Types } from 'mongoose';
+import { Types, Document } from 'mongoose';
 
-export interface IReview {
+export interface IReview extends Document {
+    _id: string;
     userId: Types.ObjectId;
-    targetType: 'Restaurant' | 'Menu';
+    targetType: 'restaurant' | 'menu';
     targetId: Types.ObjectId;
     rating: number;
     comment?: string;
