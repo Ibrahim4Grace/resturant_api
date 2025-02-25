@@ -13,7 +13,7 @@ import {
 } from '../../middlewares/index';
 
 export default class ReviewController implements Controller {
-    public path = '/review';
+    public path = '/reviews';
     public router = Router();
     private reviewService = new ReviewService();
 
@@ -23,26 +23,33 @@ export default class ReviewController implements Controller {
 
     private initializeRoutes(): void {
         this.router.post(
-            `${this.path}/`,
+            `${this.path}`,
             authMiddleware(),
             authorization(UserModel, ['user']),
             validateData(validate.reviewSchema),
             this.createReview,
         );
         this.router.put(
-            '/:reviewId',
+            `${this.path}/:reviewId`,
             authMiddleware(),
             authorization(UserModel, ['user']),
             validateData(validate.reviewSchema),
             this.updateReview,
         );
 
-        this.router.delete('/:reviewId', authMiddleware(), this.deleteReview);
+        this.router.delete(
+            `${this.path}/:reviewId`,
+            authMiddleware(),
+            this.deleteReview,
+        );
 
         // Get reviews for a target (restaurant or menu)
-        this.router.get('/target/:targetType/:targetId', this.getTargetReviews);
+        this.router.get(
+            `${this.path}/target/:targetType/:targetId`,
+            this.getTargetReviews,
+        );
 
-        this.router.get('/user', authMiddleware(), this.getUserReviews);
+        this.router.get(`${this.path}`, authMiddleware(), this.getUserReviews);
     }
 
     public createReview = asyncHandler(
