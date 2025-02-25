@@ -4,6 +4,7 @@ import { IRider } from '../resources/rider/rider-interface';
 import { IAdmin } from '../resources/admin/admin-interface';
 import { IOrder } from '../resources/order/order-interface';
 import { IMenu } from '../resources/menu/menu-interface';
+import { IReview } from '../resources/review/review-interface';
 
 export const UserRoles = {
     User: 'user',
@@ -67,6 +68,7 @@ export type IMenuPaginatedResponse = IPaginatedEntityResponse<IMenu>;
 export type IUserPaginatedResponse = IPaginatedEntityResponse<IUser>;
 export type IRiderPaginatedResponse = IPaginatedEntityResponse<IRider>;
 export type IOrderPaginatedResponse = IPaginatedEntityResponse<IOrder>;
+export type IReviewPaginatedResponse = IPaginatedEntityResponse<IReview>;
 export type IRestaurantPaginatedResponse =
     IPaginatedEntityResponse<IRestaurant>;
 
@@ -75,13 +77,13 @@ declare global {
         interface Response {
             // paginatedResults?: IPaginationResponse;
             paginatedResults?: {
-                results: any[];
+                results: unknown[];
                 pagination: IPaginationResponse;
             };
         }
 
         interface Request {
-            ownerId?: any;
+            ownerId?: string;
             user?: AuthUser;
             currentUser?: IUser;
         }
@@ -99,17 +101,3 @@ export interface UploadedImage {
     imageId: string;
     imageUrl: string;
 }
-
-// export interface MulterFile {
-//     fieldname: string;
-//     originalname: string;
-//     encoding: string;
-//     mimetype: string;
-//     size: number;
-//     destination: string;
-//     filename: string;
-//     path: string;
-//     buffer: Buffer;
-//     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-//     stream: any;
-// }
