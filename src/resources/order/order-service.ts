@@ -15,6 +15,7 @@ import {
     CACHE_TTL,
     generateOrderId,
     getPaginatedAndCachedResults,
+    CACHE_KEYS,
 } from '../../utils/index';
 import {
     orderStatusUpdateEmail,
@@ -30,10 +31,7 @@ export class OrderService {
     private order = OrderModel;
     private user = UserModel;
     private menu = MenuModel;
-    private readonly CACHE_KEYS = {
-        ALL_USER_ORDER: (restaurantId: string) =>
-            `all_user_order${restaurantId}`,
-    };
+
     private async validateUser(userId: string) {
         const user = await this.user.findById(userId);
         if (!user) {
@@ -227,7 +225,7 @@ export class OrderService {
             req,
             res,
             this.order,
-            this.CACHE_KEYS.ALL_USER_ORDER(restaurantId),
+            CACHE_KEYS.ALL_USER_ORDER(restaurantId),
             { restaurantId },
             {
                 orderId: 1,

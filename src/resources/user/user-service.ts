@@ -14,6 +14,7 @@ import {
     withCachedData,
     CACHE_TTL,
     getPaginatedAndCachedResults,
+    CACHE_KEYS,
 } from '../../utils/index';
 import {
     IUser,
@@ -39,15 +40,6 @@ import {
 export class UserService {
     private user = UserModel;
     private order = OrderModel;
-    private readonly CACHE_KEYS = {
-        USER_BY_ID: (id: string) => `user:${id}`,
-        USER_ADDRESSES: (userId: string) => `user:${userId}:addresses`,
-        USER_ADDRESS_BY_ID: (userId: string, addressId: string) =>
-            `user:${userId}:address:${addressId}`,
-        USER_ORDERS: (userId: string) => `user:${userId}:orders`,
-        USER_ORDER_BY_ID: (userId: string, orderId: string) =>
-            `user:${userId}:order:${orderId}`,
-    };
 
     private async checkDuplicate(
         field: 'email' | 'phone',
@@ -366,7 +358,7 @@ export class UserService {
             req,
             res,
             this.user,
-            this.CACHE_KEYS.USER_ADDRESSES(userId),
+            CACHE_KEYS.USER_ADDRESSES(userId),
             { _id: userId },
             { addresses: 1 },
         );
@@ -391,7 +383,7 @@ export class UserService {
         addressId: string,
     ): Promise<IAddress> {
         return withCachedData(
-            this.CACHE_KEYS.USER_ADDRESS_BY_ID(userId, addressId),
+            CACHE_KEYS.USER_ADDRESS_BY_ID(userId, addressId),
             async () => {
                 const user = await this.user
                     .findOne({
@@ -439,7 +431,7 @@ export class UserService {
             req,
             res,
             this.order,
-            this.CACHE_KEYS.USER_ORDERS(userId),
+            CACHE_KEYS.USER_ORDERS(userId),
             { userId },
         );
 
@@ -460,7 +452,7 @@ export class UserService {
         orderId: string,
     ): Promise<Partial<IOrder>> {
         return withCachedData(
-            this.CACHE_KEYS.USER_ORDER_BY_ID(userId, orderId),
+            CACHE_KEYS.USER_ORDER_BY_ID(userId, orderId),
             async () => {
                 const order = await this.order
                     .findOne({

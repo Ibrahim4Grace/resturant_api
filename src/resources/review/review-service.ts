@@ -3,16 +3,17 @@ import ReviewModel from './review-model';
 import RestaurantModel from '../restaurant/model';
 import MenuModel from '../menu/menu-model';
 import { ResourceNotFound } from '../../middlewares/index';
-import { withCachedData, CACHE_TTL } from '../../utils/index';
+import {
+    withCachedData,
+    CACHE_TTL,
+    deleteCacheData,
+    CACHE_KEYS,
+} from '../../utils/index';
 
 export class ReviewService {
     private review = ReviewModel;
     private restaurant = RestaurantModel;
     private menu = MenuModel;
-    private readonly CACHE_KEYS = {
-        TARGET_REVIEWS: (targetType: string, targetId: string) =>
-            `rider:${targetType}:${targetId}`,
-    };
 
     public async createReview(reviewData: {
         userId: string;
@@ -87,7 +88,7 @@ export class ReviewService {
         targetType: 'Restaurant' | 'Menu',
         targetId: string,
     ) {
-        const cacheKey = this.CACHE_KEYS.TARGET_REVIEWS(targetType, targetId);
+        const cacheKey = CACHE_KEYS.TARGET_REVIEWS(targetType, targetId);
         return withCachedData(
             cacheKey,
             async () => {
@@ -141,8 +142,12 @@ export class ReviewService {
             );
         }
 
-        // Invalidate related cache
-        // Your cache invalidation logic here
+        // Invalidate restaurant-related caches
+        await deleteCacheData(CACHE_KEYS.RESTAURANT_DETAILS(targetId));
+        await deleteCacheData(CACHE_KEYS.RESTAURANT_ANALYTICS(targetId));
+        await deleteCacheData(
+            CACHE_KEYS.TARGET_REVIEWS('Restaurant', targetId),
+        );
     }
 
     // Get a user's reviews

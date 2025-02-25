@@ -15,16 +15,17 @@ import {
     getPaginatedAndCachedResults,
     withCachedData,
     EmailQueueService,
+    CACHE_KEYS,
 } from '../../utils/index';
 
 export class MenuService {
     private menu = MenuModel;
     private restaurant = RestaurantModel;
-    private readonly CACHE_KEYS = {
-        ALL_MENUS: (userId: string) => `all_menus_${userId}`,
-        MENU_BY_ID: (menuId: string, restaurantId: string) =>
-            `menu_by_restaurant_${menuId}_${restaurantId}`,
-    };
+    // private readonly CACHE_KEYS = {
+    //     ALL_MENUS: (userId: string) => `all_menus_${userId}`,
+    //     MENU_BY_ID: (menuId: string, restaurantId: string) =>
+    //         `menu_by_restaurant_${menuId}_${restaurantId}`,
+    // };
     private cloudinaryService: CloudinaryService;
     constructor() {
         this.cloudinaryService = new CloudinaryService();
@@ -117,7 +118,7 @@ export class MenuService {
             req,
             res,
             this.menu,
-            this.CACHE_KEYS.ALL_MENUS(userId),
+            CACHE_KEYS.ALL_MENUS(userId),
             { restaurantId: userId },
             { name: 1, description: 1, price: 1, category: 1, image: 1 },
         );
@@ -137,8 +138,7 @@ export class MenuService {
         restaurantId: string,
     ): Promise<MenuItem[]> {
         return withCachedData(
-            this.CACHE_KEYS.MENU_BY_ID(menuId, restaurantId),
-
+            CACHE_KEYS.MENU_BY_ID(menuId, restaurantId),
             async () => {
                 const menuItems = await this.menu
                     .find({

@@ -21,6 +21,7 @@ import {
     deleteCacheData,
     getPaginatedAndCachedResults,
     withCachedData,
+    CACHE_KEYS,
 } from '../../utils/index';
 import {
     IAdmin,
@@ -50,18 +51,6 @@ export class AdminService {
     private restaurant = RestaurantModel;
     private rider = RiderModel;
     private order = OrderModel;
-    private readonly CACHE_KEYS = {
-        ALL_ADMINS: 'all_admins',
-        ADMIN_BY_ID: (id: string) => `admin:${id}`,
-        ALL_USERS: 'all_users',
-        USER_BY_ID: (id: string) => `user:${id}`,
-        ALL_RESTAURANTS: 'all_restaurants',
-        RESTAURANT_BY_ID: (id: string) => `restaurant:${id}`,
-        ALL_RIDERS: 'all_riders',
-        RIDER_BY_ID: (id: string) => `rider:${id}`,
-        ALL_ORDERS: 'all_orders',
-        ORDER_BY_ID: (id: string) => `order:${id}`,
-    };
 
     private async checkDuplicate(
         field: 'email' | 'phone',
@@ -287,7 +276,7 @@ export class AdminService {
             req,
             res,
             this.admin,
-            this.CACHE_KEYS.ALL_ADMINS,
+            CACHE_KEYS.ALL_ADMINS,
             { name: 1, email: 1, address: 1, phone: 1, role: 1 },
         );
 
@@ -303,7 +292,7 @@ export class AdminService {
 
     public async fetchAdminsById(userId: string): Promise<IAdmin> {
         return withCachedData(
-            this.CACHE_KEYS.ADMIN_BY_ID(userId),
+            CACHE_KEYS.ADMIN_BY_ID(userId),
             async () => {
                 const admin = await this.admin.findById(userId);
                 if (!admin) throw new ResourceNotFound('Admin not found');
@@ -320,8 +309,8 @@ export class AdminService {
         }
 
         await Promise.all([
-            deleteCacheData(this.CACHE_KEYS.ADMIN_BY_ID(userId)),
-            deleteCacheData(this.CACHE_KEYS.ALL_ADMINS),
+            deleteCacheData(CACHE_KEYS.ADMIN_BY_ID(userId)),
+            deleteCacheData(CACHE_KEYS.ALL_ADMINS),
         ]);
 
         return admin;
@@ -335,7 +324,7 @@ export class AdminService {
             req,
             res,
             this.user,
-            this.CACHE_KEYS.ALL_USERS,
+            CACHE_KEYS.ALL_USERS,
             { name: 1, email: 1, addresses: 1, phone: 1, status: 1 },
         );
 
@@ -351,7 +340,7 @@ export class AdminService {
 
     public async fetchUserById(userId: string): Promise<IUser> {
         return withCachedData(
-            this.CACHE_KEYS.USER_BY_ID(userId),
+            CACHE_KEYS.USER_BY_ID(userId),
             async () => {
                 const user = await this.user.findById(userId);
                 if (!user) throw new ResourceNotFound('User not found');
@@ -368,8 +357,8 @@ export class AdminService {
         }
 
         await Promise.all([
-            deleteCacheData(this.CACHE_KEYS.USER_BY_ID(userId)),
-            deleteCacheData(this.CACHE_KEYS.ALL_USERS),
+            deleteCacheData(CACHE_KEYS.USER_BY_ID(userId)),
+            deleteCacheData(CACHE_KEYS.ALL_USERS),
         ]);
         return user;
     }
@@ -383,7 +372,7 @@ export class AdminService {
                 req,
                 res,
                 this.restaurant,
-                this.CACHE_KEYS.ALL_RESTAURANTS,
+                CACHE_KEYS.ALL_RESTAURANTS,
                 {
                     name: 1,
                     email: 1,
@@ -406,7 +395,7 @@ export class AdminService {
 
     public async fetchRestaurantById(userId: string): Promise<IRestaurant> {
         return withCachedData(
-            this.CACHE_KEYS.RESTAURANT_BY_ID(userId),
+            CACHE_KEYS.RESTAURANT_BY_ID(userId),
             async () => {
                 const restaurant = await this.restaurant.findById(userId);
                 if (!restaurant)
@@ -424,8 +413,8 @@ export class AdminService {
         }
 
         await Promise.all([
-            deleteCacheData(this.CACHE_KEYS.RESTAURANT_BY_ID(userId)),
-            deleteCacheData(this.CACHE_KEYS.ALL_RESTAURANTS),
+            deleteCacheData(CACHE_KEYS.RESTAURANT_BY_ID(userId)),
+            deleteCacheData(CACHE_KEYS.ALL_RESTAURANTS),
         ]);
         return restaurant;
     }
@@ -438,7 +427,7 @@ export class AdminService {
             req,
             res,
             this.rider,
-            this.CACHE_KEYS.ALL_RIDERS,
+            CACHE_KEYS.ALL_RIDERS,
             { name: 1, email: 1, phone: 1, address: 1, status: 1 },
         );
 
@@ -454,7 +443,7 @@ export class AdminService {
 
     public async fetchRiderById(userId: string): Promise<IRider> {
         return withCachedData(
-            this.CACHE_KEYS.RIDER_BY_ID(userId),
+            CACHE_KEYS.RIDER_BY_ID(userId),
             async () => {
                 const rider = await this.rider.findById(userId);
                 if (!rider) throw new ResourceNotFound('Rider not found');
@@ -471,8 +460,8 @@ export class AdminService {
         }
 
         await Promise.all([
-            deleteCacheData(this.CACHE_KEYS.RIDER_BY_ID(userId)),
-            deleteCacheData(this.CACHE_KEYS.ALL_RIDERS),
+            deleteCacheData(CACHE_KEYS.RIDER_BY_ID(userId)),
+            deleteCacheData(CACHE_KEYS.ALL_RIDERS),
         ]);
         return rider;
     }
@@ -485,7 +474,7 @@ export class AdminService {
             req,
             res,
             this.order,
-            this.CACHE_KEYS.ALL_ORDERS,
+            CACHE_KEYS.ALL_ORDERS,
             { name: 1, email: 1, address: 1, status: 1 },
         );
 
@@ -501,7 +490,7 @@ export class AdminService {
 
     public async fetchOrdersById(userId: string): Promise<IOrder> {
         return withCachedData(
-            this.CACHE_KEYS.ORDER_BY_ID(userId),
+            CACHE_KEYS.ORDER_BY_ID(userId),
             async () => {
                 const order = await this.order.findById(userId);
                 if (!order) throw new ResourceNotFound('Order not found');
@@ -518,8 +507,8 @@ export class AdminService {
         }
 
         await Promise.all([
-            deleteCacheData(this.CACHE_KEYS.ORDER_BY_ID(userId)),
-            deleteCacheData(this.CACHE_KEYS.ALL_ORDERS),
+            deleteCacheData(CACHE_KEYS.ORDER_BY_ID(userId)),
+            deleteCacheData(CACHE_KEYS.ALL_ORDERS),
         ]);
         return order;
     }

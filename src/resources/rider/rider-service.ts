@@ -13,6 +13,7 @@ import {
     getPaginatedAndCachedResults,
     withCachedData,
     CACHE_TTL,
+    CACHE_KEYS,
 } from '../../utils/index';
 import {
     UploadedImage,
@@ -46,11 +47,7 @@ export class RiderService {
     private order = OrderModel;
     private user = UserModel;
     private readonly ALLOWED_RIDER_STATUSES = 'delivered' as const;
-    private readonly CACHE_KEYS = {
-        RIDER_BY_ID: (id: string) => `rider:${id}`,
-        RIDER_DELIVERY_BY_ID: (riderId: string, deliveryId: string) =>
-            `rider:${riderId}:delivery:${deliveryId}`,
-    };
+
     private cloudinaryService: CloudinaryService;
     constructor() {
         this.cloudinaryService = new CloudinaryService();
@@ -483,7 +480,7 @@ export class RiderService {
             req,
             res,
             this.order,
-            this.CACHE_KEYS.RIDER_BY_ID(riderId),
+            CACHE_KEYS.RIDER_BY_ID(riderId),
             { 'delivery_info.riderId': riderId },
             { userId: 1, restaurantId: 1, status: 1, createdAt: 1 },
         );
@@ -503,7 +500,7 @@ export class RiderService {
         deliveryId: string,
     ): Promise<IOrder> {
         return withCachedData(
-            this.CACHE_KEYS.RIDER_DELIVERY_BY_ID(riderId, deliveryId),
+            CACHE_KEYS.RIDER_DELIVERY_BY_ID(riderId, deliveryId),
             async () => {
                 const delivery = await this.order
                     .findOne({

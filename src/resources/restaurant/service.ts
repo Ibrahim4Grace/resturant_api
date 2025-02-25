@@ -24,6 +24,7 @@ import {
     EmailQueueService,
     withCachedData,
     CACHE_TTL,
+    CACHE_KEYS,
 } from '../../utils/index';
 import {
     Conflict,
@@ -43,11 +44,6 @@ export class RestaurantService {
         this.cloudinaryService = new CloudinaryService();
     }
 
-    private readonly CACHE_KEYS = {
-        ALL_RESTAURANTS: 'all_restaurants',
-        RESTAURANT_BY_ID: (id: string) => `restaurant:${id}`,
-        RESTAURANT_ANALYTICS: (id: string) => `restaurant:${id}:analytics`,
-    };
     private async checkDuplicateEmail(email: string): Promise<void> {
         const existingRestaurant = await this.restaurant.findOne({ email });
         if (existingRestaurant) {
@@ -362,7 +358,7 @@ export class RestaurantService {
     public async getRestaurant(
         restaurantId: string,
     ): Promise<ISanitizedRestaurant> {
-        const cacheKey = this.CACHE_KEYS.RESTAURANT_BY_ID(restaurantId);
+        const cacheKey = CACHE_KEYS.RESTAURANT_BY_ID(restaurantId);
 
         return withCachedData<ISanitizedRestaurant>(
             cacheKey,
@@ -401,7 +397,7 @@ export class RestaurantService {
     public async getRestaurantAnalytics(
         restaurantId: string,
     ): Promise<RestaurantAnalytics> {
-        const cacheKey = this.CACHE_KEYS.RESTAURANT_ANALYTICS(restaurantId);
+        const cacheKey = CACHE_KEYS.RESTAURANT_ANALYTICS(restaurantId);
 
         return withCachedData<RestaurantAnalytics>(
             cacheKey,
