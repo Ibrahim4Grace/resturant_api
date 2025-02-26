@@ -215,13 +215,31 @@ export class RestaurantService {
         }
 
         restaurant.passwordHistory = restaurant.passwordHistory ?? [];
+        const isPasswordUsedBefore = restaurant.passwordHistory.some((entry) =>
+            bcrypt.compareSync(newPassword, entry.password),
+        );
+        if (isPasswordUsedBefore) {
+            throw new BadRequest(
+                'This password has been used before. Please choose a new password.',
+            );
+        }
+
         restaurant.passwordHistory.push({
             password: restaurant.password,
             changedAt: new Date(),
         });
 
+        const PASSWORD_HISTORY_LIMIT = 5;
+        if (restaurant.passwordHistory.length > PASSWORD_HISTORY_LIMIT) {
+            restaurant.passwordHistory = restaurant.passwordHistory.slice(
+                -PASSWORD_HISTORY_LIMIT,
+            );
+        }
+
         restaurant.password = newPassword;
         restaurant.emailVerificationOTP = undefined;
+        restaurant.failedLoginAttempts = 0;
+        restaurant.isLocked = false;
         await restaurant.save();
 
         const emailOptions = PasswordResetEmail(restaurant as IRestaurant);

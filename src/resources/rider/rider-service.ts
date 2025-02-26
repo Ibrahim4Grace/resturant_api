@@ -201,13 +201,32 @@ export class RiderService {
         }
 
         rider.passwordHistory = rider.passwordHistory ?? [];
+        const isPasswordUsedBefore = rider.passwordHistory.some((entry) =>
+            bcrypt.compareSync(newPassword, entry.password),
+        );
+
+        if (isPasswordUsedBefore) {
+            throw new BadRequest(
+                'This password has been used before. Please choose a new password.',
+            );
+        }
+
         rider.passwordHistory.push({
             password: rider.password,
             changedAt: new Date(),
         });
 
+        const PASSWORD_HISTORY_LIMIT = 5;
+        if (rider.passwordHistory.length > PASSWORD_HISTORY_LIMIT) {
+            rider.passwordHistory = rider.passwordHistory.slice(
+                -PASSWORD_HISTORY_LIMIT,
+            );
+        }
+
         rider.password = newPassword;
         rider.emailVerificationOTP = undefined;
+        rider.failedLoginAttempts = 0;
+        rider.isLocked = false;
         await rider.save();
 
         const emailOptions = PasswordResetEmail(rider as IRider);
