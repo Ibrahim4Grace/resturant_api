@@ -134,7 +134,7 @@ export default class ReviewController implements Controller {
             sendJsonResponse(
                 res,
                 200,
-                'User reviews retrieved successfully',
+                'Reviews retrieved successfully',
                 reviews,
             );
         },

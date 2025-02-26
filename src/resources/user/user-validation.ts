@@ -45,15 +45,6 @@ const loginSchema = z.object({
         ),
 });
 
-const paymentMethodSchema = z
-    .object({
-        type: z.string().optional(),
-        last4: z.string().length(4).optional(),
-        expiryDate: z.date().optional(),
-        isDefault: z.boolean().optional(),
-    })
-    .optional();
-
 const imageSchema = z
     .object({
         imageId: z.string().optional(),
@@ -65,7 +56,6 @@ const updateUserSchema = z
     .object({
         name: z.string().min(1).max(30).optional(),
         email: z.string().email().optional(),
-        paymentMethods: z.array(paymentMethodSchema).optional(),
         image: imageSchema,
         phone: z.string().optional(),
         addresses: z

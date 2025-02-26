@@ -1,11 +1,12 @@
 import { Types } from 'mongoose';
 import { Request, Response } from 'express';
 import ReviewModel from './review-model';
-import RestaurantModel from '../restaurant/model';
+import RestaurantModel from '../restaurant/restaurant-model';
 import MenuModel from '../menu/menu-model';
 import { ResourceNotFound } from '../../middlewares/index';
 import { IReview } from './review-interface';
 import { IReviewPaginatedResponse } from '../../types/index';
+import { reviewData } from '../review/review-helper';
 import {
     withCachedData,
     CACHE_TTL,
@@ -18,19 +19,7 @@ export class ReviewService {
     private review = ReviewModel;
     private restaurant = RestaurantModel;
     private menu = MenuModel;
-
-    private reviewData(review: IReview) {
-        return {
-            _id: review._id,
-            userId: review.userId,
-            targetType: review.targetType,
-            targetId: review.targetId,
-            rating: review.rating,
-            comment: review.comment,
-            createdAt: review.createdAt,
-            updatedAt: review.updatedAt,
-        };
-    }
+    private reviewData = reviewData;
 
     public async createReview(reviewData: {
         userId: string;
@@ -175,14 +164,6 @@ export class ReviewService {
             res,
             this.review,
             CACHE_KEYS.ALL_REVIEWS,
-            {
-                userId: 1,
-                targetType: 1,
-                targetId: 1,
-                rating: 1,
-                comment: 1,
-                createdAt: 1,
-            },
         );
 
         return {

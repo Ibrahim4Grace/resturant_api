@@ -1,12 +1,17 @@
+import bcrypt from 'bcryptjs';
 import { Request, Response } from 'express';
 import UserModel from '../user/user-model';
 import OrderModel from '../order/order-model';
-import bcrypt from 'bcryptjs';
+import ReviewModel from '../review/review-model';
 import { IOrder } from '../order/order-interface';
+import { IReview } from '../review/review-interface';
+import { orderData } from '../order/order-helper';
+import { reviewData } from '../review/review-helper';
 import {
     LoginCredentials,
     IAddressPaginatedResponse,
     IOrderPaginatedResponse,
+    IReviewPaginatedResponse,
 } from '../../types/index';
 import {
     TokenService,
@@ -36,73 +41,25 @@ import {
     Forbidden,
     Unauthorized,
 } from '../../middlewares/index';
+import {
+    checkDuplicate,
+    findUserByEmail,
+    findUserById,
+    findUserByVerificationToken,
+    userData,
+} from '../user/user-helper';
 
 export class UserService {
     private user = UserModel;
     private order = OrderModel;
-
-    private async checkDuplicate(
-        field: 'email' | 'phone',
-        value: string,
-    ): Promise<void> {
-        const existingUser = await this.user.findOne({ [field]: value });
-        if (existingUser) {
-            throw new Conflict(
-                `${field === 'email' ? 'Email' : 'Phone Number'} already registered!`,
-            );
-        }
-    }
-    private async findUserByEmail(email: string) {
-        return this.user.findOne({
-            email: email.toLowerCase().trim(),
-        });
-    }
-
-    private async findUserById(userId: string): Promise<IUser> {
-        const user = await this.user.findById(userId).lean();
-        if (!user) {
-            throw new ResourceNotFound('User not found');
-        }
-        return user;
-    }
-
-    private async findUserByVerificationToken(verificationToken: string) {
-        return this.user.findOne({
-            'emailVerificationOTP.verificationToken': verificationToken,
-            'emailVerificationOTP.expiresAt': { $gt: new Date() },
-        });
-    }
-
-    private userData(user: IUser): Partial<IUser> {
-        return {
-            _id: user._id,
-            name: user.name,
-            email: user.email,
-            addresses: user.addresses,
-            phone: user.phone,
-            isEmailVerified: user.isEmailVerified,
-            createdAt: user.createdAt,
-            updatedAt: user.updatedAt,
-        };
-    }
-
-    private orderData(order: IOrder): Partial<IOrder> {
-        return {
-            _id: order._id,
-            order_number: order.order_number,
-            status: order.status,
-            total_price: order.total_price,
-            userId: order.userId,
-            restaurantId: order.restaurantId,
-            items: order.items,
-            subtotal: order.subtotal,
-            tax: order.tax,
-            delivery_fee: order.delivery_fee,
-            delivery_info: order.delivery_info,
-            createdAt: order.createdAt,
-            updatedAt: order.updatedAt,
-        };
-    }
+    private review = ReviewModel;
+    private checkDuplicate = checkDuplicate;
+    private findUserByEmail = findUserByEmail;
+    private findUserById = findUserById;
+    private orderData = orderData;
+    private userData = userData;
+    private reviewData = reviewData;
+    private findUserByVerificationToken = findUserByVerificationToken;
 
     public async register(
         userData: RegisterUserto,
@@ -471,5 +428,30 @@ export class UserService {
             },
             CACHE_TTL.ONE_HOUR,
         );
+    }
+
+    public async getUserReviews(
+        req: Request,
+        res: Response,
+        userId: string,
+    ): Promise<IReviewPaginatedResponse> {
+        const paginatedResults = await getPaginatedAndCachedResults<IReview>(
+            req,
+            res,
+            this.review,
+            CACHE_KEYS.USER_REVIEWS(userId),
+            { userId },
+        );
+
+        return {
+            results: paginatedResults.results.map((review) =>
+                this.reviewData(review),
+            ) as IReview[],
+            pagination: {
+                currentPage: paginatedResults.currentPage,
+                totalPages: paginatedResults.totalPages,
+                limit: paginatedResults.limit,
+            },
+        };
     }
 }

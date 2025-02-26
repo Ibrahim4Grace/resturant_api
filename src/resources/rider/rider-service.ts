@@ -7,6 +7,7 @@ import { IOrder } from '../order/order-interface';
 import { orderStatusUpdateEmail } from '../order/order-email-template';
 import { riderAssignedEmail } from '../rider/rider-email-template';
 import { CloudinaryService } from '../../config/index';
+import { orderData } from '../order/order-helper';
 import {
     EmailQueueService,
     TokenService,
@@ -27,105 +28,44 @@ import {
     RegisterRiderto,
     loginResponse,
     UpdateOrderStatusParams,
-} from '../../resources/rider/rider-interface';
+} from '../rider/rider-interface';
 import {
     sendOTPByEmail,
     welcomeEmail,
     PasswordResetEmail,
-} from '../../resources/rider/rider-email-template';
+} from '../rider/rider-email-template';
 import {
-    Conflict,
     ResourceNotFound,
     BadRequest,
     Forbidden,
     Unauthorized,
     ServerError,
 } from '../../middlewares/index';
+import {
+    checkDuplicate,
+    findRiderById,
+    findRiderByEmail,
+    findRiderByVerificationToken,
+    checkOrderAssignment,
+    riderData,
+} from '../rider/rider-helper';
 
 export class RiderService {
     private rider = RiderModel;
     private order = OrderModel;
     private user = UserModel;
+    private checkDuplicate = checkDuplicate;
+    private findRiderById = findRiderById;
+    private findRiderByEmail = findRiderByEmail;
+    private findRiderByVerificationToken = findRiderByVerificationToken;
+    private riderData = riderData;
+    private checkOrderAssignment = checkOrderAssignment;
+    private orderData = orderData;
     private readonly ALLOWED_RIDER_STATUSES = 'delivered' as const;
 
     private cloudinaryService: CloudinaryService;
     constructor() {
         this.cloudinaryService = new CloudinaryService();
-    }
-
-    private async checkDuplicate(
-        field: 'email' | 'phone',
-        value: string,
-    ): Promise<void> {
-        const existingRider = await this.rider.findOne({ [field]: value });
-        if (existingRider) {
-            throw new Conflict(
-                `${field === 'email' ? 'Email' : 'Phone Number'} already registered!`,
-            );
-        }
-    }
-    private async findRiderById(riderId: string): Promise<IRider> {
-        const rider = await this.rider.findById(riderId).lean();
-        if (!rider) {
-            throw new ResourceNotFound('Rider not found');
-        }
-        return rider;
-    }
-    private async findRiderByEmail(email: string) {
-        return this.rider.findOne({
-            email: email.toLowerCase().trim(),
-        });
-    }
-    private async findRiderByVerificationToken(verificationToken: string) {
-        return this.rider.findOne({
-            'emailVerificationOTP.verificationToken': verificationToken,
-            'emailVerificationOTP.expiresAt': { $gt: new Date() },
-        });
-    }
-
-    private riderData(rider: IRider): Partial<IRider> {
-        return {
-            _id: rider._id,
-            name: rider.name,
-            email: rider.email,
-            phone: rider.phone,
-            address: rider.address,
-            role: rider.role,
-            createdAt: rider.createdAt,
-            updatedAt: rider.updatedAt,
-        };
-    }
-
-    private async checkOrderAssignment(
-        orderId: string,
-        riderId: string,
-    ): Promise<void> {
-        const order = await this.order.findOne({
-            _id: orderId,
-            'delivery_info.riderId': riderId,
-        });
-        if (!order) {
-            throw new ResourceNotFound(
-                'Order not found or not assigned to this rider',
-            );
-        }
-    }
-    private sanitizeOrder(order: IOrder): Partial<IOrder> {
-        return {
-            _id: order._id,
-            order_number: order.order_number,
-            status: order.status,
-            total_price: order.total_price,
-            userId: order.userId,
-            restaurantId: order.restaurantId,
-            items: order.items,
-            subtotal: order.subtotal,
-            tax: order.tax,
-            delivery_fee: order.delivery_fee,
-            delivery_info: order.delivery_info,
-            createdAt: order.createdAt,
-            updatedAt: order.updatedAt,
-        };
     }
 
     public async register(
@@ -348,7 +288,7 @@ export class RiderService {
         }
 
         const sanitizedResults = paginatedResults.results.map((order) =>
-            this.sanitizeOrder(order),
+            this.orderData(order),
         );
 
         return {
@@ -402,7 +342,7 @@ export class RiderService {
             await EmailQueueService.addEmailToQueue(emailOptions);
         }
 
-        return this.sanitizeOrder(updatedOrder);
+        return this.orderData(updatedOrder);
     }
 
     public async updateOrderStatus(
@@ -468,7 +408,7 @@ export class RiderService {
             await EmailQueueService.addEmailToQueue(emailOptions);
         }
 
-        return this.sanitizeOrder(updatedOrder);
+        return this.orderData(updatedOrder);
     }
 
     public async getRiderDeliveries(

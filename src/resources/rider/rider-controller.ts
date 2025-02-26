@@ -20,7 +20,7 @@ import {
 } from '../../middlewares/index';
 
 export default class RiderController implements Controller {
-    public authPath = '/auth/riders';
+    public authPath = '/auth/rider';
     public path = '/rider';
     public router = Router();
     private riderService = new RiderService();
