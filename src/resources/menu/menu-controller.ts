@@ -1,9 +1,9 @@
 import { Router, Request, Response } from 'express';
 import { Controller } from '../../types/index';
-import { MenuService } from '../../resources/menu/menu-service';
-import RestaurantModel from '../../resources/restaurant/model';
+import { MenuService } from '../menu/menu-service';
+import RestaurantModel from '../restaurant/restaurant-model';
 import { upload } from '../../config/index';
-import validate from '../../resources/menu/menu-validation';
+import validate from '../menu/menu-validation';
 import {
     sendJsonResponse,
     asyncHandler,

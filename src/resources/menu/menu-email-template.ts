@@ -1,5 +1,5 @@
-import { MenuItem } from '../../resources/menu/menu-interface';
-import { IRestaurant } from '../../resources/restaurant/interface';
+import { MenuItem } from '../menu/menu-interface';
+import { IRestaurant } from '../restaurant/restaurant-interface';
 import { EmailData } from '../../types/index';
 
 export const newMenuConfirmationEmail = (

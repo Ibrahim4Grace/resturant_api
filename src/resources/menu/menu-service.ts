@@ -1,15 +1,12 @@
 import { Request, Response } from 'express';
-import MenuModel from '../../resources/menu/menu-model';
-import RestaurantModel from '../../resources/restaurant/model';
-import { IMenu, MenuItem } from '../../resources/menu/menu-interface';
+import MenuModel from '../menu/menu-model';
+import RestaurantModel from '../restaurant/restaurant-model';
+import { IMenu, MenuItem } from '../menu/menu-interface';
 import { UploadedImage, IMenuPaginatedResponse } from '../../types/index';
 import { CloudinaryService } from '../../config/index';
-import { newMenuConfirmationEmail } from '../../resources/menu/menu-email-template';
-import {
-    ResourceNotFound,
-    Conflict,
-    Unauthorized,
-} from '../../middlewares/index';
+import { newMenuConfirmationEmail } from '../menu/menu-email-template';
+import { menuData, checkDuplicateMenuItem } from '../menu/menu-helper';
+import { ResourceNotFound, Unauthorized } from '../../middlewares/index';
 import {
     CACHE_TTL,
     getPaginatedAndCachedResults,
@@ -21,44 +18,12 @@ import {
 export class MenuService {
     private menu = MenuModel;
     private restaurant = RestaurantModel;
+    private menuData = menuData;
+    private checkDuplicateMenuItem = checkDuplicateMenuItem;
 
     private cloudinaryService: CloudinaryService;
     constructor() {
         this.cloudinaryService = new CloudinaryService();
-    }
-
-    private sanitizeMenu(menuItem: IMenu): MenuItem {
-        return {
-            _id: menuItem._id.toString(),
-            restaurantId: menuItem.restaurantId.toString(),
-            name: menuItem.name,
-            quantity: menuItem.quantity,
-            description: menuItem.description,
-            price: menuItem.price,
-            category: menuItem.category,
-            image: menuItem.image,
-            createdAt: menuItem.createdAt,
-            updatedAt: menuItem.updatedAt,
-        };
-    }
-
-    private async checkDuplicateMenuItem(
-        restaurantId: string,
-        menuItemData: MenuItem,
-    ): Promise<void> {
-        const existingMenuItem = await this.menu.findOne({
-            restaurantId,
-            name: menuItemData.name,
-            description: menuItemData.description,
-            price: menuItemData.price,
-            category: menuItemData.category,
-        });
-
-        if (existingMenuItem) {
-            throw new Conflict(
-                'Duplicate menu item: A menu item with this name already exists for this restaurant.',
-            );
-        }
     }
 
     public async addMenuItem(
@@ -102,7 +67,7 @@ export class MenuService {
         const emailOptions = newMenuConfirmationEmail(restaurant, menuItemData);
         await EmailQueueService.addEmailToQueue(emailOptions);
 
-        return this.sanitizeMenu(newMenuItem);
+        return this.menuData(newMenuItem);
     }
 
     public async fetchAllMenu(
@@ -148,7 +113,7 @@ export class MenuService {
                         'Menu not found or does not belong to this restaurant',
                     );
                 }
-                return menuItems.map(this.sanitizeMenu);
+                return menuItems.map(this.menuData);
             },
             CACHE_TTL.ONE_HOUR,
         );
@@ -176,7 +141,7 @@ export class MenuService {
             );
         }
 
-        return this.sanitizeMenu(updatedMenuItem);
+        return this.menuData(updatedMenuItem);
     }
 
     public async deleteMenuItem(
