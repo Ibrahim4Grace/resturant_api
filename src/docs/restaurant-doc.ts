@@ -616,6 +616,59 @@ export const restaurantDocs = {
                 },
             },
         },
+        '/api/v1/restaurant/password/reset': {
+            post: {
+                summary: 'Change Restaurant Password',
+                tags: ['Restaurant Profile'],
+                security: [{ BearerAuth: [] }],
+                requestBody: {
+                    required: true,
+                    content: {
+                        'application/json': {
+                            schema: {
+                                type: 'object',
+                                properties: {
+                                    currentPassword: {
+                                        type: 'string',
+                                        example: 'oldpassword123',
+                                    },
+                                    newPassword: {
+                                        type: 'string',
+                                        example: 'newstrongpassword',
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+                responses: {
+                    200: {
+                        description: 'Password reset successfully',
+                        content: {
+                            'application/json': {
+                                schema: {
+                                    type: 'object',
+                                    properties: {
+                                        status: {
+                                            type: 'number',
+                                            example: 200,
+                                        },
+                                        message: {
+                                            type: 'string',
+                                            example:
+                                                'Password reset successfully',
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    401: { description: 'Current password is incorrect' },
+                    400: { description: 'Password has been used before' },
+                    500: { description: 'Server error' },
+                },
+            },
+        },
     },
 };
 

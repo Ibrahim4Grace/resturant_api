@@ -1,4 +1,4 @@
-import { Conflict } from '../../middlewares/index';
+import { Conflict, ResourceNotFound } from '../../middlewares/index';
 import {
     IRestaurant,
     Address,
@@ -40,6 +40,16 @@ export async function findRestaurantByVerificationToken(
         'emailVerificationOTP.verificationToken': verificationToken,
         'emailVerificationOTP.expiresAt': { $gt: new Date() },
     });
+}
+
+export async function findRestaurantById(
+    restaurantId: string,
+): Promise<IRestaurant> {
+    const restaurant = await this.restaurant.findById(restaurantId);
+    if (!restaurant) {
+        throw new ResourceNotFound('Restaurant not found');
+    }
+    return restaurant;
 }
 
 export function restaurantData(restaurant: IRestaurant): ISanitizedRestaurant {

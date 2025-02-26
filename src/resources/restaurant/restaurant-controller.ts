@@ -82,6 +82,13 @@ export default class RestaurantController implements Controller {
             validateData(validate.updateSchema),
             this.updateRestaurant,
         );
+        this.router.post(
+            `${this.path}/password/reset`,
+            authMiddleware(),
+            authorization(RestaurantModel, ['restaurant_owner']),
+            validateData(validate.changePassword),
+            this.changePassword,
+        );
         this.router.get(
             `${this.path}/analytics`,
             authMiddleware(),
@@ -316,6 +323,23 @@ export default class RestaurantController implements Controller {
         },
     );
 
+    private changePassword = asyncHandler(
+        async (req: Request, res: Response): Promise<void> => {
+            const restaurantId = req.currentUser._id;
+            if (!restaurantId) {
+                throw new ResourceNotFound('Restaurant not found');
+            }
+            const { currentPassword, newPassword } = req.body;
+
+            await this.restaurantService.changePassword(
+                restaurantId,
+                currentPassword,
+                newPassword,
+            );
+
+            sendJsonResponse(res, 200, 'Password reset successfully');
+        },
+    );
     private getRestaurantAnalytics = asyncHandler(
         async (req: Request, res: Response): Promise<void> => {
             const restaurantId = req.currentUser?._id;

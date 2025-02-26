@@ -1,5 +1,6 @@
 import bcrypt from 'bcryptjs';
 import { Request, Response } from 'express';
+import { config } from '../../config/index';
 import { Types } from 'mongoose';
 import RestaurantModel from '../restaurant/restaurant-model';
 import UserModel from '../user/user-model';
@@ -47,6 +48,7 @@ import {
     checkDuplicateAddress,
     findRestaurantByVerificationToken,
     restaurantData,
+    findRestaurantById,
 } from '../restaurant/restaurant-helper';
 
 export class RestaurantService {
@@ -55,6 +57,7 @@ export class RestaurantService {
     private order = OrderModel;
     private orderData = orderData;
     private checkDuplicate = checkDuplicate;
+    private findRestaurantById = findRestaurantById;
     private checkDuplicateAddress = checkDuplicateAddress;
     private findRestaurantByVerificationToken =
         findRestaurantByVerificationToken;
@@ -379,6 +382,46 @@ export class RestaurantService {
         }
 
         return this.restaurantData(restaurant);
+    }
+
+    public async changePassword(
+        restaurantId: string,
+        currentPassword: string,
+        newPassword: string,
+    ): Promise<void> {
+        const restaurant = await this.findRestaurantById(restaurantId);
+
+        const isPasswordValid = await bcrypt.compare(
+            currentPassword,
+            restaurant.password,
+        );
+        if (!isPasswordValid) {
+            throw new Unauthorized('Current password is incorrect');
+        }
+
+        restaurant.passwordHistory = restaurant.passwordHistory ?? [];
+        const isPasswordUsedBefore = restaurant.passwordHistory.some((entry) =>
+            bcrypt.compareSync(newPassword, entry.password),
+        );
+        if (isPasswordUsedBefore) {
+            throw new BadRequest(
+                'This password has been used before. Please choose a new password.',
+            );
+        }
+        restaurant.passwordHistory.push({
+            password: restaurant.password,
+            changedAt: new Date(),
+        });
+
+        const PASSWORD_HISTORY_LIMIT = Number(config.PASSWORD_HISTORY_LIMIT);
+        if (restaurant.passwordHistory.length > PASSWORD_HISTORY_LIMIT) {
+            restaurant.passwordHistory = restaurant.passwordHistory.slice(
+                -PASSWORD_HISTORY_LIMIT,
+            );
+        }
+
+        restaurant.password = newPassword;
+        await restaurant.save();
     }
 
     public async getRestaurantAnalytics(
