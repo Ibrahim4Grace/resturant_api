@@ -19,6 +19,9 @@ export const CACHE_KEYS = {
     RESTAURANT_BY_ID: (id: string) => `restaurant:${id}`,
     RESTAURANT_DETAILS: (id: string) => `restaurant:${id}:details`,
     RESTAURANT_ANALYTICS: (id: string) => `restaurant:${id}:analytics`,
+    ALL_RESTAURANT_ORDERS: (restaurantId: string) =>
+        `restaurant:${restaurantId}:orders`,
+
     // RESTAURANT_MENU: (id: string) => `restaurant:${id}:menu`,
 
     // Rider-related keys
@@ -39,7 +42,8 @@ export const CACHE_KEYS = {
     // MENU_DETAILS: (id: string) => `menu:${id}:details`,
 
     // Review-related keys
+    ALL_REVIEWS: 'all_reviews',
     TARGET_REVIEWS: (targetType: string, targetId: string) =>
         `reviews:${targetType.toLowerCase()}:${targetId}`,
-    ALL_REVIEWS: 'all_reviews',
+    USER_REVIEWS: (userId: string) => `user_reviews_${userId}`,
 } as const;
