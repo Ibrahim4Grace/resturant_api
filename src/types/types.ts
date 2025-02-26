@@ -1,5 +1,5 @@
 import { IUser, IAddress } from '../resources/user/user-interface';
-import { IRestaurant } from '../resources/restaurant/interface';
+import { IRestaurant } from '../resources/restaurant/restaurant-interface';
 import { IRider } from '../resources/rider/rider-interface';
 import { IAdmin } from '../resources/admin/admin-interface';
 import { IOrder } from '../resources/order/order-interface';
