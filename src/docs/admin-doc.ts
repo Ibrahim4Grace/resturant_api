@@ -1,6 +1,6 @@
 export const authAdminDocs = {
     paths: {
-        '/api/v1/auth/admins/register': {
+        '/api/v1/auth/admin/register': {
             post: {
                 summary: 'Register a new user',
                 tags: ['Authenticate - Admin'],
@@ -94,7 +94,7 @@ export const authAdminDocs = {
                 },
             },
         },
-        '/api/v1/auth/admins/verify-otp': {
+        '/api/v1/auth/admin/verify-otp': {
             post: {
                 summary: 'Verify OTP for registration',
                 tags: ['Authenticate - Admin'],
@@ -141,7 +141,7 @@ export const authAdminDocs = {
                 },
             },
         },
-        '/api/v1/auth/admins/forgot': {
+        '/api/v1/auth/admin/forgot': {
             post: {
                 summary: 'Request password reset',
                 tags: ['Authenticate - Admin'],
@@ -193,7 +193,7 @@ export const authAdminDocs = {
                 },
             },
         },
-        '/api/v1/auth/admins/password/verify-otp': {
+        '/api/v1/auth/admin/password/verify-otp': {
             post: {
                 summary: 'Verify OTP for password reset',
                 tags: ['Authenticate - Admin'],
@@ -238,7 +238,7 @@ export const authAdminDocs = {
                 },
             },
         },
-        '/api/v1/auth/admins/password/reset': {
+        '/api/v1/auth/admin/password/reset': {
             post: {
                 summary: 'Reset password using reset token and OTP',
                 tags: ['Authenticate - Admin'],
@@ -285,7 +285,7 @@ export const authAdminDocs = {
                 },
             },
         },
-        '/api/v1/auth/admins/login': {
+        '/api/v1/auth/admin/login': {
             post: {
                 summary: 'Login with email and password',
                 tags: ['Authenticate - Admin'],

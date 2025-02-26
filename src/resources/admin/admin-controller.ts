@@ -12,11 +12,13 @@ import {
     BadRequest,
     authMiddleware,
     authorization,
+    ResourceNotFound,
 } from '../../middlewares/index';
 
 export default class AdminController implements Controller {
-    public authPath = '/auth/admins';
-    public path = '/admins';
+    public authPath = '/auth/admin';
+    public path = '/admin';
+    public paths = '/admins';
     public router = Router();
     private adminService = new AdminService();
 
@@ -56,11 +58,32 @@ export default class AdminController implements Controller {
             this.login,
         );
         this.router.get(
+            `${this.path}/profile`,
+            authMiddleware(),
+            authorization(AdminModel, ['admin']),
+            this.getProfile,
+        );
+        this.router.put(
+            `${this.path}/profile`,
+            authMiddleware(),
+            authorization(AdminModel, ['admin']),
+            validateData(validate.updateUserSchema),
+            this.updateProfile,
+        );
+        this.router.put(
+            `${this.path}/password/reset`,
+            authMiddleware(),
+            authorization(AdminModel, ['admin']),
+            validateData(validate.changePassword),
+            this.changePassword,
+        );
+        this.router.get(
             `${this.path}`,
             authMiddleware(),
             authorization(AdminModel, ['admin']),
             this.getAdmins,
         );
+
         this.router.get(
             `${this.path}/admin/:id`,
             authMiddleware(),
@@ -267,6 +290,61 @@ export default class AdminController implements Controller {
                 password,
             });
             sendJsonResponse(res, 200, 'Login successful', result);
+        },
+    );
+
+    private getProfile = asyncHandler(
+        async (req: Request, res: Response): Promise<void> => {
+            const adminId = req.currentUser._id;
+            if (!adminId) {
+                throw new ResourceNotFound('Admin not found');
+            }
+            const admin = await this.adminService.getAdminById(adminId);
+
+            sendJsonResponse(res, 200, 'Profile retrieved successfully', admin);
+        },
+    );
+
+    private updateProfile = asyncHandler(
+        async (req: Request, res: Response): Promise<void> => {
+            const adminId = req.currentUser._id;
+            if (!adminId) {
+                throw new ResourceNotFound('Admin not found');
+            }
+            const updateData = req.body;
+            const updatedAdmin = await this.adminService.updateAdminById(
+                adminId,
+                updateData,
+            );
+
+            if (!updatedAdmin) {
+                throw new ResourceNotFound('Admin not found or update failed');
+            }
+
+            sendJsonResponse(
+                res,
+                200,
+                'Profile data updated successfully',
+                updatedAdmin,
+            );
+        },
+    );
+
+    private changePassword = asyncHandler(
+        async (req: Request, res: Response): Promise<void> => {
+            const adminId = req.currentUser._id;
+            if (!adminId) {
+                throw new ResourceNotFound('Admin not found');
+            }
+            const { currentPassword, newPassword } = req.body;
+
+            await this.adminService.changePassword(
+                adminId,
+                currentPassword,
+                newPassword,
+            );
+
+            sendJsonResponse(res, 200, 'Password reset successfully');
         },
     );
 

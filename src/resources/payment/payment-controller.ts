@@ -17,7 +17,7 @@ import {
 } from '../../middlewares/index';
 
 export default class PaymentController implements Controller {
-    public path = '/payments';
+    public path = '/payment';
     public router = Router();
     private paymentService: PaymentService;
     private orderService: OrderService;

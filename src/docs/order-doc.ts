@@ -1,6 +1,6 @@
 export const orderDocs = {
     paths: {
-        '/api/v1/orders': {
+        '/api/v1/order': {
             post: {
                 summary: 'Place a new order',
                 tags: ['Orders'],
@@ -167,7 +167,7 @@ export const orderDocs = {
             },
         },
         paths: {
-            '/api/v1/orders/{id}/status': {
+            '/api/v1/order/{id}/status': {
                 patch: {
                     summary: 'Update order status',
                     tags: ['Orders'],
@@ -229,7 +229,7 @@ export const orderDocs = {
                 },
             },
         },
-        '/api/v1/orders/{id}': {
+        '/api/v1/order/{id}': {
             get: {
                 summary: 'Get an order by ID',
                 tags: ['Orders'],

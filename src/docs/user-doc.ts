@@ -1,6 +1,6 @@
 export const authUserDocs = {
     paths: {
-        '/api/v1/auth/users/register': {
+        '/api/v1/auth/user/register': {
             post: {
                 summary: 'Register a new user',
                 tags: ['Authenticate - User'],
@@ -94,7 +94,7 @@ export const authUserDocs = {
                 },
             },
         },
-        '/api/v1/auth/users/verify-otp': {
+        '/api/v1/auth/user/verify-otp': {
             post: {
                 summary: 'Verify OTP for registration',
                 tags: ['Authenticate - User'],
@@ -141,7 +141,7 @@ export const authUserDocs = {
                 },
             },
         },
-        '/api/v1/auth/users/forgot': {
+        '/api/v1/auth/user/forgot': {
             post: {
                 summary: 'Request password reset',
                 tags: ['Authenticate - User'],
@@ -193,7 +193,7 @@ export const authUserDocs = {
                 },
             },
         },
-        '/api/v1/auth/users/password/verify-otp': {
+        '/api/v1/auth/user/password/verify-otp': {
             post: {
                 summary: 'Verify OTP for password reset',
                 tags: ['Authenticate - User'],
@@ -238,7 +238,7 @@ export const authUserDocs = {
                 },
             },
         },
-        '/api/v1/auth/users/password/reset': {
+        '/api/v1/auth/user/password/reset': {
             post: {
                 summary: 'Reset password using reset token and OTP',
                 tags: ['Authenticate - User'],
@@ -285,7 +285,7 @@ export const authUserDocs = {
                 },
             },
         },
-        '/api/v1/auth/users/login': {
+        '/api/v1/auth/user/login': {
             post: {
                 summary: 'Login with email and password',
                 tags: ['Authenticate - User'],
@@ -587,6 +587,104 @@ export const userDocs = {
                 responses: {
                     200: { description: 'Order retrieved successfully' },
                     404: { description: 'Order not found' },
+                },
+            },
+        },
+        '/api/v1/user/reviews': {
+            get: {
+                summary: 'Get user reviews',
+                tags: ['User', 'Reviews'],
+                security: [{ BearerAuth: [] }],
+                responses: {
+                    200: {
+                        description: 'Reviews retrieved successfully',
+                        content: {
+                            'application/json': {
+                                schema: {
+                                    type: 'object',
+                                    properties: {
+                                        status: {
+                                            type: 'number',
+                                            example: 200,
+                                        },
+                                        message: {
+                                            type: 'string',
+                                            example:
+                                                'Reviews retrieved successfully',
+                                        },
+                                        data: {
+                                            type: 'object',
+                                            properties: {
+                                                results: {
+                                                    type: 'array',
+                                                    items: {
+                                                        type: 'object',
+                                                        properties: {
+                                                            userId: {
+                                                                type: 'string',
+                                                                example:
+                                                                    '678f49a7dcba8c2840bc622c',
+                                                            },
+                                                            targetType: {
+                                                                type: 'string',
+                                                                example:
+                                                                    'restaurant',
+                                                            },
+                                                            targetId: {
+                                                                type: 'string',
+                                                                example:
+                                                                    '678fd14bf0db6a5013468482',
+                                                            },
+                                                            rating: {
+                                                                type: 'number',
+                                                                example: 4,
+                                                            },
+                                                            comment: {
+                                                                type: 'string',
+                                                                example:
+                                                                    'Great experience!',
+                                                            },
+                                                            createdAt: {
+                                                                type: 'string',
+                                                                format: 'date-time',
+                                                                example:
+                                                                    '2025-02-25T05:06:31.655Z',
+                                                            },
+                                                        },
+                                                    },
+                                                },
+                                                pagination: {
+                                                    type: 'object',
+                                                    properties: {
+                                                        currentPage: {
+                                                            type: 'number',
+                                                            example: 1,
+                                                        },
+                                                        totalPages: {
+                                                            type: 'number',
+                                                            example: 5,
+                                                        },
+                                                        limit: {
+                                                            type: 'number',
+                                                            example: 10,
+                                                        },
+                                                    },
+                                                },
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    401: {
+                        description: 'Unauthorized - User not authenticated',
+                    },
+                    404: {
+                        description:
+                            'User not authenticated or reviews not found',
+                    },
+                    500: { description: 'Server error' },
                 },
             },
         },

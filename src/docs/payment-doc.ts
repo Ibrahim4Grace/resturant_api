@@ -1,6 +1,6 @@
 export const paymentDocs = {
     paths: {
-        '/api/v1/payments/initialize': {
+        '/api/v1/payment/initialize': {
             post: {
                 summary: 'Initialize a payment',
                 tags: ['Payments'],
@@ -68,7 +68,7 @@ export const paymentDocs = {
             },
         },
 
-        '/api/v1/payments/webhook': {
+        '/api/v1/payment/webhook': {
             post: {
                 summary: 'Handle payment webhook',
                 tags: ['Payments'],

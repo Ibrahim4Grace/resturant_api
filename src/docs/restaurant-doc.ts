@@ -1,6 +1,6 @@
 export const authRestaurantDocs = {
     paths: {
-        '/api/v1/auth/restaurants/register': {
+        '/api/v1/auth/restaurant/register': {
             post: {
                 summary: 'Register a new restaurant',
                 tags: ['Authenticate - Restaurant'],
@@ -78,7 +78,7 @@ export const authRestaurantDocs = {
                 },
             },
         },
-        '/api/v1/auth/restaurants/verify-otp': {
+        '/api/v1/auth/restaurant/verify-otp': {
             post: {
                 summary: 'Verify OTP for registration',
                 tags: ['Authenticate - Restaurant'],
@@ -125,7 +125,7 @@ export const authRestaurantDocs = {
                 },
             },
         },
-        '/api/v1/auth/restaurants/forgot': {
+        '/api/v1/auth/restaurant/forgot': {
             post: {
                 summary: 'Request password reset',
                 tags: ['Authenticate - Restaurant'],
@@ -177,7 +177,7 @@ export const authRestaurantDocs = {
                 },
             },
         },
-        '/api/v1/auth/restaurants/password/verify-otp': {
+        '/api/v1/auth/restaurant/password/verify-otp': {
             post: {
                 summary: 'Verify OTP for password reset',
                 tags: ['Authenticate - Restaurant'],
@@ -222,7 +222,7 @@ export const authRestaurantDocs = {
                 },
             },
         },
-        '/api/v1/auth/restaurants/password/reset': {
+        '/api/v1/auth/restaurant/password/reset': {
             post: {
                 summary: 'Reset password using reset token and OTP',
                 tags: ['Authenticate - Restaurant'],
@@ -269,7 +269,7 @@ export const authRestaurantDocs = {
                 },
             },
         },
-        '/api/v1/auth/restaurants/login': {
+        '/api/v1/auth/restaurant/login': {
             post: {
                 summary: 'Login with email and password',
                 tags: ['Authenticate - Restaurant'],

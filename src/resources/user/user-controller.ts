@@ -16,7 +16,7 @@ import {
 } from '../../middlewares/index';
 
 export default class UserController implements Controller {
-    public authPath = '/auth/users';
+    public authPath = '/auth/user';
     public path = '/user';
     public router = Router();
     private userService = new UserService();
@@ -106,6 +106,12 @@ export default class UserController implements Controller {
             authMiddleware(),
             authorization(UserModel, ['user']),
             this.getUserOrderById,
+        );
+        this.router.get(
+            `${this.path}/reviews`,
+            authMiddleware(),
+            authorization(UserModel, ['user']),
+            this.getUserReviews,
         );
     }
 
@@ -374,6 +380,28 @@ export default class UserController implements Controller {
             );
 
             sendJsonResponse(res, 200, 'Orders retrieved successfully', orders);
+        },
+    );
+
+    public getUserReviews = asyncHandler(
+        async (req: Request, res: Response): Promise<void> => {
+            const userId = req.currentUser._id;
+            if (!userId) {
+                throw new ResourceNotFound('User not authenticated');
+            }
+
+            const reviews = await this.userService.getUserReviews(
+                req,
+                res,
+                userId,
+            );
+
+            sendJsonResponse(
+                res,
+                200,
+                'Reviews retrieved successfully',
+                reviews,
+            );
         },
     );
 }

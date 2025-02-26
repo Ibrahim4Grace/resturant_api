@@ -1,6 +1,6 @@
 export const authRiderDocs = {
     paths: {
-        '/api/v1/auth/riders/register': {
+        '/api/v1/auth/rider/register': {
             post: {
                 summary: 'Register a new user',
                 tags: ['Authenticate - Riders'],
@@ -78,7 +78,7 @@ export const authRiderDocs = {
                 },
             },
         },
-        '/api/v1/auth/riders/verify-otp': {
+        '/api/v1/auth/rider/verify-otp': {
             post: {
                 summary: 'Verify OTP for registration',
                 tags: ['Authenticate - Riders'],
@@ -125,7 +125,7 @@ export const authRiderDocs = {
                 },
             },
         },
-        '/api/v1/auth/riders/forgot': {
+        '/api/v1/auth/rider/forgot': {
             post: {
                 summary: 'Request password reset',
                 tags: ['Authenticate - Riders'],
@@ -177,7 +177,7 @@ export const authRiderDocs = {
                 },
             },
         },
-        '/api/v1/auth/riders/password/verify-otp': {
+        '/api/v1/auth/rider/password/verify-otp': {
             post: {
                 summary: 'Verify OTP for password reset',
                 tags: ['Authenticate - Riders'],
@@ -222,7 +222,7 @@ export const authRiderDocs = {
                 },
             },
         },
-        '/api/v1/auth/riders/password/reset': {
+        '/api/v1/auth/rider/password/reset': {
             post: {
                 summary: 'Reset password using reset token and OTP',
                 tags: ['Authenticate - Riders'],
@@ -269,7 +269,7 @@ export const authRiderDocs = {
                 },
             },
         },
-        '/api/v1/auth/riders/login': {
+        '/api/v1/auth/rider/login': {
             post: {
                 summary: 'Login with email and password',
                 tags: ['Authenticate - Riders'],

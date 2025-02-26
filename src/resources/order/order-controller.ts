@@ -3,7 +3,7 @@ import { Controller } from '../../types/index';
 import validate from '../order/order-validation';
 import { OrderService } from '../order/order-service';
 import UserModel from '../user/user-model';
-import RestaurantModel from '../restaurant/model';
+import RestaurantModel from '../restaurant/restaurant-model';
 import {
     validateData,
     sendJsonResponse,
@@ -14,7 +14,7 @@ import {
 } from '../../middlewares/index';
 
 export default class OrderController implements Controller {
-    public path = '/orders';
+    public path = '/order';
     public router = Router();
     private orderService = new OrderService();
 
