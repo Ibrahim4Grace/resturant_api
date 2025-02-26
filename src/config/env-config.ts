@@ -23,6 +23,7 @@ export const config = {
     RABBITMQ_URL: process.env.RABBITMQ_URL,
     TAX_RATE: process.env.TAX_RATE,
     DELIVERY_FEE: process.env.DELIVERY_FEE,
+    PASSWORD_HISTORY_LIMIT: process.env.PASSWORD_HISTORY_LIMIT,
     MAILER_SERVICE: process.env.MAILER_SERVICE,
     NODEMAILER_EMAIL: process.env.NODEMAILER_EMAIL,
     NODEMAILER_PASSWORD: process.env.NODEMAILER_PASSWORD,
