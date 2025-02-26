@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from 'express';
 import Admin from '../resources/admin/admin-model';
 import User from '../resources/user/user-model';
 import Rider from '../resources/rider/rider-model';
-import Restaurant from '../resources/restaurant/model';
+import Restaurant from '../resources/restaurant/restaurant-model';
 import { TokenService } from '../utils/index';
 import { ValidUser } from '../types/index';
 import {
