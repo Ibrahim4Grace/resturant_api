@@ -65,6 +65,16 @@ const orderStatus = z.object({
     status: z.string().min(1, 'Status is required'),
 });
 
+const changePassword = z.object({
+    currentPassword: z.string().min(1, 'Current password is required'),
+    newPassword: z
+        .string()
+        .regex(
+            regex,
+            'Password must include at least one uppercase letter, one lowercase letter, one number, and one special character',
+        ),
+});
+
 export default {
     register,
     forgetPwd,
@@ -74,4 +84,5 @@ export default {
     updateSchema,
     pickOrder,
     orderStatus,
+    changePassword,
 };

@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
+import { config } from '../../config/index';
 import RiderModel from '../rider/rider-model';
 import OrderModel from '../order/order-model';
 import UserModel from '../user/user-model';
@@ -294,6 +295,46 @@ export class RiderService {
         );
 
         return this.riderData(rider);
+    }
+
+    public async changePassword(
+        riderId: string,
+        currentPassword: string,
+        newPassword: string,
+    ): Promise<void> {
+        const rider = await this.findRiderById(riderId);
+
+        const isPasswordValid = await bcrypt.compare(
+            currentPassword,
+            rider.password,
+        );
+        if (!isPasswordValid) {
+            throw new Unauthorized('Current password is incorrect');
+        }
+
+        rider.passwordHistory = rider.passwordHistory ?? [];
+        const isPasswordUsedBefore = rider.passwordHistory.some((entry) =>
+            bcrypt.compareSync(newPassword, entry.password),
+        );
+        if (isPasswordUsedBefore) {
+            throw new BadRequest(
+                'This password has been used before. Please choose a new password.',
+            );
+        }
+        rider.passwordHistory.push({
+            password: rider.password,
+            changedAt: new Date(),
+        });
+
+        const PASSWORD_HISTORY_LIMIT = Number(config.PASSWORD_HISTORY_LIMIT);
+        if (rider.passwordHistory.length > PASSWORD_HISTORY_LIMIT) {
+            rider.passwordHistory = rider.passwordHistory.slice(
+                -PASSWORD_HISTORY_LIMIT,
+            );
+        }
+
+        rider.password = newPassword;
+        await rider.save();
     }
 
     public async getReadytToPickOrder(

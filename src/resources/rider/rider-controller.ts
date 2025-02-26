@@ -76,6 +76,13 @@ export default class RiderController implements Controller {
             validateData(validate.updateSchema),
             this.updateRiderProfile,
         );
+        this.router.post(
+            `${this.path}/password/reset`,
+            authMiddleware(),
+            authorization(RiderModel, ['rider']),
+            validateData(validate.changePassword),
+            this.changePassword,
+        );
         this.router.get(
             `${this.path}/orders/ready-for-pickup`,
             authMiddleware(),
@@ -275,6 +282,24 @@ export default class RiderController implements Controller {
                 'Rider data updated successfully',
                 updatedRider,
             );
+        },
+    );
+
+    private changePassword = asyncHandler(
+        async (req: Request, res: Response): Promise<void> => {
+            const riderId = req.currentUser._id;
+            if (!riderId) {
+                throw new ResourceNotFound('Rider not found');
+            }
+            const { currentPassword, newPassword } = req.body;
+
+            await this.riderService.changePassword(
+                riderId,
+                currentPassword,
+                newPassword,
+            );
+
+            sendJsonResponse(res, 200, 'Password reset successfully');
         },
     );
 

@@ -429,6 +429,59 @@ export const riderDocs = {
                 },
             },
         },
+        '/api/v1/rider/password/reset': {
+            post: {
+                summary: 'Change Rider Password',
+                tags: ['Rider Profile'],
+                security: [{ BearerAuth: [] }],
+                requestBody: {
+                    required: true,
+                    content: {
+                        'application/json': {
+                            schema: {
+                                type: 'object',
+                                properties: {
+                                    currentPassword: {
+                                        type: 'string',
+                                        example: 'oldpassword123',
+                                    },
+                                    newPassword: {
+                                        type: 'string',
+                                        example: 'newstrongpassword',
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+                responses: {
+                    200: {
+                        description: 'Password reset successfully',
+                        content: {
+                            'application/json': {
+                                schema: {
+                                    type: 'object',
+                                    properties: {
+                                        status: {
+                                            type: 'number',
+                                            example: 200,
+                                        },
+                                        message: {
+                                            type: 'string',
+                                            example:
+                                                'Password reset successfully',
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    401: { description: 'Current password is incorrect' },
+                    400: { description: 'Password has been used before' },
+                    500: { description: 'Server error' },
+                },
+            },
+        },
 
         '/api/v1/rider/orders/ready-for-pickup': {
             get: {
