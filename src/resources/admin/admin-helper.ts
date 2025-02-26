@@ -20,7 +20,7 @@ export async function findAdminByEmail(email: string) {
 }
 
 export async function findAdminById(adminId: string): Promise<IAdmin> {
-    const admin = await this.admin.findById(adminId).lean();
+    const admin = await this.admin.findById(adminId);
     if (!admin) {
         throw new ResourceNotFound('Admin not found');
     }

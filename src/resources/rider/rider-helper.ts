@@ -13,7 +13,7 @@ export async function checkDuplicate(
     }
 }
 export async function findRiderById(riderId: string): Promise<IRider> {
-    const rider = await this.rider.findById(riderId).lean();
+    const rider = await this.rider.findById(riderId);
     if (!rider) {
         throw new ResourceNotFound('Rider not found');
     }

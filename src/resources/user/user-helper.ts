@@ -20,7 +20,7 @@ export async function findUserByEmail(email: string) {
 }
 
 export async function findUserById(userId: string): Promise<IUser> {
-    const user = await this.user.findById(userId).lean();
+    const user = await this.user.findById(userId);
     if (!user) {
         throw new ResourceNotFound('User not found');
     }
