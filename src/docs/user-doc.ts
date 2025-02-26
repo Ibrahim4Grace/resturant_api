@@ -414,6 +414,59 @@ export const userDocs = {
                 },
             },
         },
+        '/api/v1/user/password/reset': {
+            post: {
+                summary: 'Change User Password',
+                tags: ['User Profile'],
+                security: [{ BearerAuth: [] }],
+                requestBody: {
+                    required: true,
+                    content: {
+                        'application/json': {
+                            schema: {
+                                type: 'object',
+                                properties: {
+                                    currentPassword: {
+                                        type: 'string',
+                                        example: 'oldpassword123',
+                                    },
+                                    newPassword: {
+                                        type: 'string',
+                                        example: 'newstrongpassword',
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+                responses: {
+                    200: {
+                        description: 'Password reset successfully',
+                        content: {
+                            'application/json': {
+                                schema: {
+                                    type: 'object',
+                                    properties: {
+                                        status: {
+                                            type: 'number',
+                                            example: 200,
+                                        },
+                                        message: {
+                                            type: 'string',
+                                            example:
+                                                'Password reset successfully',
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    401: { description: 'Current password is incorrect' },
+                    400: { description: 'Password has been used before' },
+                    500: { description: 'Server error' },
+                },
+            },
+        },
         '/api/v1/user/address': {
             post: {
                 summary: 'Add new address',

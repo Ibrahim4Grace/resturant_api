@@ -71,6 +71,13 @@ export default class UserController implements Controller {
             this.updateUser,
         );
         this.router.post(
+            `${this.path}/password/reset`,
+            authMiddleware(),
+            authorization(UserModel, ['user']),
+            validateData(validate.changePassword),
+            this.changePassword,
+        );
+        this.router.post(
             `${this.path}/address`,
             authMiddleware(),
             authorization(UserModel, ['user']),
@@ -242,7 +249,7 @@ export default class UserController implements Controller {
 
     private getUser = asyncHandler(
         async (req: Request, res: Response): Promise<void> => {
-            const userId = req.currentUser?._id;
+            const userId = req.currentUser._id;
             if (!userId) {
                 throw new ResourceNotFound('User not found');
             }
@@ -254,7 +261,7 @@ export default class UserController implements Controller {
 
     private updateUser = asyncHandler(
         async (req: Request, res: Response): Promise<void> => {
-            const userId = req.currentUser?._id;
+            const userId = req.currentUser._id;
             if (!userId) {
                 throw new ResourceNotFound('User not found');
             }
@@ -277,9 +284,27 @@ export default class UserController implements Controller {
         },
     );
 
+    private changePassword = asyncHandler(
+        async (req: Request, res: Response): Promise<void> => {
+            const userId = req.currentUser._id;
+            if (!userId) {
+                throw new ResourceNotFound('User not found');
+            }
+            const { currentPassword, newPassword } = req.body;
+
+            await this.userService.changePassword(
+                userId,
+                currentPassword,
+                newPassword,
+            );
+
+            sendJsonResponse(res, 200, 'Password reset successfully');
+        },
+    );
+
     private addNewAddress = asyncHandler(
         async (req: Request, res: Response): Promise<void> => {
-            const userId = req.currentUser?._id;
+            const userId = req.currentUser._id;
             if (!userId) throw new ResourceNotFound('User not found');
 
             const { street, city, state } = req.body;
@@ -298,7 +323,7 @@ export default class UserController implements Controller {
 
     private getUserAddress = asyncHandler(
         async (req: Request, res: Response): Promise<void> => {
-            const userId = req.currentUser?._id;
+            const userId = req.currentUser._id;
             if (!userId) throw new ResourceNotFound('User not found');
 
             const addresses = await this.userService.getUserAddress(
@@ -317,7 +342,7 @@ export default class UserController implements Controller {
     );
     private getUserAddressById = asyncHandler(
         async (req: Request, res: Response): Promise<void> => {
-            const userId = req.currentUser?._id;
+            const userId = req.currentUser._id;
             const { addressId } = req.params;
             if (!userId) throw new ResourceNotFound('User not found');
 
@@ -337,7 +362,7 @@ export default class UserController implements Controller {
 
     private deleteAddress = asyncHandler(
         async (req: Request, res: Response): Promise<void> => {
-            const userId = req.currentUser?._id;
+            const userId = req.currentUser._id;
             if (!userId) throw new ResourceNotFound('User not found');
 
             const addressId = req.params.id;
@@ -348,7 +373,7 @@ export default class UserController implements Controller {
 
     private getUserOrders = asyncHandler(
         async (req: Request, res: Response) => {
-            const userId = req.currentUser?._id;
+            const userId = req.currentUser._id;
             if (!userId) {
                 throw new ResourceNotFound('User not found');
             }
@@ -369,7 +394,7 @@ export default class UserController implements Controller {
 
     private getUserOrderById = asyncHandler(
         async (req: Request, res: Response): Promise<void> => {
-            const userId = req.currentUser?._id;
+            const userId = req.currentUser._id;
             const orderId = req.params.orderId;
             if (!userId) {
                 throw new ResourceNotFound('User not foundw');

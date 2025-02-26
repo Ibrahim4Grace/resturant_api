@@ -1,4 +1,5 @@
 import bcrypt from 'bcryptjs';
+import { config } from '../../config/index';
 import { Request, Response } from 'express';
 import UserModel from '../user/user-model';
 import OrderModel from '../order/order-model';
@@ -198,7 +199,7 @@ export class UserService {
             changedAt: new Date(),
         });
 
-        const PASSWORD_HISTORY_LIMIT = 5;
+        const PASSWORD_HISTORY_LIMIT = Number(config.PASSWORD_HISTORY_LIMIT);
         if (user.passwordHistory.length > PASSWORD_HISTORY_LIMIT) {
             user.passwordHistory = user.passwordHistory.slice(
                 -PASSWORD_HISTORY_LIMIT,
@@ -276,6 +277,46 @@ export class UserService {
         );
 
         return user;
+    }
+
+    public async changePassword(
+        userId: string,
+        currentPassword: string,
+        newPassword: string,
+    ): Promise<void> {
+        const user = await this.findUserById(userId);
+
+        const isPasswordValid = await bcrypt.compare(
+            currentPassword,
+            user.password,
+        );
+        if (!isPasswordValid) {
+            throw new Unauthorized('Current password is incorrect');
+        }
+
+        user.passwordHistory = user.passwordHistory ?? [];
+        const isPasswordUsedBefore = user.passwordHistory.some((entry) =>
+            bcrypt.compareSync(newPassword, entry.password),
+        );
+        if (isPasswordUsedBefore) {
+            throw new BadRequest(
+                'This password has been used before. Please choose a new password.',
+            );
+        }
+        user.passwordHistory.push({
+            password: user.password,
+            changedAt: new Date(),
+        });
+
+        const PASSWORD_HISTORY_LIMIT = Number(config.PASSWORD_HISTORY_LIMIT);
+        if (user.passwordHistory.length > PASSWORD_HISTORY_LIMIT) {
+            user.passwordHistory = user.passwordHistory.slice(
+                -PASSWORD_HISTORY_LIMIT,
+            );
+        }
+
+        user.password = newPassword;
+        await user.save();
     }
 
     public async addNewAddress(
