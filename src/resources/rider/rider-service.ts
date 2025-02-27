@@ -16,6 +16,7 @@ import {
     withCachedData,
     CACHE_TTL,
     CACHE_KEYS,
+    deleteCacheData,
 } from '../../utils/index';
 import {
     UploadedImage,
@@ -294,6 +295,9 @@ export class RiderService {
             { new: true },
         );
 
+        await deleteCacheData(CACHE_KEYS.RIDER_BY_ID(riderId));
+        await deleteCacheData(CACHE_KEYS.ALL_RIDERS);
+
         return this.riderData(rider);
     }
 
@@ -482,11 +486,12 @@ export class RiderService {
             this.order,
             CACHE_KEYS.RIDER_BY_ID(riderId),
             { 'delivery_info.riderId': riderId },
-            { userId: 1, restaurantId: 1, status: 1, createdAt: 1 },
         );
 
         return {
-            results: paginatedResults.results,
+            results: paginatedResults.results.map(
+                (order) => orderData(order) as IOrder,
+            ),
             pagination: {
                 currentPage: paginatedResults.currentPage,
                 totalPages: paginatedResults.totalPages,
