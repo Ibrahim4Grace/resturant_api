@@ -11,7 +11,7 @@ export async function getPaginatedAndCachedResults<T extends Document>(
     model: Model<T>,
     cacheKeyPrefix: string,
     filter: Record<string, any> = {},
-    projection: Record<string, 1 | 0> = {},
+    projection?: Record<string, 1 | 0>,
 ): Promise<{ results: T[] } & IPaginationResponse> {
     const page = parseInt(req.query.page as string, 10) || 1;
     const limit = parseInt(req.query.limit as string, 10) || 6;
