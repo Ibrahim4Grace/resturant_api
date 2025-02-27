@@ -74,14 +74,14 @@ export class MenuService {
     public async fetchAllMenu(
         req: Request,
         res: Response,
-        menuId: string,
+        restaurantId: string,
     ): Promise<IMenuPaginatedResponse> {
         const paginatedResults = await getPaginatedAndCachedResults<IMenu>(
             req,
             res,
             this.menu,
-            CACHE_KEYS.ALL_MENUS(menuId),
-            { restaurantId: menuId },
+            CACHE_KEYS.ALL_MENUS(restaurantId),
+            { restaurantId: restaurantId },
             { name: 1, description: 1, price: 1, category: 1, image: 1 },
         );
 

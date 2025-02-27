@@ -84,13 +84,13 @@ export default class MenuController implements Controller {
 
     private fectchAllMenu = asyncHandler(
         async (req: Request, res: Response): Promise<void> => {
-            const menuId = req.currentUser._id;
-            if (!menuId)
+            const restaurantId = req.currentUser._id;
+            if (!restaurantId)
                 throw new ResourceNotFound('Restaurant owner not found');
             const riders = await this.menuService.fetchAllMenu(
                 req,
                 res,
-                menuId,
+                restaurantId,
             );
 
             sendJsonResponse(res, 200, 'menus retrive succesful', riders);
