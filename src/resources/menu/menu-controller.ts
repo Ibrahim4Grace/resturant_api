@@ -68,7 +68,7 @@ export default class MenuController implements Controller {
             throw new ResourceNotFound('Owner ID not found');
         }
 
-        const userId = req.currentUser?._id;
+        const userId = req.currentUser._id;
         if (!userId) {
             throw new ResourceNotFound('Restaurant owner not found.');
         }
@@ -84,13 +84,13 @@ export default class MenuController implements Controller {
 
     private fectchAllMenu = asyncHandler(
         async (req: Request, res: Response): Promise<void> => {
-            const userId = req.currentUser?._id;
-            if (!userId)
+            const menuId = req.currentUser._id;
+            if (!menuId)
                 throw new ResourceNotFound('Restaurant owner not found');
             const riders = await this.menuService.fetchAllMenu(
                 req,
                 res,
-                userId,
+                menuId,
             );
 
             sendJsonResponse(res, 200, 'menus retrive succesful', riders);
@@ -99,7 +99,7 @@ export default class MenuController implements Controller {
 
     private getMenuById = asyncHandler(async (req: Request, res: Response) => {
         const { menuId } = req.params;
-        const restaurantId = req.currentUser?._id;
+        const restaurantId = req.currentUser._id;
         if (!restaurantId) {
             throw new ResourceNotFound('Restaurant owner not found');
         }
@@ -120,7 +120,7 @@ export default class MenuController implements Controller {
         async (req: Request, res: Response) => {
             const { menuId } = req.params;
             const updateData = req.body;
-            const restaurantId = req.currentUser?._id;
+            const restaurantId = req.currentUser._id;
             if (!restaurantId) {
                 throw new ResourceNotFound('Restaurant owner not found');
             }
@@ -143,7 +143,7 @@ export default class MenuController implements Controller {
     private deleteMenuItem = asyncHandler(
         async (req: Request, res: Response) => {
             const { menuId } = req.params;
-            const restaurantId = req.currentUser?._id;
+            const restaurantId = req.currentUser._id;
             if (!restaurantId) {
                 throw new ResourceNotFound('Restaurant owner not found');
             }
