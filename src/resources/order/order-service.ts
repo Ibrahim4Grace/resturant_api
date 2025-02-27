@@ -13,6 +13,7 @@ import {
     CACHE_TTL,
     generateOrderId,
     getPaginatedAndCachedResults,
+    deleteCacheData,
     CACHE_KEYS,
 } from '../../utils/index';
 import {
@@ -87,6 +88,12 @@ export class OrderService {
             throw new ResourceNotFound('Order not found');
         }
 
+        await Promise.all([
+            deleteCacheData(CACHE_KEYS.ALL_ORDERS),
+            deleteCacheData(CACHE_KEYS.ORDER_BY_ID(orderId)),
+            deleteCacheData(CACHE_KEYS.ALL_USER_ORDER(restaurantId)),
+        ]);
+
         const user = await this.user.findById(updatedOrder.userId);
         if (user) {
             const emailOptions = orderStatusUpdateEmail(user, updatedOrder);
@@ -152,24 +159,12 @@ export class OrderService {
             this.order,
             CACHE_KEYS.ALL_USER_ORDER(restaurantId),
             { restaurantId },
-            {
-                orderId: 1,
-                status: 1,
-                total_price: 1,
-                userId: 1,
-                restaurantId: 1,
-                items: 1,
-                subtotal: 1,
-                tax: 1,
-                delivery_fee: 1,
-                delivery_info: 1,
-                createdAt: 1,
-                updatedAt: 1,
-            },
         );
 
         return {
-            results: paginatedResults.results,
+            results: paginatedResults.results.map(
+                (order) => orderData(order) as IOrder,
+            ),
             pagination: {
                 currentPage: paginatedResults.currentPage,
                 totalPages: paginatedResults.totalPages,

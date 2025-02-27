@@ -35,6 +35,7 @@ import {
     CACHE_TTL,
     getPaginatedAndCachedResults,
     CACHE_KEYS,
+    deleteCacheData,
 } from '../../utils/index';
 import {
     Conflict,
@@ -380,6 +381,12 @@ export class RestaurantService {
         if (!restaurant) {
             return null;
         }
+
+        await Promise.all([
+            deleteCacheData(CACHE_KEYS.ALL_RESTAURANTS),
+            deleteCacheData(CACHE_KEYS.RESTAURANT_BY_ID(restaurantId)),
+            deleteCacheData(CACHE_KEYS.RESTAURANT_DETAILS(restaurantId)),
+        ]);
 
         return this.restaurantData(restaurant);
     }

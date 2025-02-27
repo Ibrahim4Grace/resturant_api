@@ -72,6 +72,17 @@ export class ReviewService {
             review.targetId.toString(),
         );
 
+        await Promise.all([
+            deleteCacheData(CACHE_KEYS.ALL_REVIEWS),
+            deleteCacheData(
+                CACHE_KEYS.TARGET_REVIEWS(
+                    review.targetType,
+                    review.targetId.toString(),
+                ),
+            ),
+            deleteCacheData(CACHE_KEYS.USER_REVIEWS(userId)),
+        ]);
+
         return this.reviewData(review);
     }
 
@@ -85,6 +96,15 @@ export class ReviewService {
         await review.deleteOne();
 
         await this.updateReviewStats(targetType, targetId.toString());
+
+        await Promise.all([
+            deleteCacheData(CACHE_KEYS.ALL_REVIEWS),
+            deleteCacheData(
+                CACHE_KEYS.TARGET_REVIEWS(targetType, targetId.toString()),
+            ),
+            deleteCacheData(CACHE_KEYS.USER_REVIEWS(userId)),
+            deleteCacheData(CACHE_KEYS.USER_ADDRESS_BY_ID(userId, reviewId)),
+        ]);
 
         return { success: true };
     }
@@ -147,12 +167,11 @@ export class ReviewService {
             );
         }
 
-        // Invalidate restaurant-related caches
-        await deleteCacheData(CACHE_KEYS.RESTAURANT_DETAILS(targetId));
-        await deleteCacheData(CACHE_KEYS.RESTAURANT_ANALYTICS(targetId));
-        await deleteCacheData(
-            CACHE_KEYS.TARGET_REVIEWS('Restaurant', targetId),
-        );
+        await Promise.all([
+            deleteCacheData(CACHE_KEYS.RESTAURANT_DETAILS(targetId)),
+            deleteCacheData(CACHE_KEYS.RESTAURANT_ANALYTICS(targetId)),
+            deleteCacheData(CACHE_KEYS.TARGET_REVIEWS(targetType, targetId)),
+        ]);
     }
 
     public async getReviews(

@@ -295,8 +295,10 @@ export class RiderService {
             { new: true },
         );
 
-        await deleteCacheData(CACHE_KEYS.RIDER_BY_ID(riderId));
-        await deleteCacheData(CACHE_KEYS.ALL_RIDERS);
+        await Promise.all([
+            deleteCacheData(CACHE_KEYS.RIDER_BY_ID(riderId)),
+            deleteCacheData(CACHE_KEYS.ALL_RIDERS),
+        ]);
 
         return this.riderData(rider);
     }

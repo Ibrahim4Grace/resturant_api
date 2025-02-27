@@ -21,6 +21,7 @@ import {
     CACHE_TTL,
     getPaginatedAndCachedResults,
     CACHE_KEYS,
+    deleteCacheData,
 } from '../../utils/index';
 import {
     IUser,
@@ -276,6 +277,11 @@ export class UserService {
             { new: true },
         );
 
+        await Promise.all([
+            deleteCacheData(CACHE_KEYS.USER_BY_ID(userId)),
+            deleteCacheData(CACHE_KEYS.ALL_USERS),
+        ]);
+
         return user;
     }
 
@@ -416,6 +422,11 @@ export class UserService {
         if (!result) {
             throw new ResourceNotFound('Address not found');
         }
+
+        await Promise.all([
+            deleteCacheData(CACHE_KEYS.USER_ADDRESSES(userId)),
+            deleteCacheData(CACHE_KEYS.USER_ADDRESS_BY_ID(userId, addressId)),
+        ]);
     }
 
     public async getUserOrders(
