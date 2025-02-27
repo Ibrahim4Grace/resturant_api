@@ -36,7 +36,7 @@ export const CACHE_KEYS = {
     ALL_USER_ORDER: (restaurantId: string) => `all_user_order${restaurantId}`,
 
     // Menu-related keys
-    ALL_MENUS: (userId: string) => `all_menus_${userId}`,
+    ALL_MENUS: (menuId: string) => `all_menus_${menuId}`,
     MENU_BY_ID: (menuId: string, restaurantId: string) =>
         `menu_by_restaurant_${menuId}_${restaurantId}`,
     // MENU_DETAILS: (id: string) => `menu:${id}:details`,
