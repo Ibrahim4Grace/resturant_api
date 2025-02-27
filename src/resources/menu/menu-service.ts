@@ -12,6 +12,7 @@ import {
     getPaginatedAndCachedResults,
     withCachedData,
     EmailQueueService,
+    deleteCacheData,
     CACHE_KEYS,
 } from '../../utils/index';
 
@@ -73,14 +74,14 @@ export class MenuService {
     public async fetchAllMenu(
         req: Request,
         res: Response,
-        userId: string,
+        menuId: string,
     ): Promise<IMenuPaginatedResponse> {
         const paginatedResults = await getPaginatedAndCachedResults<IMenu>(
             req,
             res,
             this.menu,
-            CACHE_KEYS.ALL_MENUS(userId),
-            { restaurantId: userId },
+            CACHE_KEYS.ALL_MENUS(menuId),
+            { restaurantId: menuId },
             { name: 1, description: 1, price: 1, category: 1, image: 1 },
         );
 
@@ -140,7 +141,10 @@ export class MenuService {
                 'Menu item not found or does not belong to this restaurant',
             );
         }
-
+        await Promise.all([
+            deleteCacheData(CACHE_KEYS.ALL_MENUS(menuId)),
+            deleteCacheData(CACHE_KEYS.MENU_BY_ID(menuId, restaurantId)),
+        ]);
         return this.menuData(updatedMenuItem);
     }
 
@@ -158,5 +162,10 @@ export class MenuService {
                 'Menu item not found or does not belong to this restaurant',
             );
         }
+
+        await Promise.all([
+            deleteCacheData(CACHE_KEYS.ALL_MENUS(menuId)),
+            deleteCacheData(CACHE_KEYS.MENU_BY_ID(menuId, restaurantId)),
+        ]);
     }
 }
