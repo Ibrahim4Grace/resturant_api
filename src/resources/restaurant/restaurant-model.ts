@@ -29,7 +29,10 @@ const restaurantSchema = new Schema<IRestaurant>(
             },
         ],
         deliveryRadius: Number,
-        status: String, // 'active', 'pending', 'suspended'
+        status: {
+            type: String,
+            default: 'pending', // 'active', 'pending', 'suspended'
+        },
         bankInfo: {
             accountNumber: String,
             bankName: String,

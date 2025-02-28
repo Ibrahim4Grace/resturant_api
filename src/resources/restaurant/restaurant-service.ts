@@ -17,7 +17,6 @@ import {
 import {
     IRestaurant,
     RegisterRestaurantto,
-    Address,
     RegistrationResponse,
     RestaurantCreationResponse,
     ISanitizedRestaurant,
@@ -38,7 +37,6 @@ import {
     deleteCacheData,
 } from '../../utils/index';
 import {
-    Conflict,
     ResourceNotFound,
     BadRequest,
     Forbidden,
