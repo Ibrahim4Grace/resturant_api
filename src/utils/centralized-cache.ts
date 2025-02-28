@@ -2,6 +2,9 @@ export const CACHE_KEYS = {
     // Admin-related keys
     ALL_ADMINS: 'all_admins',
     ADMIN_BY_ID: (id: string) => `admin:${id}`,
+    ADMIN_RESTAURANT_ANALYTICS: 'admin:restaurant:analytics',
+    ADMIN_ALL_MENUS: 'admin:all_menus',
+    ADMIN_MENU_BY_ID: (menuId: string) => `admin:menu:${menuId}`,
 
     // User-related keys
     ALL_USERS: 'all_users',
@@ -21,8 +24,8 @@ export const CACHE_KEYS = {
     RESTAURANT_ANALYTICS: (id: string) => `restaurant:${id}:analytics`,
     ALL_RESTAURANT_ORDERS: (restaurantId: string) =>
         `restaurant:${restaurantId}:orders`,
-
-    // RESTAURANT_MENU: (id: string) => `restaurant:${id}:menu`,
+    RESTAURANT_MENUS: (restaurantId: string) =>
+        `restaurant:${restaurantId}:menus`,
 
     // Rider-related keys
     ALL_RIDERS: 'all_riders',
@@ -32,7 +35,7 @@ export const CACHE_KEYS = {
 
     // Order-related keys
     ALL_ORDERS: 'all_orders',
-    ORDER_BY_ID: (id: string) => `user:${id}`,
+    ORDER_BY_ID: (id: string) => `order:${id}`,
     ALL_USER_ORDER: (restaurantId: string) => `all_user_order${restaurantId}`,
 
     // Menu-related keys
