@@ -63,3 +63,9 @@ export interface RegistrationResponse {
     admin: Partial<IAdmin>;
     verificationToken?: string;
 }
+
+export interface UpdateOrderStatusParams {
+    riderId: string;
+    orderId: string;
+    status: string;
+}

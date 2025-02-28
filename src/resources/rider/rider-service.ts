@@ -425,7 +425,6 @@ export class RiderService {
         // Verify rider is assigned to this order
         await this.checkOrderAssignment(orderId, riderId);
 
-        // Get current order to check status transition
         const currentOrder = await this.order.findById(orderId);
         if (!currentOrder) {
             throw new ResourceNotFound('Order not found');
@@ -467,6 +466,16 @@ export class RiderService {
                 status: 'available',
             });
         }
+
+        await Promise.all([
+            deleteCacheData(CACHE_KEYS.ORDER_BY_ID(orderId)),
+            deleteCacheData(
+                CACHE_KEYS.ALL_USER_ORDER(currentOrder.restaurantId.toString()),
+            ),
+            ...(status === 'delivered'
+                ? [deleteCacheData(CACHE_KEYS.RIDER_BY_ID(riderId))]
+                : []),
+        ]);
 
         const user = await this.user.findById(updatedOrder.userId);
         if (user) {

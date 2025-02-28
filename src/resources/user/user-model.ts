@@ -42,7 +42,6 @@ const userSchema = new Schema<IUser>(
             type: String,
             required: true,
         },
-        status: String, // 'active', 'suspended'
         image: { imageId: String, imageUrl: String },
         isEmailVerified: { type: Boolean, default: false },
         googleId: { type: String, trim: true },

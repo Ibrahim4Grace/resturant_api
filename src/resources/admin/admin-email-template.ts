@@ -1,5 +1,7 @@
 import { EmailData } from '../../types/index';
 import { config } from '../../config/index';
+import { IUser } from '../user/user-interface';
+import { IRestaurant } from 'resources/restaurant/restaurant-interface';
 
 export const sendOTPByEmail = (
     admin: { name: string; email: string },
@@ -48,5 +50,25 @@ export const PasswordResetEmail = (admin: {
             <p>Hello ${admin.name},</p>
             <p>Your password has been successfully reset. If you did not perform this action, please contact our support team immediately.</p>
              <p>Best regards,<br>The Chef-kay restaurant Team</p>`,
+    };
+};
+
+export const userStatusUpdate = (user: IUser): EmailData => {
+    return {
+        from: process.env.nodemailerEmail as string,
+        to: user.email,
+        subject: 'Your Account Status Has Been Updated',
+        html: `<p>Hello ${user.name}, your account has been <strong>${user.isLocked ? 'locked' : 'unlocked'}</strong>.</p>
+        <p>Best regards,<br>The Chef-kay restaurant Team</p>`,
+    };
+};
+
+export const restaurantStatusUpdate = (restaurant: IRestaurant): EmailData => {
+    return {
+        from: process.env.nodemailerEmail as string,
+        to: restaurant.email,
+        subject: 'Your Account Status Has Been Updated',
+        html: `<p>Hello ${restaurant.name}, your account status has been updated to <strong>${restaurant.status}</strong>.</p>
+        <p>Best regards,<br>The Chef-kay restaurant Team</p>`,
     };
 };

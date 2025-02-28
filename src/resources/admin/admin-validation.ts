@@ -9,7 +9,7 @@ const register = z.object({
     street: z.string().min(1, 'Street is required'),
     city: z.string().min(1, 'City is required'),
     state: z.string().min(1, 'State is required'),
-    phone: z.string().min(1, "Phone number is required"),
+    phone: z.string().min(1, 'Phone number is required'),
     password: z
         .string()
         .regex(
@@ -45,10 +45,58 @@ const login = z.object({
         ),
 });
 
+const imageSchema = z
+    .object({
+        imageId: z.string().optional(),
+        imageUrl: z.string().url().optional(),
+    })
+    .optional();
+
+const updateUserSchema = z
+    .object({
+        name: z.string().min(1).max(30).optional(),
+        email: z.string().email().optional(),
+        image: imageSchema,
+        phone: z.string().optional(),
+        addresses: z
+            .object({
+                street: z.string().min(1).max(100).optional(),
+                city: z.string().min(1).max(50).optional(),
+                state: z.string().min(1).max(50).optional(),
+            })
+            .optional(),
+    })
+    .passthrough(); // Allow additional fields
+
+const changePassword = z.object({
+    currentPassword: z.string().min(1, 'Current password is required'),
+    newPassword: z
+        .string()
+        .regex(
+            regex,
+            'Password must include at least one uppercase letter, one lowercase letter, one number, and one special character',
+        ),
+});
+
+const lockSchema = z.object({
+    isLocked: z.boolean({
+        required_error: 'isLocked is required',
+        invalid_type_error: 'isLocked must be a boolean',
+    }),
+});
+
+const statusSchema = z.object({
+    status: z.string().min(1, 'Status is required'),
+});
+
 export default {
     register,
     forgetPwd,
     verifyOtp,
     resetPassword,
     login,
+    updateUserSchema,
+    changePassword,
+    lockSchema,
+    statusSchema,
 };

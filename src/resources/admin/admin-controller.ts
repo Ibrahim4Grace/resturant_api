@@ -27,6 +27,30 @@ export default class AdminController implements Controller {
     }
 
     private initializeRoutes(): void {
+        this.router.get(
+            `${this.path}/orders`,
+            authMiddleware(),
+            authorization(AdminModel, ['admin']),
+            this.getOrders,
+        );
+        this.router.get(
+            `${this.path}/reviews`,
+            authMiddleware(),
+            authorization(AdminModel, ['admin']),
+            this.getReviews,
+        );
+        this.router.get(
+            `${this.path}/menus`,
+            authMiddleware(),
+            authorization(AdminModel, ['admin']),
+            this.getMenus,
+        );
+        this.router.get(
+            `${this.path}/riders`,
+            authMiddleware(),
+            authorization(AdminModel, ['admin']),
+            this.getRiders,
+        );
         this.router.post(
             `${this.authPath}/register`,
             validateData(validate.register),
@@ -70,7 +94,7 @@ export default class AdminController implements Controller {
             validateData(validate.updateUserSchema),
             this.updateProfile,
         );
-        this.router.put(
+        this.router.post(
             `${this.path}/password/reset`,
             authMiddleware(),
             authorization(AdminModel, ['admin']),
@@ -78,23 +102,10 @@ export default class AdminController implements Controller {
             this.changePassword,
         );
         this.router.get(
-            `${this.path}`,
+            `${this.paths}`,
             authMiddleware(),
             authorization(AdminModel, ['admin']),
             this.getAdmins,
-        );
-
-        this.router.get(
-            `${this.path}/admin/:id`,
-            authMiddleware(),
-            authorization(AdminModel, ['admin']),
-            this.getAdminsById,
-        );
-        this.router.delete(
-            `${this.path}/admin/:id`,
-            authMiddleware(),
-            authorization(AdminModel, ['admin']),
-            this.deleteAdminById,
         );
         this.router.get(
             `${this.path}/users`,
@@ -103,72 +114,121 @@ export default class AdminController implements Controller {
             this.getUsers,
         );
         this.router.get(
-            `${this.path}/user/:id`,
-            authMiddleware(),
-            authorization(AdminModel, ['admin']),
-            this.getUsersById,
-        );
-        this.router.delete(
-            `${this.path}/user/:id`,
-            authMiddleware(),
-            authorization(AdminModel, ['admin']),
-            this.deleteUserById,
-        );
-
-        this.router.get(
             `${this.path}/restaurants`,
             authMiddleware(),
             authorization(AdminModel, ['admin']),
             this.getRestaurants,
         );
         this.router.get(
-            `${this.path}/restaurant/:id`,
+            `${this.path}/:id`,
+            authMiddleware(),
+            authorization(AdminModel, ['admin']),
+            this.getAdminsById,
+        );
+
+        this.router.delete(
+            `${this.path}/:id`,
+            authMiddleware(),
+            authorization(AdminModel, ['admin']),
+            this.deleteAdminById,
+        );
+        this.router.get(
+            `${this.path}/user/:userId`,
+            authMiddleware(),
+            authorization(AdminModel, ['admin']),
+            this.getUsersById,
+        );
+        this.router.delete(
+            `${this.path}/user/:userId`,
+            authMiddleware(),
+            authorization(AdminModel, ['admin']),
+            this.deleteUserById,
+        );
+        this.router.patch(
+            `${this.path}/user/:userId/status`,
+            authMiddleware(),
+            authorization(AdminModel, ['admin']),
+            validateData(validate.lockSchema),
+            this.updateUserStatus,
+        );
+        this.router.get(
+            `${this.path}/restaurant/:restaurantId`,
             authMiddleware(),
             authorization(AdminModel, ['admin']),
             this.getRestaurantsById,
         );
+        this.router.patch(
+            `${this.path}/restaurant/:restaurantId/status`,
+            authMiddleware(),
+            authorization(AdminModel, ['admin']),
+            validateData(validate.statusSchema),
+            this.updateRestaurantStatus,
+        );
         this.router.delete(
-            `${this.path}/restaurant/:id`,
+            `${this.path}/restaurant/:restaurantId`,
             authMiddleware(),
             authorization(AdminModel, ['admin']),
             this.deleteRestaurantById,
         );
         this.router.get(
-            `${this.path}/riders`,
+            `${this.path}/restaurant/stats`,
             authMiddleware(),
             authorization(AdminModel, ['admin']),
-            this.getRiders,
+            this.getRestaurantAnalytics,
         );
         this.router.get(
-            `${this.path}/rider/:id`,
+            `${this.path}/rider/:riderId`,
             authMiddleware(),
             authorization(AdminModel, ['admin']),
             this.getRidersById,
         );
         this.router.delete(
-            `${this.path}/rider/:id`,
+            `${this.path}/rider/:riderId`,
             authMiddleware(),
             authorization(AdminModel, ['admin']),
             this.deleteRiderById,
         );
-
         this.router.get(
-            `${this.path}/orders`,
-            authMiddleware(),
-            authorization(AdminModel, ['admin']),
-            this.getOrders,
-        );
-        this.router.get(
-            `${this.path}/order/:id`,
+            `${this.path}/order/:orderId`,
             authMiddleware(),
             authorization(AdminModel, ['admin']),
             this.getOrdersById,
         );
         this.router.delete(
-            `${this.path}/order/:id`,
+            `${this.path}/order/:orderId`,
             authMiddleware(),
             authorization(AdminModel, ['admin']),
             this.deleteOrderById,
+        );
+        this.router.get(
+            `${this.path}/menu/:menuId`,
+            authMiddleware(),
+            authorization(AdminModel, ['admin']),
+            this.getMenuById,
+        );
+        this.router.delete(
+            `${this.path}/menu/:menuId`,
+            authMiddleware(),
+            authorization(AdminModel, ['admin']),
+            this.deleteMenuById,
+        );
+        this.router.get(
+            `${this.path}/restaurant/:restaurantId/menus`,
+            authMiddleware(),
+            authorization(AdminModel, ['admin']),
+            this.getRestaurantMenus,
+        );
+        this.router.get(
+            `${this.path}/review/:reviewId`,
+            authMiddleware(),
+            authorization(AdminModel, ['admin']),
+            this.getReviewById,
+        );
+        this.router.delete(
+            `${this.path}/review/:reviewId`,
+            authMiddleware(),
+            authorization(AdminModel, ['admin']),
+            this.deleteReviewById,
         );
     }
 
@@ -338,7 +398,7 @@ export default class AdminController implements Controller {
             }
             const { currentPassword, newPassword } = req.body;
 
-            await this.adminService.changePassword(
+            await this.adminService.changeAdminPassword(
                 adminId,
                 currentPassword,
                 newPassword,
@@ -350,6 +410,10 @@ export default class AdminController implements Controller {
 
     private getAdmins = asyncHandler(
         async (req: Request, res: Response): Promise<void> => {
+            const adminId = req.currentUser._id;
+            if (!adminId) {
+                throw new ResourceNotFound('Admin not found');
+            }
             const admins = await this.adminService.fetchAllAdmins(req, res);
 
             sendJsonResponse(res, 200, 'Admins retrive succesful', admins);
@@ -359,6 +423,10 @@ export default class AdminController implements Controller {
     private getAdminsById = asyncHandler(
         async (req: Request, res: Response): Promise<void> => {
             const { id } = req.params;
+            const adminId = req.currentUser._id;
+            if (!adminId) {
+                throw new ResourceNotFound('Admin not found');
+            }
             const admin = await this.adminService.fetchAdminsById(id);
 
             sendJsonResponse(res, 200, 'Admin retrive by id succesful', admin);
@@ -368,7 +436,11 @@ export default class AdminController implements Controller {
     public deleteAdminById = asyncHandler(
         async (req: Request, res: Response): Promise<void> => {
             const { id } = req.params;
-            const deletedAdmin = await this.adminService.deletedAdmin(id);
+            const adminId = req.currentUser._id;
+            if (!adminId) {
+                throw new ResourceNotFound('Admin not found');
+            }
+            await this.adminService.deletedAdmin(id);
 
             sendJsonResponse(res, 200, 'Admin deleted successfully');
         },
@@ -376,7 +448,11 @@ export default class AdminController implements Controller {
 
     private getUsers = asyncHandler(
         async (req: Request, res: Response): Promise<void> => {
-            const users = await this.adminService.fetchAllUsers(req, res);
+            const adminId = req.currentUser._id;
+            if (!adminId) {
+                throw new ResourceNotFound('Admin not found');
+            }
+            const users = await this.adminService.allUsers(req, res);
 
             sendJsonResponse(res, 200, 'Users retrive succesful', users);
         },
@@ -384,8 +460,8 @@ export default class AdminController implements Controller {
 
     private getUsersById = asyncHandler(
         async (req: Request, res: Response): Promise<void> => {
-            const { id } = req.params;
-            const user = await this.adminService.fetchUserById(id);
+            const { userId } = req.params;
+            const user = await this.adminService.fetchUserById(userId);
 
             sendJsonResponse(res, 200, 'Users retrive by id succesful', user);
         },
@@ -393,10 +469,32 @@ export default class AdminController implements Controller {
 
     public deleteUserById = asyncHandler(
         async (req: Request, res: Response): Promise<void> => {
-            const { id } = req.params;
-            const deletedUser = await this.adminService.deleteUser(id);
+            const { userId } = req.params;
+            const adminId = req.currentUser._id;
+            if (!adminId) {
+                throw new ResourceNotFound('Admin not found');
+            }
+            await this.adminService.deleteUser(userId);
 
             sendJsonResponse(res, 200, 'User deleted successfully');
+        },
+    );
+
+    private updateUserStatus = asyncHandler(
+        async (req: Request, res: Response): Promise<void> => {
+            const { userId } = req.params;
+            const { isLocked } = req.body;
+            const updatedUser = await this.adminService.updateUserStatus(
+                userId,
+                isLocked,
+            );
+            const statusMessage = updatedUser.isLocked ? 'locked' : 'unlocked';
+            sendJsonResponse(
+                res,
+                200,
+                `User account ${statusMessage} successfully`,
+                updatedUser,
+            );
         },
     );
 
@@ -418,8 +516,9 @@ export default class AdminController implements Controller {
 
     private getRestaurantsById = asyncHandler(
         async (req: Request, res: Response): Promise<void> => {
-            const { id } = req.params;
-            const restaurant = await this.adminService.fetchRestaurantById(id);
+            const { restaurantId } = req.params;
+            const restaurant =
+                await this.adminService.fetchRestaurantById(restaurantId);
 
             sendJsonResponse(
                 res,
@@ -430,16 +529,56 @@ export default class AdminController implements Controller {
         },
     );
 
+    private updateRestaurantStatus = asyncHandler(
+        async (req: Request, res: Response): Promise<void> => {
+            const adminId = req.currentUser._id;
+            if (!adminId) {
+                throw new ResourceNotFound('Admin not found');
+            }
+
+            const { restaurantId } = req.params;
+            const { status } = req.body;
+
+            const updatedUser = await this.adminService.restaurantStatus(
+                restaurantId,
+                status,
+            );
+
+            sendJsonResponse(
+                res,
+                200,
+                'User status updated successfully',
+                updatedUser,
+            );
+        },
+    );
+
     public deleteRestaurantById = asyncHandler(
         async (req: Request, res: Response): Promise<void> => {
-            const { id } = req.params;
-            const deletedRestaurant =
-                await this.adminService.deleteRestaurant(id);
+            const { restaurantId } = req.params;
+
+            await this.adminService.deleteRestaurant(restaurantId);
 
             sendJsonResponse(res, 200, 'Restaurant deleted successfully');
         },
     );
+    private getRestaurantAnalytics = asyncHandler(
+        async (req: Request, res: Response): Promise<void> => {
+            const adminId = req.currentUser?._id;
+            if (!adminId) {
+                throw new ResourceNotFound('Admin not found');
+            }
 
+            const analytics = await this.adminService.getRestaurantAnalytics();
+
+            sendJsonResponse(
+                res,
+                200,
+                'Restaurant analytics retrieved successfully',
+                analytics,
+            );
+        },
+    );
     private getRiders = asyncHandler(
         async (req: Request, res: Response): Promise<void> => {
             const riders = await this.adminService.fetchAllRiders(req, res);
@@ -447,48 +586,109 @@ export default class AdminController implements Controller {
             sendJsonResponse(res, 200, 'Riders retrive succesful', riders);
         },
     );
-
     private getRidersById = asyncHandler(
         async (req: Request, res: Response): Promise<void> => {
-            const { id } = req.params;
-            const rider = await this.adminService.fetchRiderById(id);
-
+            const { riderId } = req.params;
+            const rider = await this.adminService.fetchRiderById(riderId);
             sendJsonResponse(res, 200, 'Riders retrive by id succesful', rider);
         },
     );
-
     public deleteRiderById = asyncHandler(
         async (req: Request, res: Response): Promise<void> => {
-            const { id } = req.params;
-            const deletedRider = await this.adminService.deleteRider(id);
+            const { riderId } = req.params;
+            await this.adminService.deleteRider(riderId);
 
             sendJsonResponse(res, 200, 'Rider deleted successfully');
         },
     );
-
     private getOrders = asyncHandler(
         async (req: Request, res: Response): Promise<void> => {
             const orders = await this.adminService.fetchAllOrders(req, res);
-
             sendJsonResponse(res, 200, 'Orders retrive succesful', orders);
         },
     );
-
     private getOrdersById = asyncHandler(
         async (req: Request, res: Response): Promise<void> => {
-            const { id } = req.params;
-            const order = await this.adminService.fetchOrdersById(id);
-
+            const { orderId } = req.params;
+            const order = await this.adminService.fetchOrdersById(orderId);
             sendJsonResponse(res, 200, 'Orders retrive by id succesful', order);
         },
     );
-
     public deleteOrderById = asyncHandler(
         async (req: Request, res: Response): Promise<void> => {
-            const { id } = req.params;
-            const deletedOrder = await this.adminService.deleteOrder(id);
+            const { orderId } = req.params;
+            await this.adminService.deleteOrder(orderId);
 
             sendJsonResponse(res, 200, 'Order deleted successfully');
+        },
+    );
+    private getMenus = asyncHandler(
+        async (req: Request, res: Response): Promise<void> => {
+            const menus = await this.adminService.fetchAllMenus(req, res);
+            sendJsonResponse(res, 200, 'Menu retrive succesful', menus);
+        },
+    );
+    private getMenuById = asyncHandler(
+        async (req: Request, res: Response): Promise<void> => {
+            const { menuId } = req.params;
+            const menu = await this.adminService.fetchMenuById(menuId);
+            sendJsonResponse(res, 200, 'Menu retrive by id succesful', menu);
+        },
+    );
+    public deleteMenuById = asyncHandler(
+        async (req: Request, res: Response): Promise<void> => {
+            const { menuId } = req.params;
+            await this.adminService.deleteMenu(menuId);
+            sendJsonResponse(res, 200, 'Menu deleted successfully');
+        },
+    );
+    private getRestaurantMenus = asyncHandler(
+        async (req: Request, res: Response): Promise<void> => {
+            const { restaurantId } = req.params;
+
+            const menus = await this.adminService.fetchRestaurantMenus(
+                req,
+                res,
+                restaurantId,
+            );
+
+            sendJsonResponse(
+                res,
+                200,
+                'Restaurant menus retrieved successfully',
+                menus,
+            );
+        },
+    );
+
+    private getReviews = asyncHandler(
+        async (req: Request, res: Response): Promise<void> => {
+            const reviews = await this.adminService.getReviews(req, res);
+            sendJsonResponse(
+                res,
+                200,
+                'Reviews retrieved successfully',
+                reviews,
+            );
+        },
+    );
+    private getReviewById = asyncHandler(
+        async (req: Request, res: Response): Promise<void> => {
+            const { reviewId } = req.params;
+            const review = await this.adminService.fetchReviewById(reviewId);
+            sendJsonResponse(
+                res,
+                200,
+                'Review retrive by id succesful',
+                review,
+            );
+        },
+    );
+    private deleteReviewById = asyncHandler(
+        async (req: Request, res: Response): Promise<void> => {
+            const { reviewId } = req.params;
+            await this.adminService.deleteReview(reviewId);
+            sendJsonResponse(res, 200, 'Review deleted successfully');
         },
     );
 }

@@ -44,5 +44,6 @@ export function userData(user: IUser): Partial<IUser> {
         isEmailVerified: user.isEmailVerified,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
+        isLocked: user.isLocked,
     };
 }

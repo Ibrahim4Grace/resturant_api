@@ -363,6 +363,167 @@ export const authAdminDocs = {
 
 export const adminDocs = {
     paths: {
+        '/api/v1/admin/profile': {
+            get: {
+                summary: 'Get Admin Profile',
+                tags: ['Admin Profile'],
+                security: [{ BearerAuth: [] }],
+                responses: {
+                    200: {
+                        description: 'Profile retrieved successfully',
+                        content: {
+                            'application/json': {
+                                schema: {
+                                    type: 'object',
+                                    properties: {
+                                        status: {
+                                            type: 'number',
+                                            example: 200,
+                                        },
+                                        message: {
+                                            type: 'string',
+                                            example:
+                                                'Profile retrieved successfully',
+                                        },
+                                        data: {
+                                            type: 'object',
+                                            properties: {
+                                                _id: {
+                                                    type: 'string',
+                                                    example: '654321abcdef',
+                                                },
+                                                full_name: {
+                                                    type: 'string',
+                                                    example: 'John Doe',
+                                                },
+                                                email: {
+                                                    type: 'string',
+                                                    example:
+                                                        'john.doe@example.com',
+                                                },
+                                                phone: {
+                                                    type: 'string',
+                                                    example: '+1234567890',
+                                                },
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    404: { description: 'Admin not found' },
+                    500: { description: 'Server error' },
+                },
+            },
+            put: {
+                summary: 'Update Admin Profile',
+                tags: ['Admin Profile'],
+                security: [{ BearerAuth: [] }],
+                requestBody: {
+                    required: true,
+                    content: {
+                        'application/json': {
+                            schema: {
+                                type: 'object',
+                                properties: {
+                                    full_name: {
+                                        type: 'string',
+                                        example: 'John Doe',
+                                    },
+                                    email: {
+                                        type: 'string',
+                                        example: 'john.doe@example.com',
+                                    },
+                                    phone: {
+                                        type: 'string',
+                                        example: '+1234567890',
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+                responses: {
+                    200: {
+                        description: 'Profile data updated successfully',
+                        content: {
+                            'application/json': {
+                                schema: {
+                                    type: 'object',
+                                    properties: {
+                                        status: {
+                                            type: 'number',
+                                            example: 200,
+                                        },
+                                        message: {
+                                            type: 'string',
+                                            example:
+                                                'Profile data updated successfully',
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    404: { description: 'Admin not found or update failed' },
+                    500: { description: 'Server error' },
+                },
+            },
+        },
+        '/api/v1/admin/password/reset': {
+            post: {
+                summary: 'Change Admin Password',
+                tags: ['Admin Profile'],
+                security: [{ BearerAuth: [] }],
+                requestBody: {
+                    required: true,
+                    content: {
+                        'application/json': {
+                            schema: {
+                                type: 'object',
+                                properties: {
+                                    currentPassword: {
+                                        type: 'string',
+                                        example: 'oldpassword123',
+                                    },
+                                    newPassword: {
+                                        type: 'string',
+                                        example: 'newstrongpassword',
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+                responses: {
+                    200: {
+                        description: 'Password reset successfully',
+                        content: {
+                            'application/json': {
+                                schema: {
+                                    type: 'object',
+                                    properties: {
+                                        status: {
+                                            type: 'number',
+                                            example: 200,
+                                        },
+                                        message: {
+                                            type: 'string',
+                                            example:
+                                                'Password reset successfully',
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    401: { description: 'Current password is incorrect' },
+                    400: { description: 'Password has been used before' },
+                    500: { description: 'Server error' },
+                },
+            },
+        },
         '/api/v1/admins': {
             get: {
                 summary: 'Retrieve all admins',
@@ -411,7 +572,7 @@ export const adminDocs = {
                 },
             },
         },
-        '/api/v1/admins/admin/{id}': {
+        '/api/v1/admin/{id}': {
             get: {
                 summary: 'Retrieve a admin by ID',
                 tags: ['Admin - Admins'],
@@ -468,7 +629,7 @@ export const adminDocs = {
                 },
             },
             delete: {
-                summary: 'Delete a rider by ID',
+                summary: 'Delete a admin by ID',
                 tags: ['Admin - Admins'],
                 security: [{ BearerAuth: [] }],
                 parameters: [
@@ -509,7 +670,7 @@ export const adminDocs = {
                 },
             },
         },
-        '/api/v1/admins/users': {
+        '/api/v1/admin/users': {
             get: {
                 summary: 'Retrieve all users',
                 tags: ['Admin - Users'],
@@ -561,7 +722,7 @@ export const adminDocs = {
                 },
             },
         },
-        '/api/v1/admins/user/{id}': {
+        '/api/v1/admin/user/{id}': {
             get: {
                 summary: 'Retrieve a user by ID',
                 tags: ['Admin - Users'],
@@ -663,7 +824,96 @@ export const adminDocs = {
                 },
             },
         },
-        '/api/v1/admins/restaurants': {
+        '/api/v1/admin/user/{userId}/status': {
+            patch: {
+                summary: 'Update user account status',
+                tags: ['Admin - Users'],
+                security: [{ BearerAuth: [] }],
+                parameters: [
+                    {
+                        name: 'userId',
+                        in: 'path',
+                        required: true,
+                        schema: {
+                            type: 'string',
+                            example: '65f2c3b4a9e12d001b123456',
+                        },
+                        description:
+                            'ID of the user whose status is being updated',
+                    },
+                ],
+                requestBody: {
+                    required: true,
+                    content: {
+                        'application/json': {
+                            schema: {
+                                type: 'object',
+                                properties: {
+                                    isLocked: {
+                                        type: 'boolean',
+                                        example: true,
+                                        description:
+                                            'Set to true to lock the account, false to unlock',
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+                responses: {
+                    200: {
+                        description: 'User account status updated successfully',
+                        content: {
+                            'application/json': {
+                                schema: {
+                                    type: 'object',
+                                    properties: {
+                                        status: {
+                                            type: 'number',
+                                            example: 200,
+                                        },
+                                        message: {
+                                            type: 'string',
+                                            example:
+                                                'User account locked successfully',
+                                        },
+                                        data: {
+                                            type: 'object',
+                                            properties: {
+                                                _id: {
+                                                    type: 'string',
+                                                    example:
+                                                        '65f2c3b4a9e12d001b123456',
+                                                },
+                                                email: {
+                                                    type: 'string',
+                                                    example: 'user@example.com',
+                                                },
+                                                isLocked: {
+                                                    type: 'boolean',
+                                                    example: true,
+                                                },
+                                                updatedAt: {
+                                                    type: 'string',
+                                                    format: 'date-time',
+                                                },
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    400: { description: 'Invalid input data' },
+                    401: {
+                        description: 'Unauthorized - Admin access required',
+                    },
+                    404: { description: 'User not found' },
+                    500: { description: 'Internal server error' },
+                },
+            },
+        },
+        '/api/v1/admin/restaurants': {
             get: {
                 summary: 'Retrieve all restaurants',
                 tags: ['Admin - Restaurants'],
@@ -716,7 +966,171 @@ export const adminDocs = {
                 },
             },
         },
-        '/api/v1/admins/restaurant/{id}': {
+        '/api/v1/admin/restaurant/{restaurantId}/status': {
+            patch: {
+                summary: 'Update restaurant account status',
+                tags: ['Admin - restaurant'],
+                security: [{ BearerAuth: [] }],
+                parameters: [
+                    {
+                        name: 'restaurantId',
+                        in: 'path',
+                        required: true,
+                        schema: {
+                            type: 'string',
+                            example: '65f2c3b4a9e12d001b123456',
+                        },
+                        description:
+                            'ID of the restaurant whose status is being updated',
+                    },
+                ],
+                requestBody: {
+                    required: true,
+                    content: {
+                        'application/json': {
+                            schema: {
+                                type: 'object',
+                                properties: {
+                                    isLocked: {
+                                        type: 'string',
+                                        status: 'active',
+                                        description:
+                                            'restaurant account activated',
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+                responses: {
+                    200: {
+                        description:
+                            'restaurant account status updated successfully',
+                        content: {
+                            'application/json': {
+                                schema: {
+                                    type: 'object',
+                                    properties: {
+                                        status: {
+                                            type: 'number',
+                                            example: 200,
+                                        },
+                                        message: {
+                                            type: 'string',
+                                            example:
+                                                'restaurant account locked successfully',
+                                        },
+                                        data: {
+                                            type: 'object',
+                                            properties: {
+                                                _id: {
+                                                    type: 'string',
+                                                    example:
+                                                        '65f2c3b4a9e12d001b123456',
+                                                },
+                                                email: {
+                                                    type: 'string',
+                                                    example: 'user@example.com',
+                                                },
+                                                status: {
+                                                    type: 'string',
+                                                    example: 'active',
+                                                },
+                                                updatedAt: {
+                                                    type: 'string',
+                                                    format: 'date-time',
+                                                },
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    400: { description: 'Invalid input data' },
+                    401: {
+                        description: 'Unauthorized - Admin access required',
+                    },
+                    404: { description: 'restaurant not found' },
+                    500: { description: 'Internal server error' },
+                },
+            },
+        },
+        '/api/v1/admin/restaurant/stats': {
+            get: {
+                summary: 'Get restaurant analytics',
+                tags: ['Admin - Restaurant Analytics'],
+                security: [{ BearerAuth: [] }],
+                responses: {
+                    200: {
+                        description:
+                            'Restaurant analytics retrieved successfully',
+                        content: {
+                            'application/json': {
+                                schema: {
+                                    type: 'object',
+                                    properties: {
+                                        status: {
+                                            type: 'number',
+                                            example: 200,
+                                        },
+                                        message: {
+                                            type: 'string',
+                                            example:
+                                                'Restaurant analytics retrieved successfully',
+                                        },
+                                        data: {
+                                            type: 'object',
+                                            properties: {
+                                                totalOrders: {
+                                                    type: 'number',
+                                                    example: 500,
+                                                },
+                                                revenue: {
+                                                    type: 'object',
+                                                    properties: {
+                                                        total: {
+                                                            type: 'number',
+                                                            example: 250000,
+                                                        },
+                                                        average: {
+                                                            type: 'number',
+                                                            example: 500,
+                                                        },
+                                                    },
+                                                },
+                                                ratings: {
+                                                    type: 'object',
+                                                    properties: {
+                                                        total: {
+                                                            type: 'number',
+                                                            example: 1200,
+                                                        },
+                                                        average: {
+                                                            type: 'number',
+                                                            example: 4.5,
+                                                        },
+                                                    },
+                                                },
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    401: {
+                        description: 'Unauthorized - Invalid or missing token',
+                    },
+                    403: {
+                        description: 'Forbidden - Insufficient permissions',
+                    },
+                    404: { description: 'Admin not found' },
+                    500: { description: 'Server error' },
+                },
+            },
+        },
+        '/api/v1/admin/restaurant/{id}': {
             get: {
                 summary: 'Retrieve a restaurant by ID',
                 tags: ['Admin - Restaurants'],
@@ -820,7 +1234,7 @@ export const adminDocs = {
             },
         },
 
-        '/api/v1/admins/riders': {
+        '/api/v1/admin/riders': {
             get: {
                 summary: 'Retrieve all riders',
                 tags: ['Admin - Riders'],
@@ -872,7 +1286,7 @@ export const adminDocs = {
                 },
             },
         },
-        '/api/v1/admins/rider/{id}': {
+        '/api/v1/admin/rider/{id}': {
             get: {
                 summary: 'Retrieve a rider by ID',
                 tags: ['Admin - Riders'],
@@ -974,7 +1388,7 @@ export const adminDocs = {
                 },
             },
         },
-        '/api/v1/admins/orders': {
+        '/api/v1/admin/orders': {
             get: {
                 summary: 'Retrieve all orders',
                 tags: ['Admin - Orders'],
@@ -1022,7 +1436,7 @@ export const adminDocs = {
                 },
             },
         },
-        '/api/v1/admins/order/{id}': {
+        '/api/v1/admin/order/{id}': {
             get: {
                 summary: 'Retrieve a order by ID',
                 tags: ['Admin - Orders'],
@@ -1123,9 +1537,382 @@ export const adminDocs = {
     },
 };
 
+export const menuDocs = {
+    paths: {
+        '/api/v1/admin/menus': {
+            get: {
+                summary: 'Fetch all menus',
+                tags: ['Admin - Menus'],
+                security: [{ BearerAuth: [] }],
+                responses: {
+                    200: {
+                        description: 'Menus retrieved successfully',
+                        content: {
+                            'application/json': {
+                                schema: {
+                                    type: 'object',
+                                    properties: {
+                                        status: {
+                                            type: 'number',
+                                            example: 200,
+                                        },
+                                        message: {
+                                            type: 'string',
+                                            example: 'Menu retrieve successful',
+                                        },
+                                        data: {
+                                            type: 'object',
+                                            properties: {
+                                                results: {
+                                                    type: 'array',
+                                                    items: {
+                                                        $ref: '#/components/schemas/Menu',
+                                                    },
+                                                },
+                                                pagination: {
+                                                    type: 'object',
+                                                    properties: {
+                                                        currentPage: {
+                                                            type: 'number',
+                                                            example: 1,
+                                                        },
+                                                        totalPages: {
+                                                            type: 'number',
+                                                            example: 5,
+                                                        },
+                                                        limit: {
+                                                            type: 'number',
+                                                            example: 10,
+                                                        },
+                                                    },
+                                                },
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    500: { description: 'Server error' },
+                },
+            },
+        },
+        '/api/v1/admin/menu/{menuId}': {
+            get: {
+                summary: 'Fetch menu by ID',
+                tags: ['Admin - Menus'],
+                security: [{ BearerAuth: [] }],
+                parameters: [
+                    {
+                        name: 'menuId',
+                        in: 'path',
+                        required: true,
+                        schema: { type: 'string' },
+                        description: 'The ID of the menu to retrieve',
+                    },
+                ],
+                responses: {
+                    200: {
+                        description: 'Menu retrieved successfully',
+                        content: {
+                            'application/json': {
+                                schema: {
+                                    type: 'object',
+                                    properties: {
+                                        status: {
+                                            type: 'number',
+                                            example: 200,
+                                        },
+                                        message: {
+                                            type: 'string',
+                                            example:
+                                                'Menu retrieve by ID successful',
+                                        },
+                                        data: {
+                                            $ref: '#/components/schemas/Menu',
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    404: { description: 'Menu not found' },
+                    500: { description: 'Server error' },
+                },
+            },
+            delete: {
+                summary: 'Delete a menu',
+                tags: ['Admin - Menus'],
+                security: [{ BearerAuth: [] }],
+                parameters: [
+                    {
+                        name: 'menuId',
+                        in: 'path',
+                        required: true,
+                        schema: { type: 'string' },
+                        description: 'The ID of the menu to delete',
+                    },
+                ],
+                responses: {
+                    200: {
+                        description: 'Menu deleted successfully',
+                        content: {
+                            'application/json': {
+                                schema: {
+                                    type: 'object',
+                                    properties: {
+                                        status: {
+                                            type: 'number',
+                                            example: 200,
+                                        },
+                                        message: {
+                                            type: 'string',
+                                            example:
+                                                'Menu deleted successfully',
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    404: { description: 'Menu not found' },
+                    500: { description: 'Server error' },
+                },
+            },
+        },
+        '/api/v1/admin/restaurant/{restaurantId}/menus': {
+            get: {
+                summary: 'Fetch menus for a specific restaurant',
+                tags: ['Admin - Menus'],
+                security: [{ BearerAuth: [] }],
+                parameters: [
+                    {
+                        name: 'restaurantId',
+                        in: 'path',
+                        required: true,
+                        schema: { type: 'string' },
+                        description:
+                            'The ID of the restaurant to retrieve menus for',
+                    },
+                ],
+                responses: {
+                    200: {
+                        description: 'Restaurant menus retrieved successfully',
+                        content: {
+                            'application/json': {
+                                schema: {
+                                    type: 'object',
+                                    properties: {
+                                        status: {
+                                            type: 'number',
+                                            example: 200,
+                                        },
+                                        message: {
+                                            type: 'string',
+                                            example:
+                                                'Restaurant menus retrieved successfully',
+                                        },
+                                        data: {
+                                            type: 'object',
+                                            properties: {
+                                                results: {
+                                                    type: 'array',
+                                                    items: {
+                                                        $ref: '#/components/schemas/Menu',
+                                                    },
+                                                },
+                                                pagination: {
+                                                    type: 'object',
+                                                    properties: {
+                                                        currentPage: {
+                                                            type: 'number',
+                                                            example: 1,
+                                                        },
+                                                        totalPages: {
+                                                            type: 'number',
+                                                            example: 5,
+                                                        },
+                                                        limit: {
+                                                            type: 'number',
+                                                            example: 10,
+                                                        },
+                                                    },
+                                                },
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    404: { description: 'Restaurant not found' },
+                    500: { description: 'Server error' },
+                },
+            },
+        },
+    },
+    components: {
+        schemas: {
+            Menu: {
+                type: 'object',
+                properties: {
+                    id: { type: 'string', example: '65b3c1f23e4f2a001e4a2b1a' },
+                    name: { type: 'string', example: 'Cheese Pizza' },
+                    description: {
+                        type: 'string',
+                        example:
+                            'Delicious cheese pizza with fresh ingredients',
+                    },
+                    price: { type: 'number', example: 12.99 },
+                    restaurantId: {
+                        type: 'string',
+                        example: '65a1b2c3d4e5f67890123456',
+                    },
+                    createdAt: { type: 'string', format: 'date-time' },
+                    updatedAt: { type: 'string', format: 'date-time' },
+                },
+            },
+        },
+    },
+};
+
+export const reviewDocs = {
+    paths: {
+        '/api/v1/admin/reviews': {
+            get: {
+                summary: 'Get paginated reviews',
+                tags: ['Admin - Reviews'],
+                security: [{ BearerAuth: [] }],
+                responses: {
+                    200: {
+                        description: 'List of paginated reviews',
+                        content: {
+                            'application/json': {
+                                schema: {
+                                    type: 'object',
+                                    properties: {
+                                        results: {
+                                            type: 'array',
+                                            items: {
+                                                $ref: '#/components/schemas/Review',
+                                            },
+                                        },
+                                        pagination: {
+                                            type: 'object',
+                                            properties: {
+                                                currentPage: {
+                                                    type: 'number',
+                                                    example: 1,
+                                                },
+                                                totalPages: {
+                                                    type: 'number',
+                                                    example: 5,
+                                                },
+                                                limit: {
+                                                    type: 'number',
+                                                    example: 10,
+                                                },
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    500: { description: 'Server error' },
+                },
+            },
+        },
+        '/api/v1/admin/review/{reviewId}': {
+            get: {
+                summary: 'Fetch a review by ID',
+                tags: ['Admin - Reviews'],
+                security: [{ BearerAuth: [] }],
+                parameters: [
+                    {
+                        name: 'reviewId',
+                        in: 'path',
+                        required: true,
+                        schema: { type: 'string' },
+                        description: 'The ID of the review',
+                    },
+                ],
+                responses: {
+                    200: {
+                        description: 'Review details',
+                        content: {
+                            'application/json': {
+                                schema: { $ref: '#/components/schemas/Review' },
+                            },
+                        },
+                    },
+                    404: { description: 'Review not found' },
+                    500: { description: 'Server error' },
+                },
+            },
+            delete: {
+                summary: 'Delete a review by ID',
+                tags: ['Reviews'],
+                parameters: [
+                    {
+                        name: 'reviewId',
+                        in: 'path',
+                        required: true,
+                        schema: { type: 'string' },
+                        description: 'The ID of the review to delete',
+                    },
+                ],
+                responses: {
+                    200: {
+                        description: 'Review deleted successfully',
+                        content: {
+                            'application/json': {
+                                schema: {
+                                    type: 'object',
+                                    properties: {
+                                        message: {
+                                            type: 'string',
+                                            example:
+                                                'Review deleted successfully',
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    404: { description: 'Review not found' },
+                    500: { description: 'Server error' },
+                },
+            },
+        },
+    },
+    components: {
+        schemas: {
+            Review: {
+                type: 'object',
+                properties: {
+                    _id: {
+                        type: 'string',
+                        example: '60d5ec49f1a2c300154f8672',
+                    },
+                    user: {
+                        type: 'string',
+                        example: '60d5ec49f1a2c300154f1234',
+                    },
+                    rating: { type: 'number', example: 4.5 },
+                    comment: { type: 'string', example: 'Great experience!' },
+                    createdAt: { type: 'string', format: 'date-time' },
+                },
+            },
+        },
+    },
+};
+
 export const allAdminDocs = {
     paths: {
         ...authAdminDocs.paths,
         ...adminDocs.paths,
+        ...menuDocs.paths,
+        ...reviewDocs.paths,
     },
 };
