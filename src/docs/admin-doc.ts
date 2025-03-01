@@ -1931,6 +1931,10 @@ export const settingsDocs = {
                                             type: 'number',
                                             example: 5,
                                         },
+                                        restaurant_commission: {
+                                            type: 'number',
+                                            example: 0.1,
+                                        },
                                     },
                                 },
                             },
@@ -1958,6 +1962,10 @@ export const settingsDocs = {
                                         type: 'number',
                                         example: 5,
                                     },
+                                    restaurant_commission: {
+                                        type: 'number',
+                                        example: 0.1,
+                                    },
                                 },
                             },
                         },
@@ -1978,6 +1986,10 @@ export const settingsDocs = {
                                         delivery_fee: {
                                             type: 'number',
                                             example: 5,
+                                        },
+                                        restaurant_commission: {
+                                            type: 'number',
+                                            example: 0.1,
                                         },
                                     },
                                 },
@@ -2003,6 +2015,10 @@ export const settingsDocs = {
                                         type: 'number',
                                         example: 5,
                                     },
+                                    restaurant_commission: {
+                                        type: 'number',
+                                        example: 0.1,
+                                    },
                                 },
                             },
                         },
@@ -2023,6 +2039,10 @@ export const settingsDocs = {
                                         delivery_fee: {
                                             type: 'number',
                                             example: 5,
+                                        },
+                                        restaurant_commission: {
+                                            type: 'number',
+                                            example: 0.1,
                                         },
                                     },
                                 },
