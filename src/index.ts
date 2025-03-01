@@ -9,6 +9,7 @@ import OrderController from '../src/resources/order/order-controller';
 import MenuController from '../src/resources/menu/menu-controller';
 import PaymentController from '../src/resources/payment/payment-controller';
 import ReviewController from '../src/resources/review/review-controller';
+import SettingsController from '../src/resources/settings/setting-controller';
 
 const app = new App(
     [
@@ -20,6 +21,7 @@ const app = new App(
         new MenuController(),
         new PaymentController(),
         new ReviewController(),
+        new SettingsController(),
     ],
     Number(config.PORT),
 );
