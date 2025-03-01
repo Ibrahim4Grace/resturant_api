@@ -1,7 +1,7 @@
-import { config } from '../../config/index';
 import { IOrder } from '../order/order-interface';
 import { ResourceNotFound, Unauthorized } from '../../middlewares/index';
-
+import { SettingsService } from '../settings/setting-service';
+const settingsService = new SettingsService();
 export function orderData(order: IOrder): Partial<IOrder> {
     return {
         _id: order._id,
@@ -68,8 +68,9 @@ export async function calculateOrderAmounts(
         0,
     );
 
-    const taxRate = parseFloat(config.TAX_RATE);
-    const delivery_fee = parseFloat(config.DELIVERY_FEE);
+    const settings = await settingsService.getSettings();
+    const taxRate = settings.tax_rate;
+    const delivery_fee = settings.delivery_fee;
     const tax = subtotal * taxRate;
     const total_price = subtotal + tax + delivery_fee;
 

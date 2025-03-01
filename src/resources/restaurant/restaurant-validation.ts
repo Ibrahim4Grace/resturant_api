@@ -46,6 +46,11 @@ const updateSchema = createSchema
                 close: z.string(),
             }),
         ),
+        bankInfo: z.object({
+            accountNumber: z.string().min(1, 'Account number is required'),
+            bankName: z.string().min(1, 'Bank name is required'),
+            accountHolder: z.string().min(1, 'Account name is required'),
+        }),
     })
     .partial();
 // const updateSchema = createSchema.omit({ password: true }).partial();

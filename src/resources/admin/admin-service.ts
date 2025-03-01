@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 import { config } from '../../config/index';
 import AdminModel from '../admin/admin-model';
@@ -8,6 +9,7 @@ import RestaurantModel from '../restaurant/restaurant-model';
 import RiderModel from '../rider/rider-model';
 import OrderModel from '../order/order-model';
 import ReviewModel from '../review/review-model';
+import PaymentModel from '../payment/payment-model';
 import { IOrder } from '../order/order-interface';
 import { IMenu } from '../menu/menu-interface';
 import { menuData } from '../menu/menu-helper';
@@ -72,6 +74,7 @@ import {
 export class AdminService {
     private admin = AdminModel;
     private user = UserModel;
+    private payment = PaymentModel;
     private menu = MenuModel;
     private review = ReviewModel;
     private restaurant = RestaurantModel;
@@ -839,5 +842,80 @@ export class AdminService {
             deleteCacheData(CACHE_KEYS.ALL_REVIEWS),
         ]);
         return review;
+    }
+
+    public async getAllTransactions(queryParams: any) {
+        const {
+            page = 1,
+            limit = 10,
+            status,
+            fromDate,
+            toDate,
+            paymentMethod,
+            restaurantId,
+        } = queryParams;
+
+        const queryOptions: any = {};
+
+        // Apply filters if provided
+        if (status) queryOptions.status = status;
+        if (paymentMethod) queryOptions.paymentMethod = paymentMethod;
+
+        // Date filtering
+        if (fromDate || toDate) {
+            queryOptions.createdAt = {};
+            if (fromDate) queryOptions.createdAt.$gte = new Date(fromDate);
+            if (toDate) queryOptions.createdAt.$lte = new Date(toDate);
+        }
+
+        // If filtering by restaurant
+        if (restaurantId) {
+            const restaurantOrders = await OrderModel.find({
+                restaurantId: restaurantId,
+            }).select('_id');
+
+            const orderIds = restaurantOrders.map((order) =>
+                order._id.toString(),
+            );
+            queryOptions.orderId = { $in: orderIds };
+        }
+
+        // Pagination
+        const pageNum = parseInt(page as string);
+        const limitNum = parseInt(limit as string);
+        const skip = (pageNum - 1) * limitNum;
+
+        // Get transactions with pagination
+        const transactions = await this.payment
+            .find(queryOptions)
+            .populate({
+                path: 'orderId',
+                model: 'Order',
+                populate: {
+                    path: 'restaurantId',
+                    model: 'Restaurant',
+                    select: 'name',
+                },
+            })
+            .populate({
+                path: 'userId',
+                model: 'User',
+                select: 'name email',
+            })
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limitNum);
+
+        const totalCount = await PaymentModel.countDocuments(queryOptions);
+
+        return {
+            transactions,
+            pagination: {
+                total: totalCount,
+                page: pageNum,
+                limit: limitNum,
+                pages: Math.ceil(totalCount / limitNum),
+            },
+        };
     }
 }

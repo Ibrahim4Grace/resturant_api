@@ -55,6 +55,11 @@ const updateSchema = z.object({
         city: z.string().min(1, 'City is required'),
         state: z.string().min(1, 'State is required'),
     }),
+    bankInfo: z.object({
+        accountNumber: z.string().min(1, 'Account number is required'),
+        bankName: z.string().min(1, 'Bank name is required'),
+        accountHolder: z.string().min(1, 'Account name is required'),
+    }),
 });
 
 const pickOrder = z.object({
