@@ -1537,7 +1537,7 @@ export const adminDocs = {
     },
 };
 
-export const menuDocs = {
+export const adminMenuDocs = {
     paths: {
         '/api/v1/admin/menus': {
             get: {
@@ -1776,7 +1776,7 @@ export const menuDocs = {
     },
 };
 
-export const reviewDocs = {
+export const adminReviewDocs = {
     paths: {
         '/api/v1/admin/reviews': {
             get: {
@@ -1908,11 +1908,140 @@ export const reviewDocs = {
     },
 };
 
+export const settingsDocs = {
+    paths: {
+        '/api/v1/admin/settings/fees': {
+            get: {
+                summary: 'Get all settings',
+                tags: ['Admin - Settings'],
+                security: [{ BearerAuth: [] }],
+                responses: {
+                    200: {
+                        description: 'Settings retrieved successfully',
+                        content: {
+                            'application/json': {
+                                schema: {
+                                    type: 'object',
+                                    properties: {
+                                        tax_rate: {
+                                            type: 'number',
+                                            example: 0.1,
+                                        },
+                                        delivery_fee: {
+                                            type: 'number',
+                                            example: 5,
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    404: { description: 'Settings not found' },
+                    500: { description: 'Server error' },
+                },
+            },
+        },
+        '/api/v1/admin/settings': {
+            put: {
+                summary: 'Update settings',
+                tags: ['Admin - Settings'],
+                security: [{ BearerAuth: [] }],
+                requestBody: {
+                    required: true,
+                    content: {
+                        'application/json': {
+                            schema: {
+                                type: 'object',
+                                properties: {
+                                    tax_rate: { type: 'number', example: 0.1 },
+                                    delivery_fee: {
+                                        type: 'number',
+                                        example: 5,
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+                responses: {
+                    200: {
+                        description: 'Settings updated successfully',
+                        content: {
+                            'application/json': {
+                                schema: {
+                                    type: 'object',
+                                    properties: {
+                                        tax_rate: {
+                                            type: 'number',
+                                            example: 0.1,
+                                        },
+                                        delivery_fee: {
+                                            type: 'number',
+                                            example: 5,
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    500: { description: 'Server error' },
+                },
+            },
+            post: {
+                summary: 'Create settings',
+                tags: ['Admin - Settings'],
+                security: [{ BearerAuth: [] }],
+                requestBody: {
+                    required: true,
+                    content: {
+                        'application/json': {
+                            schema: {
+                                type: 'object',
+                                properties: {
+                                    tax_rate: { type: 'number', example: 0.1 },
+                                    delivery_fee: {
+                                        type: 'number',
+                                        example: 5,
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+                responses: {
+                    201: {
+                        description: 'Settings created successfully',
+                        content: {
+                            'application/json': {
+                                schema: {
+                                    type: 'object',
+                                    properties: {
+                                        tax_rate: {
+                                            type: 'number',
+                                            example: 0.1,
+                                        },
+                                        delivery_fee: {
+                                            type: 'number',
+                                            example: 5,
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    500: { description: 'Server error' },
+                },
+            },
+        },
+    },
+};
+
 export const allAdminDocs = {
     paths: {
         ...authAdminDocs.paths,
         ...adminDocs.paths,
-        ...menuDocs.paths,
-        ...reviewDocs.paths,
+        ...adminMenuDocs.paths,
+        ...adminReviewDocs.paths,
+        ...settingsDocs.paths,
     },
 };
