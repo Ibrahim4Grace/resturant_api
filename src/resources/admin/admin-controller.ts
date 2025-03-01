@@ -27,28 +27,34 @@ export default class AdminController implements Controller {
     }
 
     private initializeRoutes(): void {
-        this.router.get(
-            `${this.path}/orders`,
+        const adminMiddleware = [
             authMiddleware(),
             authorization(AdminModel, ['admin']),
+        ];
+        this.router.get(
+            `${this.path}/transactions`,
+            ...adminMiddleware,
+            this.getAllTransactions,
+        );
+
+        this.router.get(
+            `${this.path}/orders`,
+            ...adminMiddleware,
             this.getOrders,
         );
         this.router.get(
             `${this.path}/reviews`,
-            authMiddleware(),
-            authorization(AdminModel, ['admin']),
+            ...adminMiddleware,
             this.getReviews,
         );
         this.router.get(
             `${this.path}/menus`,
-            authMiddleware(),
-            authorization(AdminModel, ['admin']),
+            ...adminMiddleware,
             this.getMenus,
         );
         this.router.get(
             `${this.path}/riders`,
-            authMiddleware(),
-            authorization(AdminModel, ['admin']),
+            ...adminMiddleware,
             this.getRiders,
         );
         this.router.post(
@@ -83,151 +89,122 @@ export default class AdminController implements Controller {
         );
         this.router.get(
             `${this.path}/profile`,
-            authMiddleware(),
-            authorization(AdminModel, ['admin']),
+            ...adminMiddleware,
             this.getProfile,
         );
         this.router.put(
             `${this.path}/profile`,
-            authMiddleware(),
-            authorization(AdminModel, ['admin']),
+            ...adminMiddleware,
             validateData(validate.updateUserSchema),
             this.updateProfile,
         );
         this.router.post(
             `${this.path}/password/reset`,
-            authMiddleware(),
-            authorization(AdminModel, ['admin']),
+            ...adminMiddleware,
             validateData(validate.changePassword),
             this.changePassword,
         );
-        this.router.get(
-            `${this.paths}`,
-            authMiddleware(),
-            authorization(AdminModel, ['admin']),
-            this.getAdmins,
-        );
+        this.router.get(`${this.paths}`, ...adminMiddleware, this.getAdmins);
         this.router.get(
             `${this.path}/users`,
-            authMiddleware(),
-            authorization(AdminModel, ['admin']),
+            ...adminMiddleware,
             this.getUsers,
         );
         this.router.get(
             `${this.path}/restaurants`,
-            authMiddleware(),
-            authorization(AdminModel, ['admin']),
+            ...adminMiddleware,
             this.getRestaurants,
         );
         this.router.get(
             `${this.path}/:id`,
-            authMiddleware(),
-            authorization(AdminModel, ['admin']),
+            ...adminMiddleware,
             this.getAdminsById,
         );
-
         this.router.delete(
             `${this.path}/:id`,
-            authMiddleware(),
-            authorization(AdminModel, ['admin']),
+            ...adminMiddleware,
             this.deleteAdminById,
         );
         this.router.get(
             `${this.path}/user/:userId`,
-            authMiddleware(),
-            authorization(AdminModel, ['admin']),
+            ...adminMiddleware,
             this.getUsersById,
         );
         this.router.delete(
             `${this.path}/user/:userId`,
-            authMiddleware(),
-            authorization(AdminModel, ['admin']),
+            ...adminMiddleware,
             this.deleteUserById,
         );
         this.router.patch(
             `${this.path}/user/:userId/status`,
-            authMiddleware(),
-            authorization(AdminModel, ['admin']),
+            ...adminMiddleware,
             validateData(validate.lockSchema),
             this.updateUserStatus,
         );
         this.router.get(
             `${this.path}/restaurant/:restaurantId`,
-            authMiddleware(),
-            authorization(AdminModel, ['admin']),
+            ...adminMiddleware,
             this.getRestaurantsById,
         );
         this.router.patch(
             `${this.path}/restaurant/:restaurantId/status`,
-            authMiddleware(),
-            authorization(AdminModel, ['admin']),
+            ...adminMiddleware,
             validateData(validate.statusSchema),
             this.updateRestaurantStatus,
         );
         this.router.delete(
             `${this.path}/restaurant/:restaurantId`,
-            authMiddleware(),
-            authorization(AdminModel, ['admin']),
+            ...adminMiddleware,
             this.deleteRestaurantById,
         );
         this.router.get(
             `${this.path}/restaurant/stats`,
-            authMiddleware(),
-            authorization(AdminModel, ['admin']),
+            ...adminMiddleware,
             this.getRestaurantAnalytics,
         );
         this.router.get(
             `${this.path}/rider/:riderId`,
-            authMiddleware(),
-            authorization(AdminModel, ['admin']),
+            ...adminMiddleware,
             this.getRidersById,
         );
         this.router.delete(
             `${this.path}/rider/:riderId`,
-            authMiddleware(),
-            authorization(AdminModel, ['admin']),
+            ...adminMiddleware,
             this.deleteRiderById,
         );
         this.router.get(
             `${this.path}/order/:orderId`,
-            authMiddleware(),
-            authorization(AdminModel, ['admin']),
+            ...adminMiddleware,
             this.getOrdersById,
         );
         this.router.delete(
             `${this.path}/order/:orderId`,
-            authMiddleware(),
-            authorization(AdminModel, ['admin']),
+            ...adminMiddleware,
             this.deleteOrderById,
         );
         this.router.get(
             `${this.path}/menu/:menuId`,
-            authMiddleware(),
-            authorization(AdminModel, ['admin']),
+            ...adminMiddleware,
             this.getMenuById,
         );
         this.router.delete(
             `${this.path}/menu/:menuId`,
-            authMiddleware(),
-            authorization(AdminModel, ['admin']),
+            ...adminMiddleware,
             this.deleteMenuById,
         );
         this.router.get(
             `${this.path}/restaurant/:restaurantId/menus`,
-            authMiddleware(),
-            authorization(AdminModel, ['admin']),
+            ...adminMiddleware,
             this.getRestaurantMenus,
         );
         this.router.get(
             `${this.path}/review/:reviewId`,
-            authMiddleware(),
-            authorization(AdminModel, ['admin']),
+            ...adminMiddleware,
             this.getReviewById,
         );
         this.router.delete(
             `${this.path}/review/:reviewId`,
-            authMiddleware(),
-            authorization(AdminModel, ['admin']),
+            ...adminMiddleware,
             this.deleteReviewById,
         );
     }
@@ -660,7 +637,6 @@ export default class AdminController implements Controller {
             );
         },
     );
-
     private getReviews = asyncHandler(
         async (req: Request, res: Response): Promise<void> => {
             const reviews = await this.adminService.getReviews(req, res);
@@ -689,6 +665,20 @@ export default class AdminController implements Controller {
             const { reviewId } = req.params;
             await this.adminService.deleteReview(reviewId);
             sendJsonResponse(res, 200, 'Review deleted successfully');
+        },
+    );
+
+    private getAllTransactions = asyncHandler(
+        async (req: Request, res: Response) => {
+            const result = await this.adminService.getAllTransactions(
+                req.query,
+            );
+            return sendJsonResponse(
+                res,
+                200,
+                'Transactions retrieved successfully',
+                result,
+            );
         },
     );
 }
