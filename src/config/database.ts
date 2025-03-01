@@ -9,9 +9,7 @@ export const initializeDatabase = async (): Promise<void> => {
     }
 
     try {
-        await mongoose.connect(MONGODB_URI, {
-            ssl: true,
-        });
+        await mongoose.connect(MONGODB_URI);
 
         log.info('Database connected successfully');
     } catch (err) {
