@@ -1,4 +1,5 @@
-import { NextFunction, Request, Response } from 'express';
+import { Model } from 'mongoose';
+import { NextFunction, Request, Response, RequestHandler } from 'express';
 import Admin from '../resources/admin/admin-model';
 import User from '../resources/user/user-model';
 import Rider from '../resources/rider/rider-model';
@@ -108,3 +109,8 @@ export const authorization = (model: any, roles: string[]) =>
 
         next();
     });
+
+export const authAndAuthorize = <T>(
+    model: Model<T>,
+    roles: string[],
+): RequestHandler[] => [authMiddleware(), authorization(model, roles)];
