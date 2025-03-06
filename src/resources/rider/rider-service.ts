@@ -9,6 +9,7 @@ import { orderStatusUpdateEmail } from '../order/order-email-template';
 import { riderAssignedEmail } from '../rider/rider-email-template';
 import { CloudinaryService } from '../../config/index';
 import { orderData } from '../order/order-helper';
+import { PaymentService } from '../gateway/payment-service';
 import {
     EmailQueueService,
     TokenService,
@@ -17,6 +18,7 @@ import {
     CACHE_TTL,
     CACHE_KEYS,
     deleteCacheData,
+    log,
 } from '../../utils/index';
 import {
     UploadedImage,
@@ -66,6 +68,7 @@ export class RiderService {
     private readonly ALLOWED_RIDER_STATUSES = 'delivered' as const;
 
     private cloudinaryService: CloudinaryService;
+    private paymentDisbursementService: PaymentService;
     constructor() {
         this.cloudinaryService = new CloudinaryService();
     }
@@ -426,9 +429,7 @@ export class RiderService {
         await this.checkOrderAssignment(orderId, riderId);
 
         const currentOrder = await this.order.findById(orderId);
-        if (!currentOrder) {
-            throw new ResourceNotFound('Order not found');
-        }
+        if (!currentOrder) throw new ResourceNotFound('Order not found');
 
         if (status === 'delivered' && currentOrder.status !== 'shipped') {
             throw new BadRequest(
@@ -437,15 +438,12 @@ export class RiderService {
         }
 
         const rider = await this.rider.findById(riderId);
-        if (!rider) {
-            throw new ResourceNotFound('Rider not found');
-        }
+        if (!rider) throw new ResourceNotFound('Rider not found');
 
-        if (rider.status !== 'busy') {
+        if (rider.status !== 'busy')
             throw new BadRequest(
                 'Rider must be in busy status to update orders',
             );
-        }
 
         const updatedOrder = await this.order.findByIdAndUpdate(
             orderId,
@@ -458,14 +456,31 @@ export class RiderService {
             { new: true },
         );
 
-        if (!updatedOrder) {
-            throw new ResourceNotFound('Order not found');
-        }
-        if (status === 'delivered') {
-            await this.rider.findByIdAndUpdate(riderId, {
-                status: 'available',
-            });
-        }
+        if (!updatedOrder) throw new ResourceNotFound('Order not found');
+
+        // if (status === 'delivered') {
+        //     await this.rider.findByIdAndUpdate(riderId, {
+        //         status: 'available',
+        //     });
+
+        //     try {
+        //         const disbursementSuccess =
+        //             await this.paymentDisbursementService.disburseToRider(
+        //                 orderId,
+        //             );
+        //         if (!disbursementSuccess) {
+        //             throw new BadRequest(
+        //                 'Rider commission disbursement failed',
+        //             );
+        //         }
+        //     } catch (error) {
+        //         log.error(
+        //             `Failed to disburse commission to rider for order ${updatedOrder.order_number}:`,
+        //             error,
+        //         );
+        //         throw error;
+        //     }
+        // }
 
         await Promise.all([
             deleteCacheData(CACHE_KEYS.ORDER_BY_ID(orderId)),

@@ -14,8 +14,7 @@ import {
     sendJsonResponse,
     asyncHandler,
     BadRequest,
-    authMiddleware,
-    authorization,
+    authAndAuthorize,
     ResourceNotFound,
 } from '../../middlewares/index';
 
@@ -65,28 +64,24 @@ export default class RiderController implements Controller {
         );
         this.router.get(
             `${this.path}/profile`,
-            authMiddleware(),
-            authorization(RiderModel, ['rider']),
+            ...authAndAuthorize(RiderModel, ['rider']),
             this.getRider,
         );
         this.router.put(
             `${this.path}/profile`,
-            authMiddleware(),
-            authorization(RiderModel, ['rider']),
+            ...authAndAuthorize(RiderModel, ['rider']),
             validateData(validate.updateSchema),
             this.updateRiderProfile,
         );
         this.router.post(
             `${this.path}/password/reset`,
-            authMiddleware(),
-            authorization(RiderModel, ['rider']),
+            ...authAndAuthorize(RiderModel, ['rider']),
             validateData(validate.changePassword),
             this.changePassword,
         );
         this.router.get(
             `${this.path}/orders/ready-for-pickup`,
-            authMiddleware(),
-            authorization(RiderModel, ['rider']),
+            ...authAndAuthorize(RiderModel, ['rider']),
             paginatedResults(OrderModel, (req) => ({
                 status: 'ready_for_pickup',
             })),
@@ -94,28 +89,24 @@ export default class RiderController implements Controller {
         );
         this.router.post(
             `${this.path}/orders/:orderId/pickup`,
-            authMiddleware(),
-            authorization(RiderModel, ['rider']),
+            ...authAndAuthorize(RiderModel, ['rider']),
             validateData(validate.pickOrder),
             this.pickOrder,
         );
         this.router.put(
             `${this.path}/delivery/:orderId/status`,
-            authMiddleware(),
-            authorization(RiderModel, ['rider']),
+            ...authAndAuthorize(RiderModel, ['rider']),
             validateData(validate.orderStatus),
             this.updateOrderStatus,
         );
         this.router.get(
             `${this.path}/deliveries`,
-            authMiddleware(),
-            authorization(RiderModel, ['rider']),
+            ...authAndAuthorize(RiderModel, ['rider']),
             this.getRiderDeliveries,
         );
         this.router.get(
             `${this.path}/deliveries/:deliveryId`,
-            authMiddleware(),
-            authorization(RiderModel, ['rider']),
+            ...authAndAuthorize(RiderModel, ['rider']),
             this.getRiderDeliveriesById,
         );
     }

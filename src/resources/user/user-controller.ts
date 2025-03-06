@@ -11,8 +11,7 @@ import {
     asyncHandler,
     ResourceNotFound,
     BadRequest,
-    authMiddleware,
-    authorization,
+    authAndAuthorize,
 } from '../../middlewares/index';
 
 export default class UserController implements Controller {
@@ -59,65 +58,55 @@ export default class UserController implements Controller {
 
         this.router.get(
             `${this.path}/profile`,
-            authMiddleware(),
-            authorization(UserModel, ['user']),
+            ...authAndAuthorize(UserModel, ['user']),
             this.getUser,
         );
         this.router.put(
             `${this.path}/profile`,
-            authMiddleware(),
-            authorization(UserModel, ['user']),
+            ...authAndAuthorize(UserModel, ['user']),
             validateData(validate.updateUserSchema),
             this.updateUser,
         );
         this.router.post(
             `${this.path}/password/reset`,
-            authMiddleware(),
-            authorization(UserModel, ['user']),
+            ...authAndAuthorize(UserModel, ['user']),
             validateData(validate.changePassword),
             this.changePassword,
         );
         this.router.post(
             `${this.path}/address`,
-            authMiddleware(),
-            authorization(UserModel, ['user']),
+            ...authAndAuthorize(UserModel, ['user']),
             validateData(validate.addressesSchema),
             this.addNewAddress,
         );
         this.router.get(
             `${this.path}/address`,
-            authMiddleware(),
-            authorization(UserModel, ['user']),
+            ...authAndAuthorize(UserModel, ['user']),
             this.getUserAddress,
         );
         this.router.get(
             `${this.path}/address/:addressId`,
-            authMiddleware(),
-            authorization(UserModel, ['user']),
+            ...authAndAuthorize(UserModel, ['user']),
             this.getUserAddressById,
         );
         this.router.delete(
             `${this.path}/address/:id`,
-            authMiddleware(),
-            authorization(UserModel, ['user']),
+            ...authAndAuthorize(UserModel, ['user']),
             this.deleteAddress,
         );
         this.router.get(
             `${this.path}/orders`,
-            authMiddleware(),
-            authorization(UserModel, ['user']),
+            ...authAndAuthorize(UserModel, ['user']),
             this.getUserOrders,
         );
         this.router.get(
             `${this.path}/orders/:orderId`,
-            authMiddleware(),
-            authorization(UserModel, ['user']),
+            ...authAndAuthorize(UserModel, ['user']),
             this.getUserOrderById,
         );
         this.router.get(
             `${this.path}/reviews`,
-            authMiddleware(),
-            authorization(UserModel, ['user']),
+            ...authAndAuthorize(UserModel, ['user']),
             this.getUserReviews,
         );
     }

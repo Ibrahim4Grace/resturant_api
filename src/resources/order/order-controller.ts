@@ -4,68 +4,75 @@ import validate from '../order/order-validation';
 import { OrderService } from '../order/order-service';
 import UserModel from '../user/user-model';
 import RestaurantModel from '../restaurant/restaurant-model';
+import { PaymentService } from '../gateway/payment-service';
+import { WalletService } from '../wallet/wallet-service';
+import { UserService } from '../user/user-service';
 import {
     validateData,
     sendJsonResponse,
     asyncHandler,
     ResourceNotFound,
-    authMiddleware,
-    authorization,
+    authAndAuthorize,
 } from '../../middlewares/index';
 
 export default class OrderController implements Controller {
     public path = '/order';
     public router = Router();
-    private orderService = new OrderService();
+    private orderService: OrderService;
+    private paymentService: PaymentService;
+    private userService: UserService;
+    private walletService: WalletService;
 
     constructor() {
         this.initializeRoutes();
+        this.orderService = new OrderService(this.paymentService);
+        this.paymentService = new PaymentService(
+            this.orderService,
+            this.userService,
+            this.walletService,
+        );
     }
 
     private initializeRoutes(): void {
         this.router.post(
             `${this.path}`,
-            authMiddleware(),
-            authorization(UserModel, ['user']),
+            ...authAndAuthorize(UserModel, ['user']),
             validateData(validate.orderSchema),
             this.placeOrder,
         );
         this.router.patch(
             `${this.path}/:id/status`,
-            authMiddleware(),
-            authorization(RestaurantModel, ['restaurant_owner']),
+            ...authAndAuthorize(RestaurantModel, ['restaurant_owner']),
             validateData(validate.orderStatusSchema),
             this.updateOrderStatus,
         );
         this.router.delete(
             `${this.path}/:id`,
-            authMiddleware(),
-            authorization(RestaurantModel, ['restaurant_owner']),
+            ...authAndAuthorize(RestaurantModel, ['restaurant_owner']),
             this.cancelOrder,
         );
 
         this.router.get(
             `${this.path}/:id`,
-            authMiddleware(),
-            authorization(RestaurantModel, ['restaurant_owner']),
+            ...authAndAuthorize(RestaurantModel, ['restaurant_owner']),
             this.getOrderById,
         );
 
         this.router.get(
             `${this.path}`,
-            authMiddleware(),
-            authorization(RestaurantModel, ['restaurant_owner']),
+            ...authAndAuthorize(RestaurantModel, ['restaurant_owner']),
             this.getUsersOrders,
         );
     }
 
     private placeOrder = asyncHandler(async (req: Request, res: Response) => {
-        const userId = req.currentUser?._id;
+        const userId = req.currentUser._id;
         if (!userId) {
             throw new ResourceNotFound('User not found');
         }
 
         const orderData = req.body;
+        console.log('orderData', orderData);
         const order = await this.orderService.placeOrder(userId, orderData);
 
         sendJsonResponse(res, 201, 'Order placed successfully', order);
@@ -74,7 +81,7 @@ export default class OrderController implements Controller {
     private updateOrderStatus = asyncHandler(
         async (req: Request, res: Response) => {
             const orderId = req.params.id;
-            const restaurantId = req.currentUser?._id;
+            const restaurantId = req.currentUser._id;
             if (!restaurantId) {
                 throw new ResourceNotFound('Restaurant owner not found');
             }
@@ -95,7 +102,7 @@ export default class OrderController implements Controller {
 
     private cancelOrder = asyncHandler(async (req: Request, res: Response) => {
         const orderId = req.params.id;
-        const restaurantId = req.currentUser?._id;
+        const restaurantId = req.currentUser._id;
         if (!restaurantId) {
             throw new ResourceNotFound('Restaurant owner not found');
         }
@@ -108,7 +115,7 @@ export default class OrderController implements Controller {
 
     private getOrderById = asyncHandler(async (req: Request, res: Response) => {
         const orderId = req.params.id;
-        const restaurantId = req.currentUser?._id;
+        const restaurantId = req.currentUser._id;
         if (!restaurantId) {
             throw new ResourceNotFound('Restaurant owner not found');
         }
@@ -121,7 +128,7 @@ export default class OrderController implements Controller {
 
     private getUsersOrders = asyncHandler(
         async (req: Request, res: Response) => {
-            const restaurantId = req.currentUser?._id;
+            const restaurantId = req.currentUser._id;
             if (!restaurantId) {
                 throw new ResourceNotFound('Restaurant owner not found');
             }

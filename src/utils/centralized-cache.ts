@@ -15,7 +15,6 @@ export const CACHE_KEYS = {
     USER_ORDERS: (userId: string) => `user:${userId}:orders`,
     USER_ORDER_BY_ID: (userId: string, orderId: string) =>
         `user:${userId}:order:${orderId}`,
-    // USER_REVIEWS: (userId: string) => `reviews:user:${userId}`,
 
     // Restaurant-related keys
     ALL_RESTAURANTS: 'all_restaurants',

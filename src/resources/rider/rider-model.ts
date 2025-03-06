@@ -49,8 +49,9 @@ const riderSchema = new Schema<IRider>(
         rating: Number,
         bankInfo: {
             accountNumber: String,
-            bankName: String,
+            bankCode: String,
             accountHolder: String,
+            recipientCode: String,
         },
         image: { imageId: String, imageUrl: String },
         isEmailVerified: { type: Boolean, default: false },

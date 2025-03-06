@@ -6,10 +6,9 @@ import validate from '../review/review-validation';
 import {
     sendJsonResponse,
     asyncHandler,
-    authorization,
-    authMiddleware,
     validateData,
     ResourceNotFound,
+    authAndAuthorize,
 } from '../../middlewares/index';
 
 export default class ReviewController implements Controller {
@@ -24,22 +23,19 @@ export default class ReviewController implements Controller {
     private initializeRoutes(): void {
         this.router.post(
             `${this.path}`,
-            authMiddleware(),
-            authorization(UserModel, ['user']),
+            ...authAndAuthorize(UserModel, ['user']),
             validateData(validate.reviewSchema),
             this.createReview,
         );
         this.router.put(
             `${this.path}/:reviewId`,
-            authMiddleware(),
-            authorization(UserModel, ['user']),
+            ...authAndAuthorize(UserModel, ['user']),
             validateData(validate.updateReview),
             this.updateReview,
         );
         this.router.delete(
             `${this.path}/:reviewId`,
-            authMiddleware(),
-            authorization(UserModel, ['user']),
+            ...authAndAuthorize(UserModel, ['user']),
             this.deleteReview,
         );
         this.router.get(

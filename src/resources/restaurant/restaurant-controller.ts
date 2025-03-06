@@ -17,7 +17,7 @@ import {
     BadRequest,
     Unauthorized,
     authMiddleware,
-    authorization,
+    authAndAuthorize,
 } from '../../middlewares/index';
 
 export default class RestaurantController implements Controller {
@@ -71,34 +71,29 @@ export default class RestaurantController implements Controller {
         );
         this.router.get(
             `${this.path}`,
-            authMiddleware(),
-            authorization(RestaurantModel, ['restaurant_owner']),
+            ...authAndAuthorize(RestaurantModel, ['restaurant_owner']),
             this.getRestaurant,
         );
         this.router.put(
             `${this.path}`,
-            authMiddleware(),
-            authorization(RestaurantModel, ['restaurant_owner']),
+            ...authAndAuthorize(RestaurantModel, ['restaurant_owner']),
             validateData(validate.updateSchema),
             this.updateRestaurant,
         );
         this.router.post(
             `${this.path}/password/reset`,
-            authMiddleware(),
-            authorization(RestaurantModel, ['restaurant_owner']),
+            ...authAndAuthorize(RestaurantModel, ['restaurant_owner']),
             validateData(validate.changePassword),
             this.changePassword,
         );
         this.router.get(
             `${this.path}/analytics`,
-            authMiddleware(),
-            authorization(RestaurantModel, ['restaurant_owner']),
+            ...authAndAuthorize(RestaurantModel, ['restaurant_owner']),
             this.getRestaurantAnalytics,
         );
         this.router.get(
             `${this.path}/orders`,
-            authMiddleware(),
-            authorization(RestaurantModel, ['restaurant_owner']),
+            ...authAndAuthorize(RestaurantModel, ['restaurant_owner']),
             this.getRestaurantOrders,
         );
     }

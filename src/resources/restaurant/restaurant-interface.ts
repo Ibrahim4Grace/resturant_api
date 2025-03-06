@@ -13,11 +13,7 @@ export interface IRestaurant extends Document {
     phone?: string;
     ownerId: Types.ObjectId;
     status: 'active' | 'pending' | 'suspended';
-    bankInfo?: {
-        accountNumber?: string;
-        bankName?: string;
-        accountHolder?: string;
-    };
+    bankInfo?: BankInfo;
     password: string;
     isLocked: boolean;
     failedLoginAttempts: number;
@@ -37,6 +33,13 @@ export interface IRestaurant extends Document {
         otp: string;
         verificationToken: string;
     }>;
+}
+
+export interface BankInfo {
+    accountNumber: string;
+    bankCode: string;
+    accountHolder: string;
+    recipientCode: String;
 }
 
 export interface IReviewStats {

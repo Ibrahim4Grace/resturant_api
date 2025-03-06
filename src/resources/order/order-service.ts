@@ -1,7 +1,9 @@
 import { Request, Response } from 'express';
 import UserModel from '../user/user-model';
 import OrderModel from '../order/order-model';
+import MenuModel from '../menu/menu-model';
 import { IOrderPaginatedResponse } from '../../types/index';
+import { PaymentService } from '../gateway/payment-service';
 import {
     IOrder,
     DeliveryInfo,
@@ -15,13 +17,13 @@ import {
     getPaginatedAndCachedResults,
     deleteCacheData,
     CACHE_KEYS,
+    log,
 } from '../../utils/index';
 import {
     orderStatusUpdateEmail,
     orderCancellationEmail,
 } from '../order/order-email-template';
 import { ResourceNotFound, BadRequest } from '../../middlewares/index';
-
 import {
     orderData,
     validateUser,
@@ -31,11 +33,14 @@ import {
 
 export class OrderService {
     private order = OrderModel;
+    private menu = MenuModel;
     private user = UserModel;
     private orderData = orderData;
     private validateUser = validateUser;
     private checkOrderOwnership = checkOrderOwnership;
     private calculateOrderAmounts = calculateOrderAmounts;
+
+    constructor(private paymentDisbursementService: PaymentService) {}
 
     public async placeOrder(
         userId: string,
@@ -45,7 +50,7 @@ export class OrderService {
             delivery_address: string;
         },
     ): Promise<Partial<IOrder>> {
-        await this.validateUser(userId);
+        await this.validateUser(userId, this.user);
 
         const order_number = await generateOrderId();
 
@@ -55,7 +60,7 @@ export class OrderService {
             roundedTax,
             roundedTotalPrice,
             delivery_fee,
-        } = await this.calculateOrderAmounts(orderData.items);
+        } = await this.calculateOrderAmounts(orderData.items, this.menu);
 
         const delivery_info: DeliveryInfo = {
             delivery_address: orderData.delivery_address,
@@ -80,13 +85,34 @@ export class OrderService {
         params: UpdateOrderStatusParams,
     ): Promise<Partial<IOrder>> {
         const { restaurantId, orderId, status } = params;
-        await this.checkOrderOwnership(orderId, restaurantId);
+        await this.checkOrderOwnership(orderId, restaurantId, this.order);
+
         const updatedOrder = await this.order
             .findByIdAndUpdate(orderId, { status }, { new: true })
             .lean();
         if (!updatedOrder) {
             throw new ResourceNotFound('Order not found');
         }
+
+        // if (status === 'ready_for_pickup') {
+        //     try {
+        //         const disbursementSuccess =
+        //             await this.paymentDisbursementService.disburseToRestaurant(
+        //                 orderId,
+        //             );
+        //         if (!disbursementSuccess) {
+        //             throw new BadRequest(
+        //                 'Payment disbursement failed due to incomplete bank information',
+        //             );
+        //         }
+        //     } catch (error) {
+        //         log.error(
+        //             `Failed to disburse payment to restaurant for order ${updatedOrder.order_number}:`,
+        //             error,
+        //         );
+        //         throw error;
+        //     }
+        // }
 
         await Promise.all([
             deleteCacheData(CACHE_KEYS.ALL_ORDERS),
@@ -106,7 +132,7 @@ export class OrderService {
         params: UpdateOrderStatusParams,
     ): Promise<Partial<IOrder>> {
         const { restaurantId, orderId } = params;
-        await this.checkOrderOwnership(orderId, restaurantId);
+        await this.checkOrderOwnership(orderId, restaurantId, this.order);
         const order = await this.order.findById(orderId).lean();
         if (!order) {
             throw new ResourceNotFound('Order not found');
@@ -133,7 +159,7 @@ export class OrderService {
         params: UpdateOrderStatusParams,
     ): Promise<Partial<IOrder>> {
         const { restaurantId, orderId } = params;
-        await this.checkOrderOwnership(orderId, restaurantId);
+        await this.checkOrderOwnership(orderId, restaurantId, this.order);
         const cacheKey = `order:${orderId}`;
         return withCachedData<Partial<IOrder>>(
             cacheKey,

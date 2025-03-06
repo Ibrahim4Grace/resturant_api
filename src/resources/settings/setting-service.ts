@@ -13,6 +13,7 @@ export function settingData(setting: ISetting): Partial<ISetting> {
         delivery_fee: setting.delivery_fee,
         app_commission: setting.app_commission,
         rider_commission: setting.rider_commission,
+        restaurant_commission: setting.restaurant_commission,
         createdAt: setting.createdAt,
         updatedAt: setting.updatedAt,
     };
@@ -46,11 +47,22 @@ export class SettingsService {
     public async updateSettings(
         reqBody: IUpdateSetting,
     ): Promise<Partial<ISetting>> {
-        const { tax_rate, delivery_fee, app_commission, rider_commission } =
-            reqBody;
+        const {
+            tax_rate,
+            delivery_fee,
+            app_commission,
+            rider_commission,
+            restaurant_commission,
+        } = reqBody;
         const settings = await SettingModel.findOneAndUpdate(
             {},
-            { tax_rate, delivery_fee, app_commission, rider_commission },
+            {
+                tax_rate,
+                delivery_fee,
+                app_commission,
+                rider_commission,
+                restaurant_commission,
+            },
             { new: true, upsert: true },
         );
 

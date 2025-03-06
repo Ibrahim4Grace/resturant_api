@@ -1,4 +1,7 @@
 import { IOrder } from '../order/order-interface';
+import { Model } from 'mongoose';
+import { IUser } from '../user/user-interface';
+import { IMenu } from '../menu/menu-interface';
 import { ResourceNotFound, Unauthorized } from '../../middlewares/index';
 import { SettingsService } from '../settings/setting-service';
 const settingsService = new SettingsService();
@@ -20,18 +23,23 @@ export function orderData(order: IOrder): Partial<IOrder> {
     };
 }
 
-export async function validateUser(userId: string) {
-    const user = await this.user.findById(userId);
+export async function validateUser(
+    userId: string,
+    userModel: Model<IUser>,
+): Promise<IUser> {
+    const user = await userModel.findById(userId);
     if (!user) {
         throw new ResourceNotFound('User not found');
     }
     return user;
 }
+
 export async function checkOrderOwnership(
     orderId: string,
     restaurantId: string,
+    orderModel: Model<IOrder>,
 ): Promise<void> {
-    const order = await this.order
+    const order = await orderModel
         .findOne({
             _id: orderId,
             restaurantId: restaurantId,
@@ -44,12 +52,14 @@ export async function checkOrderOwnership(
         );
     }
 }
+
 export async function calculateOrderAmounts(
     items: { menuId: string; quantity: number }[],
+    menuModel: Model<IMenu>,
 ) {
     const itemsWithPrices = await Promise.all(
         items.map(async (item) => {
-            const menuItem = await this.menu.findById(item.menuId);
+            const menuItem = await menuModel.findById(item.menuId);
             if (!menuItem) {
                 throw new ResourceNotFound(
                     `Menu item with ID ${item.menuId} not found`,

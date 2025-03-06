@@ -1,5 +1,4 @@
 import { Request, Response } from 'express';
-import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 import { config } from '../../config/index';
 import AdminModel from '../admin/admin-model';
@@ -9,7 +8,7 @@ import RestaurantModel from '../restaurant/restaurant-model';
 import RiderModel from '../rider/rider-model';
 import OrderModel from '../order/order-model';
 import ReviewModel from '../review/review-model';
-import PaymentModel from '../payment/payment-model';
+import PaymentModel from '../gateway/payment-model';
 import { IOrder } from '../order/order-interface';
 import { IMenu } from '../menu/menu-interface';
 import { menuData } from '../menu/menu-helper';

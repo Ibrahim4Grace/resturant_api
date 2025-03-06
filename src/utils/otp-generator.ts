@@ -1,6 +1,7 @@
 import otpGenerator from 'otp-generator';
 import bcrypt from 'bcryptjs';
 import OrderModel from '../resources/order/order-model';
+import WalletModel from '../resources/wallet/wallet-model';
 
 export const generateOTP = async () => {
     const otp = otpGenerator.generate(6, {
@@ -31,4 +32,25 @@ export const generateOrderId = async (): Promise<string> => {
     }
 
     return order_number;
+};
+
+export const generateReference = async (): Promise<string> => {
+    let isUnique = false;
+    let reference = '';
+
+    while (!isUnique) {
+        const otp = otpGenerator.generate(8, {
+            upperCaseAlphabets: false,
+            lowerCaseAlphabets: false,
+            specialChars: false,
+        });
+        reference = `ref${otp}`;
+
+        const existingOrder = await WalletModel.findOne({ reference });
+        if (!existingOrder) {
+            isUnique = true;
+        }
+    }
+
+    return reference;
 };

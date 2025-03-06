@@ -8,8 +8,7 @@ import {
     sendJsonResponse,
     asyncHandler,
     ResourceNotFound,
-    authMiddleware,
-    authorization,
+    authAndAuthorize,
     validateData,
 } from '../../middlewares/index';
 
@@ -25,36 +24,31 @@ export default class MenuController implements Controller {
     private initializeRoutes(): void {
         this.router.post(
             `${this.path}/:restaurantId`,
-            authMiddleware(),
-            authorization(RestaurantModel, ['restaurant_owner']),
+            ...authAndAuthorize(RestaurantModel, ['restaurant_owner']),
             upload.single('image'),
             validateData(validate.addMenuItemSchema),
             this.addMenuItem,
         );
         this.router.get(
             `${this.path}`,
-            authMiddleware(),
-            authorization(RestaurantModel, ['restaurant_owner']),
+            ...authAndAuthorize(RestaurantModel, ['restaurant_owner']),
             this.fectchAllMenu,
         );
         this.router.get(
             `${this.path}/:menuId`,
-            authMiddleware(),
-            authorization(RestaurantModel, ['restaurant_owner']),
+            ...authAndAuthorize(RestaurantModel, ['restaurant_owner']),
             this.getMenuById,
         );
         this.router.patch(
             `${this.path}/:menuId`,
-            authMiddleware(),
-            authorization(RestaurantModel, ['restaurant_owner']),
+            ...authAndAuthorize(RestaurantModel, ['restaurant_owner']),
             upload.single('image'),
             validateData(validate.addMenuItemSchema),
             this.updateMenuItem,
         );
         this.router.delete(
             `${this.path}/:menuId`,
-            authMiddleware(),
-            authorization(RestaurantModel, ['restaurant_owner']),
+            ...authAndAuthorize(RestaurantModel, ['restaurant_owner']),
             this.deleteMenuItem,
         );
     }

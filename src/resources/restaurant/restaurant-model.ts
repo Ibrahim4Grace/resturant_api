@@ -35,8 +35,9 @@ const restaurantSchema = new Schema<IRestaurant>(
         },
         bankInfo: {
             accountNumber: String,
-            bankName: String,
+            bankCode: String,
             accountHolder: String,
+            recipientCode: String,
         },
         password: {
             type: String,

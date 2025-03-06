@@ -1,8 +1,8 @@
 import { Router, Request, Response } from 'express';
-import { Controller } from '../../types/index';
+import { Controller } from '../../types';
 import validate from '../admin/admin-validation';
 import { AdminService } from '../admin/admin-service';
-import { TokenService } from '../../utils/index';
+import { TokenService } from '../../utils';
 import AdminModel from '../admin/admin-model';
 import { RegisterAdminto, Address } from '../admin/admin-interface';
 import {
@@ -10,10 +10,9 @@ import {
     sendJsonResponse,
     asyncHandler,
     BadRequest,
-    authMiddleware,
-    authorization,
     ResourceNotFound,
-} from '../../middlewares/index';
+    authAndAuthorize,
+} from '../../middlewares';
 
 export default class AdminController implements Controller {
     public authPath = '/auth/admin';
@@ -27,34 +26,30 @@ export default class AdminController implements Controller {
     }
 
     private initializeRoutes(): void {
-        const adminMiddleware = [
-            authMiddleware(),
-            authorization(AdminModel, ['admin']),
-        ];
         this.router.get(
             `${this.path}/transactions`,
-            ...adminMiddleware,
+            ...authAndAuthorize(AdminModel, ['admin']),
             this.getAllTransactions,
         );
 
         this.router.get(
             `${this.path}/orders`,
-            ...adminMiddleware,
+            ...authAndAuthorize(AdminModel, ['admin']),
             this.getOrders,
         );
         this.router.get(
             `${this.path}/reviews`,
-            ...adminMiddleware,
+            ...authAndAuthorize(AdminModel, ['admin']),
             this.getReviews,
         );
         this.router.get(
             `${this.path}/menus`,
-            ...adminMiddleware,
+            ...authAndAuthorize(AdminModel, ['admin']),
             this.getMenus,
         );
         this.router.get(
             `${this.path}/riders`,
-            ...adminMiddleware,
+            ...authAndAuthorize(AdminModel, ['admin']),
             this.getRiders,
         );
         this.router.post(
@@ -89,122 +84,126 @@ export default class AdminController implements Controller {
         );
         this.router.get(
             `${this.path}/profile`,
-            ...adminMiddleware,
+            ...authAndAuthorize(AdminModel, ['admin']),
             this.getProfile,
         );
         this.router.put(
             `${this.path}/profile`,
-            ...adminMiddleware,
+            ...authAndAuthorize(AdminModel, ['admin']),
             validateData(validate.updateUserSchema),
             this.updateProfile,
         );
         this.router.post(
             `${this.path}/password/reset`,
-            ...adminMiddleware,
+            ...authAndAuthorize(AdminModel, ['admin']),
             validateData(validate.changePassword),
             this.changePassword,
         );
-        this.router.get(`${this.paths}`, ...adminMiddleware, this.getAdmins);
+        this.router.get(
+            `${this.paths}`,
+            ...authAndAuthorize(AdminModel, ['admin']),
+            this.getAdmins,
+        );
         this.router.get(
             `${this.path}/users`,
-            ...adminMiddleware,
+            ...authAndAuthorize(AdminModel, ['admin']),
             this.getUsers,
         );
         this.router.get(
             `${this.path}/restaurants`,
-            ...adminMiddleware,
+            ...authAndAuthorize(AdminModel, ['admin']),
             this.getRestaurants,
         );
         this.router.get(
             `${this.path}/:id`,
-            ...adminMiddleware,
+            ...authAndAuthorize(AdminModel, ['admin']),
             this.getAdminsById,
         );
         this.router.delete(
             `${this.path}/:id`,
-            ...adminMiddleware,
+            ...authAndAuthorize(AdminModel, ['admin']),
             this.deleteAdminById,
         );
         this.router.get(
             `${this.path}/user/:userId`,
-            ...adminMiddleware,
+            ...authAndAuthorize(AdminModel, ['admin']),
             this.getUsersById,
         );
         this.router.delete(
             `${this.path}/user/:userId`,
-            ...adminMiddleware,
+            ...authAndAuthorize(AdminModel, ['admin']),
             this.deleteUserById,
         );
         this.router.patch(
             `${this.path}/user/:userId/status`,
-            ...adminMiddleware,
+            ...authAndAuthorize(AdminModel, ['admin']),
             validateData(validate.lockSchema),
             this.updateUserStatus,
         );
         this.router.get(
             `${this.path}/restaurant/:restaurantId`,
-            ...adminMiddleware,
+            ...authAndAuthorize(AdminModel, ['admin']),
             this.getRestaurantsById,
         );
         this.router.patch(
             `${this.path}/restaurant/:restaurantId/status`,
-            ...adminMiddleware,
+            ...authAndAuthorize(AdminModel, ['admin']),
             validateData(validate.statusSchema),
             this.updateRestaurantStatus,
         );
         this.router.delete(
             `${this.path}/restaurant/:restaurantId`,
-            ...adminMiddleware,
+            ...authAndAuthorize(AdminModel, ['admin']),
             this.deleteRestaurantById,
         );
         this.router.get(
             `${this.path}/restaurant/stats`,
-            ...adminMiddleware,
+            ...authAndAuthorize(AdminModel, ['admin']),
             this.getRestaurantAnalytics,
         );
         this.router.get(
             `${this.path}/rider/:riderId`,
-            ...adminMiddleware,
+            ...authAndAuthorize(AdminModel, ['admin']),
             this.getRidersById,
         );
         this.router.delete(
             `${this.path}/rider/:riderId`,
-            ...adminMiddleware,
+            ...authAndAuthorize(AdminModel, ['admin']),
             this.deleteRiderById,
         );
         this.router.get(
             `${this.path}/order/:orderId`,
-            ...adminMiddleware,
+            ...authAndAuthorize(AdminModel, ['admin']),
             this.getOrdersById,
         );
         this.router.delete(
             `${this.path}/order/:orderId`,
-            ...adminMiddleware,
+            ...authAndAuthorize(AdminModel, ['admin']),
             this.deleteOrderById,
         );
         this.router.get(
             `${this.path}/menu/:menuId`,
-            ...adminMiddleware,
+            ...authAndAuthorize(AdminModel, ['admin']),
             this.getMenuById,
         );
         this.router.delete(
             `${this.path}/menu/:menuId`,
-            ...adminMiddleware,
+            ...authAndAuthorize(AdminModel, ['admin']),
             this.deleteMenuById,
         );
         this.router.get(
             `${this.path}/restaurant/:restaurantId/menus`,
-            ...adminMiddleware,
+            ...authAndAuthorize(AdminModel, ['admin']),
             this.getRestaurantMenus,
         );
         this.router.get(
             `${this.path}/review/:reviewId`,
-            ...adminMiddleware,
+            ...authAndAuthorize(AdminModel, ['admin']),
             this.getReviewById,
         );
         this.router.delete(
             `${this.path}/review/:reviewId`,
-            ...adminMiddleware,
+            ...authAndAuthorize(AdminModel, ['admin']),
             this.deleteReviewById,
         );
     }

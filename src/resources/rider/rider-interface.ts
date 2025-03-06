@@ -55,8 +55,9 @@ export interface Location {
 
 export interface BankInfo {
     accountNumber: string;
-    bankName: string;
+    bankCode: string;
     accountHolder: string;
+    recipientCode: String;
 }
 
 export interface IPasswordHistoryEntry {

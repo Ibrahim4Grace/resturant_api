@@ -35,6 +35,21 @@ export interface EmailData {
     to: string;
     subject: string;
     html: string;
+    text?: string;
+    context?: {
+        title: string;
+        name: string;
+        intro: string;
+        description: string;
+        orderDetails: {
+            orderNumber: string;
+            orderDate: string;
+            amount: string;
+        };
+        ctaText: string;
+        ctaUrl: string;
+        footerText: string;
+    };
 }
 
 export interface LoginCredentials {
@@ -75,7 +90,6 @@ export type IRestaurantPaginatedResponse =
 declare global {
     namespace Express {
         interface Response {
-            // paginatedResults?: IPaginationResponse;
             paginatedResults?: {
                 results: unknown[];
                 pagination: IPaginationResponse;

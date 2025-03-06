@@ -4,8 +4,7 @@ import { SettingsService } from '../settings/setting-service';
 import AdminModel from '../admin/admin-model';
 import validate from '../settings/setting-validation';
 import {
-    authMiddleware,
-    authorization,
+    authAndAuthorize,
     sendJsonResponse,
     validateData,
     asyncHandler,
@@ -23,21 +22,18 @@ export default class SettingsController implements Controller {
     private initializeRoutes(): void {
         this.router.get(
             `${this.path}/settings/fees`,
-            authMiddleware(),
-            authorization(AdminModel, ['admin']),
+            ...authAndAuthorize(AdminModel, ['admin']),
             this.getSettings,
         );
         this.router.put(
             `${this.path}/settings`,
-            authMiddleware(),
-            authorization(AdminModel, ['admin']),
+            ...authAndAuthorize(AdminModel, ['admin']),
             validateData(validate.settingSchema),
             this.updateSettings,
         );
         this.router.post(
             `${this.path}/settings`,
-            authMiddleware(),
-            authorization(AdminModel, ['admin']),
+            ...authAndAuthorize(AdminModel, ['admin']),
             validateData(validate.settingSchema),
             this.createSettings,
         );

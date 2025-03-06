@@ -4,6 +4,7 @@ export interface ISetting {
     delivery_fee: number;
     app_commission: number;
     rider_commission: number;
+    restaurant_commission: number;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -13,6 +14,7 @@ export interface ICreateSetting {
     delivery_fee: number;
     app_commission: number;
     rider_commission: number;
+    restaurant_commission: number;
 }
 
 export interface IUpdateSetting {
@@ -20,4 +22,5 @@ export interface IUpdateSetting {
     delivery_fee: number;
     app_commission: number;
     rider_commission: number;
+    restaurant_commission: number;
 }
