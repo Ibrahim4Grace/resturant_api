@@ -51,54 +51,54 @@ export const orderConfirmationEmail = (
     };
 };
 
-export const paymentDisbursementEmail = (
-    recipient: { name: string; email: string },
-    order: IOrder,
-    amount: number,
-    recipientType: 'restaurant' | 'rider',
-): EmailData => {
-    const title =
-        recipientType === 'restaurant'
-            ? 'Restaurant Payment Confirmation'
-            : 'Rider Commission Payment';
+// export const paymentDisbursementEmail = (
+//     recipient: { name: string; email: string },
+//     order: IOrder,
+//     amount: number,
+//     recipientType: 'restaurant' | 'rider',
+// ): EmailData => {
+//     const title =
+//         recipientType === 'restaurant'
+//             ? 'Restaurant Payment Confirmation'
+//             : 'Rider Commission Payment';
 
-    const subject =
-        recipientType === 'restaurant'
-            ? `Payment Received for Order #${order.order_number}`
-            : `Commission Received for Delivery #${order.order_number}`;
+//     const subject =
+//         recipientType === 'restaurant'
+//             ? `Payment Received for Order #${order.order_number}`
+//             : `Commission Received for Delivery #${order.order_number}`;
 
-    const intro =
-        recipientType === 'restaurant'
-            ? `Dear ${recipient.name}, we've processed your payment for order #${order.order_number}.`
-            : `Dear ${recipient.name}, we've processed your commission for delivering order #${order.order_number}.`;
+//     const intro =
+//         recipientType === 'restaurant'
+//             ? `Dear ${recipient.name}, we've processed your payment for order #${order.order_number}.`
+//             : `Dear ${recipient.name}, we've processed your commission for delivering order #${order.order_number}.`;
 
-    const description =
-        recipientType === 'restaurant'
-            ? `Your restaurant payment has been processed and is on its way to your bank account. The funds should appear in your account within 24-48 hours, depending on your bank's processing time.`
-            : `Your delivery commission has been processed and is on its way to your bank account. The funds should appear in your account within 24-48 hours, depending on your bank's processing time.`;
+//     const description =
+//         recipientType === 'restaurant'
+//             ? `Your restaurant payment has been processed and is on its way to your bank account. The funds should appear in your account within 24-48 hours, depending on your bank's processing time.`
+//             : `Your delivery commission has been processed and is on its way to your bank account. The funds should appear in your account within 24-48 hours, depending on your bank's processing time.`;
 
-    return {
-        from: 'no-reply@restaurant.com',
-        to: recipient.email,
-        subject,
-        html: `<p>${intro}</p><p>${description}</p>`,
-        context: {
-            title,
-            name: recipient.name,
-            intro,
-            description,
-            orderDetails: {
-                orderNumber: order.order_number,
-                orderDate: new Date(order.createdAt).toLocaleDateString(),
-                amount: formatCurrency(amount),
-            },
-            ctaText: 'View Details',
-            ctaUrl:
-                recipientType === 'restaurant'
-                    ? `${process.env.FRONTEND_URL}/restaurant/orders/${order._id}`
-                    : `${process.env.FRONTEND_URL}/rider/deliveries/${order._id}`,
-            footerText:
-                'If you have any questions about this payment, please contact our support team.',
-        },
-    };
-};
+//     return {
+//         from: 'no-reply@restaurant.com',
+//         to: recipient.email,
+//         subject,
+//         html: `<p>${intro}</p><p>${description}</p>`,
+//         context: {
+//             title,
+//             name: recipient.name,
+//             intro,
+//             description,
+//             orderDetails: {
+//                 orderNumber: order.order_number,
+//                 orderDate: new Date(order.createdAt).toLocaleDateString(),
+//                 amount: formatCurrency(amount),
+//             },
+//             ctaText: 'View Details',
+//             ctaUrl:
+//                 recipientType === 'restaurant'
+//                     ? `${process.env.FRONTEND_URL}/restaurant/orders/${order._id}`
+//                     : `${process.env.FRONTEND_URL}/rider/deliveries/${order._id}`,
+//             footerText:
+//                 'If you have any questions about this payment, please contact our support team.',
+//         },
+//     };
+// };
