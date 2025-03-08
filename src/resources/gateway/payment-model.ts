@@ -4,9 +4,9 @@ import { IPayment } from '../gateway/payment-interface';
 const paymentSchema = new Schema<IPayment>(
     {
         orderId: {
-            type: String,
-            required: true,
+            type: Schema.Types.ObjectId,
             ref: 'Order',
+            required: true,
         },
         userId: {
             type: Schema.Types.ObjectId,

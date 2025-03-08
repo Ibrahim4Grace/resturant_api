@@ -84,7 +84,6 @@ export class PaymentService {
             },
             callback_url: config.PAYMENT_CALLBACK_URL,
         };
-
         try {
             const response = await axios.post<PaystackResponse>(
                 this.PAYSTACK_URL,
@@ -144,7 +143,8 @@ export class PaymentService {
         let completeOrder = null;
         if (updatedOrder) {
             completeOrder = await this.orderModel.findById(orderId);
-            if (!completeOrder) throw new ResourceNotFound('Order not found');
+            if (!completeOrder)
+                throw new ResourceNotFound('Order not completed');
         }
 
         if (user && completeOrder) {
@@ -155,7 +155,6 @@ export class PaymentService {
             await EmailQueueService.addEmailToQueue(emailOptions);
         }
 
-        // Process commissions if we have the complete order
         if (completeOrder) {
             await this.processOrderCommissions(completeOrder);
         }
@@ -178,7 +177,7 @@ export class PaymentService {
 
         const payment = await this.paymentModel.create({
             userId,
-            orderId: order._id.toString(),
+            orderId: order._id,
             amount: order.total_price,
             paymentMethod,
             status: 'processing',

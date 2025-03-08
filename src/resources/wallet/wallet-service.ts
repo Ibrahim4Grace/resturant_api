@@ -15,7 +15,6 @@ export class WalletService {
     private readonly PAYSTACK_RECIPIENT_URL = `${config.PAYSTACK_URL}/transferrecipient`;
     private walletModel = WalletModel;
 
-    // Create or get a wallet for a user
     async getOrCreateWallet(
         userId: string,
         userType: 'restaurant' | 'rider',
@@ -34,7 +33,6 @@ export class WalletService {
         return wallet;
     }
 
-    // Add transaction to wallet
     async addTransaction(params: WalletTransaction): Promise<IWallet> {
         const { userId, userType, amount, type, description } = params;
         const reference = params.reference || (await generateReference());
@@ -64,7 +62,6 @@ export class WalletService {
         return wallet;
     }
 
-    // Get wallet balance
     async getWalletBalance(
         userId: string,
         userType: 'restaurant' | 'rider',
@@ -73,7 +70,6 @@ export class WalletService {
         return wallet ? wallet.balance : 0;
     }
 
-    // Get wallet transactions
     async getWalletTransactions(
         userId: string,
         userType: 'restaurant' | 'rider',
@@ -82,7 +78,6 @@ export class WalletService {
         return wallet ? wallet.transactions : [];
     }
 
-    // Process withdrawal to bank account
     async processWithdrawal(params: WithdrawalRequest): Promise<any> {
         const {
             userId,
@@ -93,15 +88,10 @@ export class WalletService {
             accountName,
         } = params;
 
-        // Check if user has enough balance
         const wallet = await this.walletModel.findOne({ userId, userType });
-        if (!wallet) {
-            throw new ResourceNotFound('Wallet not found');
-        }
-
-        if (wallet.balance < amount) {
+        if (!wallet) throw new ResourceNotFound('Wallet not found');
+        if (wallet.balance < amount)
             throw new BadRequest('Insufficient wallet balance');
-        }
 
         try {
             const recipientResponse = await axios.post(

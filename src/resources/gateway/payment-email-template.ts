@@ -1,7 +1,7 @@
 import { IOrder } from '../order/order-interface';
 import { IUser } from '../user/user-interface';
 import { EmailData } from '../../types/index';
-import { formatCurrency } from '../../utils';
+// import { formatCurrency } from '../../utils';
 
 export const orderConfirmationEmail = (
     user: Pick<IUser, 'name' | 'email'>,

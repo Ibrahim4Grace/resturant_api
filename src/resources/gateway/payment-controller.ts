@@ -61,7 +61,7 @@ export default class PaymentController implements Controller {
             }
 
             const params: paymentProcess = {
-                userId: userId.toString(),
+                userId: userId,
                 orderId,
                 paymentMethod,
                 userEmail: req.currentUser.email,

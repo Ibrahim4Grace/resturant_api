@@ -70,7 +70,7 @@ export default class WalletController implements Controller {
             }
 
             const balance = await this.walletService.getWalletBalance(
-                restaurantId.toString(),
+                restaurantId,
                 'restaurant',
             );
 
@@ -92,7 +92,7 @@ export default class WalletController implements Controller {
             }
 
             const transactions = await this.walletService.getWalletTransactions(
-                restaurantId.toString(),
+                restaurantId,
                 'restaurant',
             );
 
@@ -116,7 +116,7 @@ export default class WalletController implements Controller {
             const { amount, bankCode, accountNumber, accountName } = req.body;
 
             const result = await this.walletService.processWithdrawal({
-                userId: restaurantId.toString(),
+                userId: restaurantId,
                 userType: 'restaurant',
                 amount,
                 bankCode,
@@ -142,7 +142,7 @@ export default class WalletController implements Controller {
             }
 
             const balance = await this.walletService.getWalletBalance(
-                riderId.toString(),
+                riderId,
                 'rider',
             );
 
@@ -164,7 +164,7 @@ export default class WalletController implements Controller {
             }
 
             const transactions = await this.walletService.getWalletTransactions(
-                riderId.toString(),
+                riderId,
                 'rider',
             );
 
@@ -188,7 +188,7 @@ export default class WalletController implements Controller {
             const { amount, bankCode, accountNumber, accountName } = req.body;
 
             const result = await this.walletService.processWithdrawal({
-                userId: riderId.toString(),
+                userId: riderId,
                 userType: 'rider',
                 amount,
                 bankCode,

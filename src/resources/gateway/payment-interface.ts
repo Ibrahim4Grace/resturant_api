@@ -3,7 +3,7 @@ import { Types } from 'mongoose';
 export interface IPayment {
     _id?: string;
     userId: Types.ObjectId;
-    orderId: string;
+    orderId: Types.ObjectId;
     amount: number;
     status: 'processing' | 'completed' | 'failed';
     paymentMethod: 'paystack' | 'cash_on_delivery';
