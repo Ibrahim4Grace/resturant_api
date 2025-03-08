@@ -76,7 +76,7 @@ export class PaymentService {
         const paymentData = {
             amount: order.total_price * 100,
             email: userEmail,
-            reference: order.order_number,
+            // reference: order.order_number,
             metadata: {
                 order_id: order._id,
                 restaurant_id: order.restaurantId,
@@ -112,6 +112,10 @@ export class PaymentService {
                 },
             };
         } catch (error) {
+            log.error(
+                'Paystack error details:',
+                error.response?.data || error.message,
+            );
             await this.paymentModel.findByIdAndUpdate(payment._id, {
                 status: 'failed',
             });
