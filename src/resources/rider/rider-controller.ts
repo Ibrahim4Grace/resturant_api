@@ -90,7 +90,6 @@ export default class RiderController implements Controller {
         this.router.post(
             `${this.path}/orders/:orderId/pickup`,
             ...authAndAuthorize(RiderModel, ['rider']),
-            validateData(validate.pickOrder),
             this.pickOrder,
         );
         this.router.put(

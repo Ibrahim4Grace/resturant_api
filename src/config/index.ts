@@ -6,4 +6,3 @@ export * from './redis';
 export * from './rabbitmq';
 export * from './database';
 export * from './env-config';
-export * from './cron-job';

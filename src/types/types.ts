@@ -5,6 +5,7 @@ import { IAdmin } from '../resources/admin/admin-interface';
 import { IOrder } from '../resources/order/order-interface';
 import { IMenu } from '../resources/menu/menu-interface';
 import { IReview } from '../resources/review/review-interface';
+import { IWallet } from 'resources/wallet/wallet-interface';
 
 export const UserRoles = {
     User: 'user',
@@ -114,4 +115,11 @@ export interface ValidUser {
 export interface UploadedImage {
     imageId: string;
     imageUrl: string;
+}
+
+export interface IWebhookResponse {
+    event: string;
+    data: any;
+    signature: string;
+    rawBody: string;
 }

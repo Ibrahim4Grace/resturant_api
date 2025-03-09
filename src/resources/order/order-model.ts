@@ -46,6 +46,7 @@ const orderSchema = new Schema<IOrder>(
             },
             rider_name: String,
             estimatedDeliveryTime: Date,
+            customerConfirmationTime: Date,
         },
         order_number: { type: String, required: true },
         status: {
@@ -59,6 +60,26 @@ const orderSchema = new Schema<IOrder>(
                 'cancelled',
             ],
             default: 'pending',
+        },
+        delivery_confirmed: {
+            type: Boolean,
+            default: false,
+        },
+        has_dispute: {
+            type: Boolean,
+            default: false,
+        },
+        dispute_details: {
+            issue_type: String,
+            description: String,
+            reported_at: Date,
+            status: {
+                type: String,
+                enum: ['pending', 'investigating', 'resolved', 'rejected'],
+                default: 'pending',
+            },
+            resolution: String,
+            resolved_at: Date,
         },
     },
     { timestamps: true },

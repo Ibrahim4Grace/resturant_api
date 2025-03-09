@@ -1935,6 +1935,10 @@ export const settingsDocs = {
                                             type: 'number',
                                             example: 0.1,
                                         },
+                                        dispute_window_hours: {
+                                            type: 'number',
+                                            example: 2,
+                                        },
                                     },
                                 },
                             },
@@ -1966,6 +1970,10 @@ export const settingsDocs = {
                                         type: 'number',
                                         example: 0.1,
                                     },
+                                    dispute_window_hours: {
+                                        type: 'number',
+                                        example: 2,
+                                    },
                                 },
                             },
                         },
@@ -1990,6 +1998,10 @@ export const settingsDocs = {
                                         restaurant_commission: {
                                             type: 'number',
                                             example: 0.1,
+                                        },
+                                        dispute_window_hours: {
+                                            type: 'number',
+                                            example: 2,
                                         },
                                     },
                                 },
@@ -2019,6 +2031,10 @@ export const settingsDocs = {
                                         type: 'number',
                                         example: 0.1,
                                     },
+                                    dispute_window_hours: {
+                                        type: 'number',
+                                        example: 2,
+                                    },
                                 },
                             },
                         },
@@ -2043,6 +2059,10 @@ export const settingsDocs = {
                                         restaurant_commission: {
                                             type: 'number',
                                             example: 0.1,
+                                        },
+                                        dispute_window_hours: {
+                                            type: 'number',
+                                            example: 2,
                                         },
                                     },
                                 },

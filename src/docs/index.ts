@@ -6,3 +6,4 @@ export * from './order-doc';
 export * from './menu-doc';
 export * from './payment-doc';
 export * from './review-doc';
+export * from './wallet-doc';

@@ -47,4 +47,6 @@ export const CACHE_KEYS = {
     TARGET_REVIEWS: (targetType: string, targetId: string) =>
         `reviews:${targetType.toLowerCase()}:${targetId}`,
     USER_REVIEWS: (userId: string) => `user_reviews_${userId}`,
+
+    WALLET_TRANSACTIONS_PREFIX: 'wallet_transactions',
 } as const;

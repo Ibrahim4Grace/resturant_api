@@ -5,6 +5,7 @@ export interface ISetting {
     app_commission: number;
     rider_commission: number;
     restaurant_commission: number;
+    dispute_window_hours: number;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -15,6 +16,7 @@ export interface ICreateSetting {
     app_commission: number;
     rider_commission: number;
     restaurant_commission: number;
+    dispute_window_hours: number;
 }
 
 export interface IUpdateSetting {
@@ -23,4 +25,5 @@ export interface IUpdateSetting {
     app_commission: number;
     rider_commission: number;
     restaurant_commission: number;
+    dispute_window_hours: number;
 }

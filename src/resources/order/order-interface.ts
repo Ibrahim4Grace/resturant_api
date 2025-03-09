@@ -12,6 +12,9 @@ export interface IOrder extends Document {
     tax: number;
     delivery_fee: number;
     delivery_info: DeliveryInfo;
+    delivery_confirmed: boolean;
+    has_dispute: boolean;
+    dispute_details: DisputeDetails;
     createdAt?: Date;
     updatedAt?: Date;
 }
@@ -30,12 +33,21 @@ export interface OrderItem {
     price: number;
     name: string;
 }
+export interface DisputeDetails {
+    issue_type: String;
+    description: String;
+    reported_at: Date;
+    status: String;
+    resolution: String;
+    resolved_at: Date;
+}
 
 export interface DeliveryInfo {
     delivery_address: string;
     riderId?: string;
     rider_name?: string;
     estimatedDeliveryTime?: Date;
+    customerConfirmationTime?: Date;
 }
 
 export interface BaseOrderParams {

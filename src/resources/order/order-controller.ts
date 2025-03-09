@@ -40,6 +40,11 @@ export default class OrderController implements Controller {
             validateData(validate.orderSchema),
             this.placeOrder,
         );
+        this.router.post(
+            `${this.path}/:orderId/confirm-delivery`,
+            ...authAndAuthorize(UserModel, ['user']),
+            this.confirmDelivery,
+        );
         this.router.patch(
             `${this.path}/:id/status`,
             ...authAndAuthorize(RestaurantModel, ['restaurant_owner']),
@@ -67,24 +72,40 @@ export default class OrderController implements Controller {
 
     private placeOrder = asyncHandler(async (req: Request, res: Response) => {
         const userId = req.currentUser._id;
-        if (!userId) {
-            throw new ResourceNotFound('User not found');
-        }
+        if (!userId) throw new ResourceNotFound('User not found');
 
         const orderData = req.body;
-        console.log('orderData', orderData);
         const order = await this.orderService.placeOrder(userId, orderData);
 
         sendJsonResponse(res, 201, 'Order placed successfully', order);
     });
 
+    private confirmDelivery = asyncHandler(
+        async (req: Request, res: Response) => {
+            const { orderId } = req.params;
+            const userId = req.currentUser._id;
+            if (!userId) throw new ResourceNotFound('User not found');
+
+            const order = await this.orderService.confirmDelivery({
+                orderId,
+                userId,
+            });
+            sendJsonResponse(
+                res,
+                200,
+                'Delivery confirmed successfully',
+                order,
+            );
+        },
+    );
+
     private updateOrderStatus = asyncHandler(
         async (req: Request, res: Response) => {
             const orderId = req.params.id;
             const restaurantId = req.currentUser._id;
-            if (!restaurantId) {
+            if (!restaurantId)
                 throw new ResourceNotFound('Restaurant owner not found');
-            }
+
             const { status } = req.body;
             const order = await this.orderService.updateOrderStatus({
                 restaurantId,
@@ -103,9 +124,8 @@ export default class OrderController implements Controller {
     private cancelOrder = asyncHandler(async (req: Request, res: Response) => {
         const orderId = req.params.id;
         const restaurantId = req.currentUser._id;
-        if (!restaurantId) {
+        if (!restaurantId)
             throw new ResourceNotFound('Restaurant owner not found');
-        }
         const order = await this.orderService.cancelOrder({
             orderId,
             restaurantId,
@@ -116,9 +136,8 @@ export default class OrderController implements Controller {
     private getOrderById = asyncHandler(async (req: Request, res: Response) => {
         const orderId = req.params.id;
         const restaurantId = req.currentUser._id;
-        if (!restaurantId) {
+        if (!restaurantId)
             throw new ResourceNotFound('Restaurant owner not found');
-        }
         const order = await this.orderService.getOrderById({
             orderId,
             restaurantId,
@@ -129,9 +148,8 @@ export default class OrderController implements Controller {
     private getUsersOrders = asyncHandler(
         async (req: Request, res: Response) => {
             const restaurantId = req.currentUser._id;
-            if (!restaurantId) {
+            if (!restaurantId)
                 throw new ResourceNotFound('Restaurant owner not found');
-            }
 
             const orders = await this.orderService.fecthUserOrders(
                 req,

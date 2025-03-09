@@ -9,7 +9,6 @@ import { orderStatusUpdateEmail } from '../order/order-email-template';
 import { riderAssignedEmail } from '../rider/rider-email-template';
 import { CloudinaryService } from '../../config/index';
 import { orderData } from '../order/order-helper';
-import { PaymentService } from '../gateway/payment-service';
 import {
     EmailQueueService,
     TokenService,
@@ -65,10 +64,9 @@ export class RiderService {
     private riderData = riderData;
     private checkOrderAssignment = checkOrderAssignment;
     private orderData = orderData;
+    private cloudinaryService: CloudinaryService;
     private readonly ALLOWED_RIDER_STATUSES = 'delivered' as const;
 
-    private cloudinaryService: CloudinaryService;
-    private paymentDisbursementService: PaymentService;
     constructor() {
         this.cloudinaryService = new CloudinaryService();
     }
@@ -457,30 +455,6 @@ export class RiderService {
         );
 
         if (!updatedOrder) throw new ResourceNotFound('Order not found');
-
-        // if (status === 'delivered') {
-        //     await this.rider.findByIdAndUpdate(riderId, {
-        //         status: 'available',
-        //     });
-
-        //     try {
-        //         const disbursementSuccess =
-        //             await this.paymentDisbursementService.disburseToRider(
-        //                 orderId,
-        //             );
-        //         if (!disbursementSuccess) {
-        //             throw new BadRequest(
-        //                 'Rider commission disbursement failed',
-        //             );
-        //         }
-        //     } catch (error) {
-        //         log.error(
-        //             `Failed to disburse commission to rider for order ${updatedOrder.order_number}:`,
-        //             error,
-        //         );
-        //         throw error;
-        //     }
-        // }
 
         await Promise.all([
             deleteCacheData(CACHE_KEYS.ORDER_BY_ID(orderId)),

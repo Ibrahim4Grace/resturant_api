@@ -7,6 +7,7 @@ const settingSchema = z.object({
     restaurant_commission: z
         .number()
         .min(0, 'Restaurant commission is required'),
+    dispute_window_hours: z.number().min(0, 'Dispute window hours is required'),
 });
 
 export default {

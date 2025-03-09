@@ -4,10 +4,12 @@ import { config } from '../../config/index';
 import PaymentModel from '../gateway/payment-model';
 import SettingModel from '../settings/setting-model';
 import OrderModel from '../order/order-model';
+import RiderModel from '../rider/rider-model';
 import { OrderService } from '../order/order-service';
 import { WalletService } from '../wallet/wallet-service';
 import { UserService } from '../user/user-service';
 import { IOrder } from '../order/order-interface';
+import { IWebhookResponse } from '../../types';
 import { EmailQueueService, log } from '../../utils/index';
 import { orderConfirmationEmail } from '../gateway/payment-email-template';
 import {
@@ -28,6 +30,7 @@ export class PaymentService {
     private paymentModel = PaymentModel;
     private settingModel = SettingModel;
     private orderModel = OrderModel;
+    private rider = RiderModel;
 
     constructor(
         private orderService: OrderService,
@@ -124,52 +127,48 @@ export class PaymentService {
     }
 
     private async processSuccessfulPayment(data: any): Promise<void> {
-        await this.paymentModel.findOneAndUpdate(
-            { 'transactionDetails.reference': data.reference },
-            { status: 'completed' },
-        );
-
-        // Store these values to reuse
-        const orderId = data.metadata.order_id;
-        const restaurantId = data.metadata.restaurant_id;
-        const updatedOrder = await this.orderService.updateOrderStatus({
-            orderId,
-            restaurantId,
-            status: 'processing',
-        });
-
-        // Get user info using the updated order we already have
-        const user = await this.userService.getUserById(
-            updatedOrder.userId.toString(),
-        );
-
-        // Fetch the complete order only once
-        let completeOrder = null;
-        if (updatedOrder) {
-            completeOrder = await this.orderModel.findById(orderId);
-            if (!completeOrder)
-                throw new ResourceNotFound('Order not completed');
-        }
-
-        if (user && completeOrder) {
-            const emailOptions = orderConfirmationEmail(
-                { name: user.name, email: user.email },
-                completeOrder,
+        try {
+            await this.paymentModel.findOneAndUpdate(
+                { 'transactionDetails.reference': data.reference },
+                { status: 'completed' },
             );
-            await EmailQueueService.addEmailToQueue(emailOptions);
-        }
 
-        if (completeOrder) {
-            await this.processOrderCommissions(completeOrder);
-        }
+            // Store these values to reuse
+            const orderId = data.metadata.order_id;
+            const restaurantId = data.metadata.restaurant_id;
+            const updatedOrder = await this.orderService.updateOrderStatus({
+                orderId,
+                restaurantId,
+                status: 'processing',
+            });
 
-        // if (user && updatedOrder) {
-        //     const emailOptions = orderConfirmationEmail(
-        //         { name: user.name, email: user.email },
-        //         updatedOrder as IOrder,
-        //     );
-        //     await EmailQueueService.addEmailToQueue(emailOptions);
-        // }
+            const user = await this.userService.getUserById(
+                updatedOrder.userId.toString(),
+            );
+
+            // Fetch the complete order only once
+            let completeOrder = null;
+            if (updatedOrder) {
+                completeOrder = await this.orderModel.findById(orderId);
+                if (!completeOrder)
+                    throw new ResourceNotFound('Order not completed');
+            }
+
+            if (user && completeOrder) {
+                const emailOptions = orderConfirmationEmail(
+                    { name: user.name, email: user.email },
+                    completeOrder,
+                );
+                await EmailQueueService.addEmailToQueue(emailOptions);
+            }
+
+            if (completeOrder) {
+                await this.processRestaurantCommissions(completeOrder);
+            }
+        } catch (error) {
+            log.error('Error processing successful payment:', error);
+            throw error;
+        }
     }
 
     async processPayment(params: paymentProcess): Promise<PaymentResponse> {
@@ -225,12 +224,8 @@ export class PaymentService {
         return hash === signature;
     }
 
-    async handleWebhookEvent(
-        event: string,
-        data: any,
-        signature: string,
-        rawBody: string,
-    ): Promise<boolean> {
+    async handleWebhookEvent(params: IWebhookResponse): Promise<boolean> {
+        const { event, data, signature, rawBody } = params;
         const isValidSignature = this.verifyWebhookSignature(
             rawBody,
             signature,
@@ -252,34 +247,16 @@ export class PaymentService {
         return false;
     }
 
-    // New method to handle commissions
-    private async processOrderCommissions(order: IOrder): Promise<void> {
+    private async processRestaurantCommissions(order: IOrder): Promise<void> {
         try {
             // Get settings for commission rates
             const settings = await this.settingModel.findOne();
             if (!settings) throw new Error('Settings not found');
 
             const orderAmount = order.total_price;
-
-            const riderCommissionAmount =
-                orderAmount * settings.rider_commission;
             const restaurantCommissionAmount =
                 orderAmount * settings.restaurant_commission;
 
-            // Only process rider commission if there is a rider assigned
-            if (order.delivery_info && order.delivery_info.riderId) {
-                // Credit rider wallet
-                await this.walletService.addTransaction({
-                    userId: order.delivery_info.riderId.toString(),
-                    userType: 'rider',
-                    amount: riderCommissionAmount,
-                    type: 'credit',
-                    description: `Commission from order #${order.order_number}`,
-                    reference: `rider-commission-${order.order_number}`,
-                });
-            }
-
-            // Credit restaurant wallet
             await this.walletService.addTransaction({
                 userId: order.restaurantId.toString(),
                 userType: 'restaurant',
@@ -292,6 +269,59 @@ export class PaymentService {
             log.info(`Processed commissions for order #${order.order_number}`);
         } catch (error) {
             log.error('Error processing commissions:', error);
+        }
+    }
+
+    public async processRiderPayment(order: IOrder): Promise<void> {
+        try {
+            if (order.status !== 'delivered') {
+                return;
+            }
+
+            const settings = await this.settingModel.findOne();
+            if (!settings) throw new ResourceNotFound('Settings not found');
+            if (!order.delivery_info || !order.delivery_info.riderId) {
+                log.warn(
+                    `No rider assigned to delivered order #${order.order_number}`,
+                );
+                return;
+            }
+
+            const existingTransaction =
+                await this.walletService.findTransactionByReference(
+                    `rider-commission-${order.order_number}`,
+                );
+
+            if (existingTransaction) {
+                log.info(
+                    `Payment for order #${order.order_number} already processed`,
+                );
+                return;
+            }
+
+            const orderAmount = order.total_price;
+            const riderCommissionAmount =
+                orderAmount * settings.rider_commission;
+
+            await this.walletService.addTransaction({
+                userId: order.delivery_info.riderId.toString(),
+                userType: 'rider',
+                amount: riderCommissionAmount,
+                type: 'credit',
+                description: `Delivery commission for order #${order.order_number}`,
+                reference: `rider-commission-${order.order_number}`,
+            });
+
+            const rider = await this.rider.findById(
+                order.delivery_info.riderId,
+            );
+            if (!rider) throw new Error('Rider not found');
+
+            await this.rider.findByIdAndUpdate(order.delivery_info.riderId, {
+                status: 'available',
+            });
+        } catch (error) {
+            log.error('Error processing rider commission:', error);
         }
     }
 }

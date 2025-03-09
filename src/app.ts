@@ -4,19 +4,18 @@ import cors from 'cors';
 import helmet from 'helmet';
 import swaggerUi from 'swagger-ui-express';
 import morgan from 'morgan';
-import { EmailQueueService, log } from '../src/utils/index';
-import { Controller } from '../src/types/index';
-import { errorHandler, routeNotFound } from '../src/middlewares/index';
-import { EmailListener, FirebaseListener } from '../src/events/index';
-
+import { EmailQueueService, log } from '../src/utils';
+import { keepAlive, setupRiderPaymentCron } from '../src/jobs';
+import { Controller } from '../src/types';
+import { errorHandler, routeNotFound } from '../src/middlewares';
+import { EmailListener, FirebaseListener } from '../src/events';
 import {
     corsOptions,
     config,
     specs,
     initializeDatabase,
     closeRabbitMQ,
-    keepAlive,
-} from '../src/config/index';
+} from '../src/config';
 
 class App {
     public express: Application;
@@ -114,6 +113,7 @@ class App {
     private initializeKeepAlive(): void {
         log.info('Initializing server cron job...');
         keepAlive(config.PROD_URL);
+        setupRiderPaymentCron();
     }
 
     public listen(): void {

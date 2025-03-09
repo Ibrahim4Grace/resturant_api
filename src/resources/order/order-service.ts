@@ -23,7 +23,11 @@ import {
     orderStatusUpdateEmail,
     orderCancellationEmail,
 } from '../order/order-email-template';
-import { ResourceNotFound, BadRequest } from '../../middlewares/index';
+import {
+    ResourceNotFound,
+    BadRequest,
+    Unauthorized,
+} from '../../middlewares/index';
 import {
     orderData,
     validateUser,
@@ -39,8 +43,11 @@ export class OrderService {
     private validateUser = validateUser;
     private checkOrderOwnership = checkOrderOwnership;
     private calculateOrderAmounts = calculateOrderAmounts;
+    private paymentService: PaymentService;
 
-    constructor(private paymentDisbursementService: PaymentService) {}
+    constructor(paymentService: PaymentService) {
+        this.paymentService = paymentService;
+    }
 
     public async placeOrder(
         userId: string,
@@ -81,6 +88,49 @@ export class OrderService {
         return this.orderData(newOrder);
     }
 
+    public async confirmDelivery(params: {
+        orderId: string;
+        userId: string;
+    }): Promise<IOrder> {
+        const { orderId, userId } = params;
+
+        const order = await this.order.findById(orderId);
+        if (!order) throw new ResourceNotFound('Order not found');
+
+        if (order.userId.toString() !== userId.toString()) {
+            throw new Unauthorized(
+                'You are not authorized to confirm this delivery',
+            );
+        }
+
+        if (order.status !== 'delivered') {
+            throw new BadRequest(
+                'Cannot confirm delivery for an order that is not marked as delivered',
+            );
+        }
+
+        // Mark as confirmed
+        const updatedOrder = await this.order.findByIdAndUpdate(
+            orderId,
+            {
+                delivery_confirmed: true,
+                'delivery_info.customerConfirmationTime': new Date(),
+            },
+            { new: true },
+        );
+
+        if (!updatedOrder) throw new ResourceNotFound('Order not found');
+        await this.paymentService.processRiderPayment(updatedOrder);
+
+        // Clear relevant caches
+        await Promise.all([
+            deleteCacheData(CACHE_KEYS.ORDER_BY_ID(orderId)),
+            deleteCacheData(CACHE_KEYS.ALL_USER_ORDER(userId)),
+        ]);
+
+        return updatedOrder;
+    }
+
     public async updateOrderStatus(
         params: UpdateOrderStatusParams,
     ): Promise<Partial<IOrder>> {
@@ -93,26 +143,6 @@ export class OrderService {
         if (!updatedOrder) {
             throw new ResourceNotFound('Order not found');
         }
-
-        // if (status === 'ready_for_pickup') {
-        //     try {
-        //         const disbursementSuccess =
-        //             await this.paymentDisbursementService.disburseToRestaurant(
-        //                 orderId,
-        //             );
-        //         if (!disbursementSuccess) {
-        //             throw new BadRequest(
-        //                 'Payment disbursement failed due to incomplete bank information',
-        //             );
-        //         }
-        //     } catch (error) {
-        //         log.error(
-        //             `Failed to disburse payment to restaurant for order ${updatedOrder.order_number}:`,
-        //             error,
-        //         );
-        //         throw error;
-        //     }
-        // }
 
         await Promise.all([
             deleteCacheData(CACHE_KEYS.ALL_ORDERS),

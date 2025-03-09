@@ -14,6 +14,7 @@ export function settingData(setting: ISetting): Partial<ISetting> {
         app_commission: setting.app_commission,
         rider_commission: setting.rider_commission,
         restaurant_commission: setting.restaurant_commission,
+        dispute_window_hours: setting.dispute_window_hours,
         createdAt: setting.createdAt,
         updatedAt: setting.updatedAt,
     };
@@ -53,6 +54,7 @@ export class SettingsService {
             app_commission,
             rider_commission,
             restaurant_commission,
+            dispute_window_hours,
         } = reqBody;
         const settings = await SettingModel.findOneAndUpdate(
             {},
@@ -62,6 +64,7 @@ export class SettingsService {
                 app_commission,
                 rider_commission,
                 restaurant_commission,
+                dispute_window_hours,
             },
             { new: true, upsert: true },
         );

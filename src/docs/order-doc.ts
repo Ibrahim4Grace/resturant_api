@@ -166,6 +166,7 @@ export const orderDocs = {
                 },
             },
         },
+
         paths: {
             '/api/v1/order/{id}/status': {
                 patch: {
@@ -225,6 +226,98 @@ export const orderDocs = {
                         },
                         404: { description: 'Order not found' },
                         500: { description: 'Server error' },
+                    },
+                },
+            },
+            '/api/v1/order/{orderId}/confirm-delivery': {
+                patch: {
+                    summary: 'Confirm delivery of an order',
+                    tags: ['User - Orders'],
+                    security: [{ BearerAuth: [] }],
+                    parameters: [
+                        {
+                            name: 'orderId',
+                            in: 'path',
+                            required: true,
+                            schema: {
+                                type: 'string',
+                                example: '60d21b4667d0d8992e610c85',
+                            },
+                            description:
+                                'The ID of the order to confirm delivery for',
+                        },
+                    ],
+                    responses: {
+                        200: {
+                            description: 'Delivery confirmed successfully',
+                            content: {
+                                'application/json': {
+                                    schema: {
+                                        type: 'object',
+                                        properties: {
+                                            success: {
+                                                type: 'boolean',
+                                                example: true,
+                                            },
+                                            message: {
+                                                type: 'string',
+                                                example:
+                                                    'Delivery confirmed successfully',
+                                            },
+                                            data: {
+                                                type: 'object',
+                                                properties: {
+                                                    id: {
+                                                        type: 'string',
+                                                        example:
+                                                            '60d21b4667d0d8992e610c85',
+                                                    },
+                                                    userId: {
+                                                        type: 'string',
+                                                        example:
+                                                            '609bda561452242d88d36e37',
+                                                    },
+                                                    status: {
+                                                        type: 'string',
+                                                        example: 'delivered',
+                                                    },
+                                                    delivery_confirmed: {
+                                                        type: 'boolean',
+                                                        example: true,
+                                                    },
+                                                    delivery_info: {
+                                                        type: 'object',
+                                                        properties: {
+                                                            customerConfirmationTime:
+                                                                {
+                                                                    type: 'string',
+                                                                    format: 'date-time',
+                                                                    example:
+                                                                        '2024-03-09T12:00:00Z',
+                                                                },
+                                                        },
+                                                    },
+                                                },
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                        400: {
+                            description:
+                                'Cannot confirm delivery for an order that is not marked as delivered',
+                        },
+                        401: {
+                            description:
+                                'Unauthorized - User is not authorized to confirm this delivery',
+                        },
+                        404: {
+                            description: 'Order not found',
+                        },
+                        500: {
+                            description: 'Server error',
+                        },
                     },
                 },
             },
