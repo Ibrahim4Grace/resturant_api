@@ -33,3 +33,22 @@ export interface WithdrawalRequest {
     accountNumber: string;
     accountName: string;
 }
+
+export interface ITransaction {
+    amount: number;
+    type: 'credit' | 'debit';
+    description: string;
+    reference: string;
+    status: 'pending' | 'completed' | 'failed';
+    createdAt: Date;
+    _id?: string;
+}
+
+export interface IWalletPaginatedResponse {
+    results: ITransaction[];
+    pagination: {
+        currentPage: number;
+        totalPages: number;
+        limit: number;
+    };
+}

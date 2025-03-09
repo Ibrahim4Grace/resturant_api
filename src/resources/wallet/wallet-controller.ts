@@ -64,10 +64,8 @@ export default class WalletController implements Controller {
     private getRestaurantWalletBalance = asyncHandler(
         async (req: Request, res: Response) => {
             const restaurantId = req.currentUser._id;
-
-            if (!restaurantId) {
+            if (!restaurantId)
                 throw new ResourceNotFound('Restaurant not found');
-            }
 
             const balance = await this.walletService.getWalletBalance(
                 restaurantId,
@@ -86,12 +84,12 @@ export default class WalletController implements Controller {
     private getRestaurantTransactions = asyncHandler(
         async (req: Request, res: Response) => {
             const restaurantId = req.currentUser._id;
-
-            if (!restaurantId) {
+            if (!restaurantId)
                 throw new ResourceNotFound('Restaurant not found');
-            }
 
             const transactions = await this.walletService.getWalletTransactions(
+                req,
+                res,
                 restaurantId,
                 'restaurant',
             );
@@ -108,10 +106,8 @@ export default class WalletController implements Controller {
     private restaurantWithdrawal = asyncHandler(
         async (req: Request, res: Response) => {
             const restaurantId = req.currentUser._id;
-
-            if (!restaurantId) {
+            if (!restaurantId)
                 throw new ResourceNotFound('Restaurant not found');
-            }
 
             const { amount, bankCode, accountNumber, accountName } = req.body;
 
@@ -136,10 +132,7 @@ export default class WalletController implements Controller {
     private getRiderWalletBalance = asyncHandler(
         async (req: Request, res: Response) => {
             const riderId = req.currentUser._id;
-
-            if (!riderId) {
-                throw new ResourceNotFound('Rider not found');
-            }
+            if (!riderId) throw new ResourceNotFound('Rider not found');
 
             const balance = await this.walletService.getWalletBalance(
                 riderId,
@@ -158,12 +151,11 @@ export default class WalletController implements Controller {
     private getRiderTransactions = asyncHandler(
         async (req: Request, res: Response) => {
             const riderId = req.currentUser._id;
-
-            if (!riderId) {
-                throw new ResourceNotFound('Rider not found');
-            }
+            if (!riderId) throw new ResourceNotFound('Rider not found');
 
             const transactions = await this.walletService.getWalletTransactions(
+                req,
+                res,
                 riderId,
                 'rider',
             );
@@ -180,10 +172,7 @@ export default class WalletController implements Controller {
     private riderWithdrawal = asyncHandler(
         async (req: Request, res: Response) => {
             const riderId = req.currentUser._id;
-
-            if (!riderId) {
-                throw new ResourceNotFound('Rider not found');
-            }
+            if (!riderId) throw new ResourceNotFound('Rider not found');
 
             const { amount, bankCode, accountNumber, accountName } = req.body;
 
