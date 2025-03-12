@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
-import { Controller } from '../../types/index';
+import { Controller } from '../../types';
+import { OrderQueueService } from '../../queue';
 import validate from '../order/order-validation';
 import { OrderService } from '../order/order-service';
 import UserModel from '../user/user-model';
@@ -13,7 +14,7 @@ import {
     asyncHandler,
     ResourceNotFound,
     authAndAuthorize,
-} from '../../middlewares/index';
+} from '../../middlewares';
 
 export default class OrderController implements Controller {
     public path = '/order';
@@ -38,7 +39,7 @@ export default class OrderController implements Controller {
             `${this.path}`,
             ...authAndAuthorize(UserModel, ['user']),
             validateData(validate.orderSchema),
-            this.placeOrder,
+            this.createOrder,
         );
         this.router.post(
             `${this.path}/:orderId/confirm-delivery`,
@@ -70,14 +71,19 @@ export default class OrderController implements Controller {
         );
     }
 
-    private placeOrder = asyncHandler(async (req: Request, res: Response) => {
+    private createOrder = asyncHandler(async (req: Request, res: Response) => {
         const userId = req.currentUser._id;
+        const userEmail = req.currentUser.email;
         if (!userId) throw new ResourceNotFound('User not found');
 
         const orderData = req.body;
-        const order = await this.orderService.placeOrder(userId, orderData);
+        await OrderQueueService.addOrderToQueue(orderData);
+        sendJsonResponse(res, 202, 'Order received, processing soon', {
+            tempId: `TEMP-${Date.now()}`,
+        });
 
-        sendJsonResponse(res, 201, 'Order placed successfully', order);
+        // const order = await this.orderService.placeOrder(userId, orderData);
+        // sendJsonResponse(res, 201, 'Order placed successfully', order);
     });
 
     private confirmDelivery = asyncHandler(

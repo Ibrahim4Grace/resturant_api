@@ -2,19 +2,19 @@ import { Request, Response } from 'express';
 import MenuModel from '../menu/menu-model';
 import RestaurantModel from '../restaurant/restaurant-model';
 import { IMenu, MenuItem } from '../menu/menu-interface';
-import { UploadedImage, IMenuPaginatedResponse } from '../../types/index';
-import { CloudinaryService } from '../../config/index';
+import { UploadedImage, IMenuPaginatedResponse } from '../../types';
+import { CloudinaryService } from '../../config';
 import { newMenuConfirmationEmail } from '../menu/menu-email-template';
 import { menuData, checkDuplicateMenuItem } from '../menu/menu-helper';
-import { ResourceNotFound, Unauthorized } from '../../middlewares/index';
+import { ResourceNotFound, Unauthorized } from '../../middlewares';
+import { EmailQueueService } from '../../queue';
 import {
     CACHE_TTL,
     getPaginatedAndCachedResults,
     withCachedData,
-    EmailQueueService,
     deleteCacheData,
     CACHE_KEYS,
-} from '../../utils/index';
+} from '../../utils';
 
 export class MenuService {
     private menu = MenuModel;

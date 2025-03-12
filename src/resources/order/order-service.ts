@@ -2,15 +2,16 @@ import { Request, Response } from 'express';
 import UserModel from '../user/user-model';
 import OrderModel from '../order/order-model';
 import MenuModel from '../menu/menu-model';
-import { IOrderPaginatedResponse } from '../../types/index';
+import { IOrderPaginatedResponse } from '../../types';
 import { PaymentService } from '../gateway/payment-service';
+import { EmailQueueService } from '../../queue';
+import { ResourceNotFound, BadRequest, Unauthorized } from '../../middlewares';
 import {
     IOrder,
     DeliveryInfo,
     UpdateOrderStatusParams,
 } from '../order/order-interface';
 import {
-    EmailQueueService,
     withCachedData,
     CACHE_TTL,
     generateOrderId,
@@ -18,16 +19,11 @@ import {
     deleteCacheData,
     CACHE_KEYS,
     log,
-} from '../../utils/index';
+} from '../../utils';
 import {
     orderStatusUpdateEmail,
     orderCancellationEmail,
 } from '../order/order-email-template';
-import {
-    ResourceNotFound,
-    BadRequest,
-    Unauthorized,
-} from '../../middlewares/index';
 import {
     orderData,
     validateUser,

@@ -1,16 +1,15 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
-import { config } from '../../config/index';
+import { CloudinaryService, config } from '../../config';
 import RiderModel from '../rider/rider-model';
 import OrderModel from '../order/order-model';
 import UserModel from '../user/user-model';
 import { IOrder } from '../order/order-interface';
 import { orderStatusUpdateEmail } from '../order/order-email-template';
 import { riderAssignedEmail } from '../rider/rider-email-template';
-import { CloudinaryService } from '../../config/index';
 import { orderData } from '../order/order-helper';
+import { EmailQueueService } from '../../queue';
 import {
-    EmailQueueService,
     TokenService,
     getPaginatedAndCachedResults,
     withCachedData,
@@ -18,14 +17,14 @@ import {
     CACHE_KEYS,
     deleteCacheData,
     log,
-} from '../../utils/index';
+} from '../../utils';
 import {
     UploadedImage,
     LoginCredentials,
     IPaginationResponse,
     IPaginatedEntityResponse,
     IOrderPaginatedResponse,
-} from '../../types/index';
+} from '../../types';
 import {
     IRider,
     RegisterRiderto,
@@ -43,7 +42,7 @@ import {
     Forbidden,
     Unauthorized,
     ServerError,
-} from '../../middlewares/index';
+} from '../../middlewares';
 import {
     checkDuplicate,
     findRiderById,

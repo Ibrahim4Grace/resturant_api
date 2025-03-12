@@ -10,6 +10,7 @@ import {
     ResourceNotFound,
     sendJsonResponse,
     authAndAuthorize,
+    authMiddleware,
 } from '../../middlewares';
 
 export default class WalletController implements Controller {
@@ -23,6 +24,12 @@ export default class WalletController implements Controller {
     }
 
     private initializeRoutes(): void {
+        this.router.get(
+            `${this.path}/banks`,
+            authMiddleware(),
+            this.getListOfbanks,
+        );
+
         this.router.get(
             `${this.path}/restaurant/balance`,
             ...authAndAuthorize(RestaurantModel, ['restaurant_owner']),
@@ -60,6 +67,18 @@ export default class WalletController implements Controller {
             this.riderWithdrawal,
         );
     }
+
+    private getListOfbanks = asyncHandler(
+        async (req: Request, res: Response) => {
+            const banks = await this.walletService.getSupportedBanks();
+            return sendJsonResponse(
+                res,
+                200,
+                'Banks and there code retrieved successfully',
+                banks,
+            );
+        },
+    );
 
     private getRestaurantWalletBalance = asyncHandler(
         async (req: Request, res: Response) => {
@@ -106,18 +125,18 @@ export default class WalletController implements Controller {
     private restaurantWithdrawal = asyncHandler(
         async (req: Request, res: Response) => {
             const restaurantId = req.currentUser._id;
-            if (!restaurantId)
-                throw new ResourceNotFound('Restaurant not found');
+            if (!restaurantId) throw new ResourceNotFound('User not found');
 
-            const { amount, bankCode, accountNumber, accountName } = req.body;
+            const { amount, bank_code, account_number, account_name } =
+                req.body;
 
             const result = await this.walletService.processWithdrawal({
                 userId: restaurantId,
                 userType: 'restaurant',
                 amount,
-                bankCode,
-                accountNumber,
-                accountName,
+                bank_code,
+                account_number,
+                account_name,
             });
 
             return sendJsonResponse(
@@ -174,15 +193,16 @@ export default class WalletController implements Controller {
             const riderId = req.currentUser._id;
             if (!riderId) throw new ResourceNotFound('Rider not found');
 
-            const { amount, bankCode, accountNumber, accountName } = req.body;
+            const { amount, bank_code, account_number, account_name } =
+                req.body;
 
             const result = await this.walletService.processWithdrawal({
                 userId: riderId,
                 userType: 'rider',
                 amount,
-                bankCode,
-                accountNumber,
-                accountName,
+                bank_code,
+                account_number,
+                account_name,
             });
 
             return sendJsonResponse(

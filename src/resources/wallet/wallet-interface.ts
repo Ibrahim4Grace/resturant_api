@@ -29,9 +29,9 @@ export interface WithdrawalRequest {
     userId: string;
     userType: 'restaurant' | 'rider';
     amount: number;
-    bankCode: string;
-    accountNumber: string;
-    accountName: string;
+    bank_code: string;
+    account_number: string;
+    account_name: string;
 }
 
 export interface ITransaction {

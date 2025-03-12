@@ -36,9 +36,9 @@ export interface IRestaurant extends Document {
 }
 
 export interface BankInfo {
-    accountNumber: string;
-    bankCode: string;
-    accountHolder: string;
+    account_number: String;
+    bank_code: String;
+    account_name: String;
     recipientCode: String;
 }
 

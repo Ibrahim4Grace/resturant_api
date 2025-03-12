@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
-import { config } from '../../config/index';
+import { config } from '../../config';
 import AdminModel from '../admin/admin-model';
 import MenuModel from '../menu/menu-model';
 import UserModel from '../user/user-model';
@@ -20,6 +20,7 @@ import { riderData } from '../rider/rider-helper';
 import { reviewData } from '../review/review-helper';
 import { restaurantData } from '../restaurant/restaurant-helper';
 import { IReview } from '../review/review-interface';
+import { EmailQueueService } from '../../queue';
 import {
     IRestaurant,
     RestaurantAnalytics,
@@ -33,7 +34,6 @@ import {
 } from '../admin/admin-email-template';
 import {
     TokenService,
-    EmailQueueService,
     CACHE_TTL,
     deleteCacheData,
     getPaginatedAndCachedResults,

@@ -56,9 +56,9 @@ const updateSchema = z.object({
         state: z.string().min(1, 'State is required'),
     }),
     bankInfo: z.object({
-        accountNumber: z.string().min(1, 'Account number is required'),
-        bankCode: z.string().min(1, 'Bank code is required'),
-        accountHolder: z.string().min(1, 'Account name is required'),
+        account_number: z.string().min(1, 'Account number is required'),
+        bank_code: z.string().min(1, 'Bank code is required'),
+        account_name: z.string().min(1, 'Account name is required'),
     }),
 });
 

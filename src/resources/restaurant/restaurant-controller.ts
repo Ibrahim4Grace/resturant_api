@@ -210,9 +210,7 @@ export default class RestaurantController implements Controller {
             const resetToken = authHeader.split(' ')[1];
             const { newPassword } = req.body;
 
-            if (!newPassword) {
-                throw new BadRequest('New password is required');
-            }
+            if (!newPassword) throw new BadRequest('New password is required');
 
             await this.restaurantService.resetPassword(resetToken, newPassword);
             sendJsonResponse(res, 200, 'Password reset successfully.');
@@ -267,10 +265,9 @@ export default class RestaurantController implements Controller {
 
     private getRestaurant = asyncHandler(
         async (req: Request, res: Response): Promise<void> => {
-            const restaurantId = req.currentUser?._id;
-            if (!restaurantId) {
+            const restaurantId = req.currentUser._id;
+            if (!restaurantId)
                 throw new ResourceNotFound('Restaurant not found');
-            }
             const restaurant =
                 await this.restaurantService.getRestaurant(restaurantId);
 
@@ -285,10 +282,9 @@ export default class RestaurantController implements Controller {
 
     private updateRestaurant = asyncHandler(
         async (req: Request, res: Response): Promise<void> => {
-            const restaurantId = req.currentUser?._id;
-            if (!restaurantId) {
+            const restaurantId = req.currentUser._id;
+            if (!restaurantId)
                 throw new ResourceNotFound('Restaurant not found');
-            }
 
             // Transform the request body
             const { street, city, state, ...rest } = req.body;
@@ -321,9 +317,8 @@ export default class RestaurantController implements Controller {
     private changePassword = asyncHandler(
         async (req: Request, res: Response): Promise<void> => {
             const restaurantId = req.currentUser._id;
-            if (!restaurantId) {
+            if (!restaurantId)
                 throw new ResourceNotFound('Restaurant not found');
-            }
             const { currentPassword, newPassword } = req.body;
 
             await this.restaurantService.changePassword(
@@ -337,10 +332,9 @@ export default class RestaurantController implements Controller {
     );
     private getRestaurantAnalytics = asyncHandler(
         async (req: Request, res: Response): Promise<void> => {
-            const restaurantId = req.currentUser?._id;
-            if (!restaurantId) {
+            const restaurantId = req.currentUser._id;
+            if (!restaurantId)
                 throw new ResourceNotFound('Restaurant not found');
-            }
 
             const analytics =
                 await this.restaurantService.getRestaurantAnalytics(
@@ -359,9 +353,8 @@ export default class RestaurantController implements Controller {
     private getRestaurantOrders = asyncHandler(
         async (req: Request, res: Response): Promise<void> => {
             const restaurantId = req.currentUser._id;
-            if (!restaurantId) {
+            if (!restaurantId)
                 throw new ResourceNotFound('Restaurant not found');
-            }
 
             const orders = await this.restaurantService.getRestaurantOrders(
                 req,

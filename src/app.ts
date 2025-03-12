@@ -4,7 +4,8 @@ import cors from 'cors';
 import helmet from 'helmet';
 import swaggerUi from 'swagger-ui-express';
 import morgan from 'morgan';
-import { EmailQueueService, log } from '../src/utils';
+import { EmailQueueService, OrderQueueService } from '../src/queue';
+import { log } from '../src/utils';
 import { keepAlive, setupRiderPaymentCron } from '../src/jobs';
 import { Controller } from '../src/types';
 import { errorHandler, routeNotFound } from '../src/middlewares';
@@ -58,6 +59,8 @@ class App {
         try {
             await EmailQueueService.initializeEmailQueue();
             await EmailQueueService.consumeEmails();
+            await OrderQueueService.initializeOrderQueue();
+            await OrderQueueService.startOrderWorker();
             log.info('RabbitMQ initialized successfully');
         } catch (error) {
             log.error('Failed to initialize RabbitMQ:', error);

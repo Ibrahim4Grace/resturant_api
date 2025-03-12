@@ -1,5 +1,65 @@
 export const walletDocs = {
     paths: {
+        '/api/v1/wallet/banks': {
+            get: {
+                summary: 'Get a list of supported banks',
+                description:
+                    'Fetches a list of supported banks from Paystack and caches the response.',
+                tags: ['Banks - Bankcodes'],
+                responses: {
+                    200: {
+                        description:
+                            'List of supported banks retrieved successfully',
+                        content: {
+                            'application/json': {
+                                schema: {
+                                    type: 'array',
+                                    items: {
+                                        type: 'object',
+                                        properties: {
+                                            id: { type: 'number', example: 1 },
+                                            name: {
+                                                type: 'string',
+                                                example:
+                                                    'First Bank of Nigeria',
+                                            },
+                                            code: {
+                                                type: 'string',
+                                                example: '011',
+                                            },
+                                            slug: {
+                                                type: 'string',
+                                                example: 'first-bank',
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    500: {
+                        description: 'Server error while fetching banks',
+                        content: {
+                            'application/json': {
+                                schema: {
+                                    type: 'object',
+                                    properties: {
+                                        status: {
+                                            type: 'number',
+                                            example: 500,
+                                        },
+                                        message: {
+                                            type: 'string',
+                                            example: 'Failed to retrieve banks',
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
         '/api/v1/wallet/restaurant/balance': {
             get: {
                 summary: 'Get restaurant wallet balance',

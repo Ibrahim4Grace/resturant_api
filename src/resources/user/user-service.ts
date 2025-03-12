@@ -8,21 +8,21 @@ import { IOrder } from '../order/order-interface';
 import { IReview } from '../review/review-interface';
 import { orderData } from '../order/order-helper';
 import { reviewData } from '../review/review-helper';
+import { EmailQueueService } from '../../queue';
 import {
     LoginCredentials,
     IAddressPaginatedResponse,
     IOrderPaginatedResponse,
     IReviewPaginatedResponse,
-} from '../../types/index';
+} from '../../types/';
 import {
     TokenService,
-    EmailQueueService,
     withCachedData,
     CACHE_TTL,
     getPaginatedAndCachedResults,
     CACHE_KEYS,
     deleteCacheData,
-} from '../../utils/index';
+} from '../../utils';
 import {
     IUser,
     RegisterUserto,
@@ -42,7 +42,7 @@ import {
     BadRequest,
     Forbidden,
     Unauthorized,
-} from '../../middlewares/index';
+} from '../../middlewares';
 import {
     checkDuplicate,
     findUserByEmail,

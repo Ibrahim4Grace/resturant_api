@@ -241,9 +241,7 @@ export default class RiderController implements Controller {
     private getRider = asyncHandler(
         async (req: Request, res: Response): Promise<void> => {
             const riderId = req.currentUser._id;
-            if (!riderId) {
-                throw new ResourceNotFound('Rider not found');
-            }
+            if (!riderId) throw new ResourceNotFound('Rider not found');
             const rider = await this.riderService.getRiderById(riderId);
 
             sendJsonResponse(res, 200, 'Rider retrieved successfully', rider);
@@ -253,9 +251,8 @@ export default class RiderController implements Controller {
     private updateRiderProfile = asyncHandler(
         async (req: Request, res: Response): Promise<void> => {
             const riderId = req.currentUser._id;
-            if (!riderId) {
-                throw new ResourceNotFound('User not found');
-            }
+            if (!riderId) throw new ResourceNotFound('Rider not found');
+
             const updateData = req.body;
             const updatedRider = await this.riderService.updateRiderById(
                 riderId,
@@ -278,9 +275,7 @@ export default class RiderController implements Controller {
     private changePassword = asyncHandler(
         async (req: Request, res: Response): Promise<void> => {
             const riderId = req.currentUser._id;
-            if (!riderId) {
-                throw new ResourceNotFound('Rider not found');
-            }
+            if (!riderId) throw new ResourceNotFound('Rider not found');
             const { currentPassword, newPassword } = req.body;
 
             await this.riderService.changePassword(
@@ -296,9 +291,7 @@ export default class RiderController implements Controller {
     private orderReadyForPickup = asyncHandler(
         async (req: Request, res: Response): Promise<void> => {
             const riderId = req.currentUser._id;
-            if (!riderId) {
-                throw new ResourceNotFound('Rider not found');
-            }
+            if (!riderId) throw new ResourceNotFound('Rider not found');
             const paginatedResults =
                 res.paginatedResults as IPaginatedEntityResponse<IOrder>;
             const orders =
@@ -315,9 +308,7 @@ export default class RiderController implements Controller {
     private pickOrder = asyncHandler(
         async (req: Request, res: Response): Promise<void> => {
             const riderId = req.currentUser._id;
-            if (!riderId) {
-                throw new ResourceNotFound('Rider not found');
-            }
+            if (!riderId) throw new ResourceNotFound('Rider not found');
             const { orderId } = req.params;
 
             const order = await this.riderService.claimOrder(riderId, orderId);
@@ -328,9 +319,7 @@ export default class RiderController implements Controller {
     private updateOrderStatus = asyncHandler(
         async (req: Request, res: Response): Promise<void> => {
             const riderId = req.currentUser._id;
-            if (!riderId) {
-                throw new ResourceNotFound('Rider not found');
-            }
+            if (!riderId) throw new ResourceNotFound('Rider not found');
             const { orderId } = req.params;
             const { status } = req.body;
 
@@ -355,9 +344,7 @@ export default class RiderController implements Controller {
     private getRiderDeliveries = asyncHandler(
         async (req: Request, res: Response): Promise<void> => {
             const riderId = req.currentUser._id;
-            if (!riderId) {
-                throw new ResourceNotFound('Rider not found');
-            }
+            if (!riderId) throw new ResourceNotFound('Rider not found');
 
             const deliveries = await this.riderService.getRiderDeliveries(
                 req,
@@ -377,9 +364,7 @@ export default class RiderController implements Controller {
     private getRiderDeliveriesById = asyncHandler(
         async (req: Request, res: Response): Promise<void> => {
             const riderId = req.currentUser._id;
-            if (!riderId) {
-                throw new ResourceNotFound('Rider not found');
-            }
+            if (!riderId) throw new ResourceNotFound('Rider not found');
             const { deliveryId } = req.params;
             const delivery = await this.riderService.getRiderDeliveriesById(
                 riderId,

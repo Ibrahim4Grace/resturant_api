@@ -75,15 +75,12 @@ export default class PaymentController implements Controller {
 
     private handleWebhook = asyncHandler(
         async (req: Request, res: Response) => {
-            console.log('Webhook received:', req.body);
-
             const parsedBody = req.body;
 
             const signature = req.headers['x-paystack-signature'] as string;
             if (!signature) throw new BadRequest('Missing Paystack signature');
 
             const { event, data } = parsedBody;
-            console.log('Webhook event:', event);
 
             let success = false;
 
@@ -102,13 +99,6 @@ export default class PaymentController implements Controller {
                     rawBody: JSON.stringify(parsedBody),
                 });
             }
-
-            // const success = await this.paymentService.handleWebhookEvent(
-            //     event,
-            //     data,
-            //     signature,
-            //     JSON.stringify(parsedBody),
-            // );
 
             return res.status(success ? 200 : 400).json({
                 success,

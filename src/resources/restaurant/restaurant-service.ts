@@ -1,14 +1,13 @@
 import bcrypt from 'bcryptjs';
 import { Request, Response } from 'express';
-import { config } from '../../config/index';
+import { config, CloudinaryService } from '../../config';
 import { Types } from 'mongoose';
 import RestaurantModel from '../restaurant/restaurant-model';
 import UserModel from '../user/user-model';
-import { CloudinaryService } from '../../config/index';
 import OrderModel from '../order/order-model';
 import { orderData } from '../order/order-helper';
 import { IOrder } from '../order/order-interface';
-
+import { EmailQueueService } from '../../queue';
 import {
     LoginCredentials,
     UploadedImage,
@@ -29,19 +28,18 @@ import {
 } from '../restaurant/restaurant-email-template';
 import {
     TokenService,
-    EmailQueueService,
     withCachedData,
     CACHE_TTL,
     getPaginatedAndCachedResults,
     CACHE_KEYS,
     deleteCacheData,
-} from '../../utils/index';
+} from '../../utils';
 import {
     ResourceNotFound,
     BadRequest,
     Forbidden,
     Unauthorized,
-} from '../../middlewares/index';
+} from '../../middlewares';
 import {
     checkDuplicate,
     checkDuplicateAddress,
@@ -126,9 +124,8 @@ export class RestaurantService {
             'emailVerificationOTP.expiresAt': { $gt: new Date() },
         });
 
-        if (!restaurant) {
+        if (!restaurant)
             throw new BadRequest('Invalid or expired verification session');
-        }
 
         if (!restaurant?.emailVerificationOTP?.otp) {
             throw new BadRequest('No OTP found for this restaurant');
@@ -142,9 +139,7 @@ export class RestaurantService {
             otp,
             restaurant.emailVerificationOTP.otp.toString(),
         );
-        if (!isValid) {
-            throw new BadRequest('Invalid OTP');
-        }
+        if (!isValid) throw new BadRequest('Invalid OTP');
 
         restaurant.emailVerificationOTP = undefined;
         restaurant.isEmailVerified = true;

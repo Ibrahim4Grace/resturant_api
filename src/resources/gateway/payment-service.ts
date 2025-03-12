@@ -1,6 +1,6 @@
 import axios from 'axios';
 import crypto from 'crypto';
-import { config } from '../../config/index';
+import { config } from '../../config';
 import PaymentModel from '../gateway/payment-model';
 import SettingModel from '../settings/setting-model';
 import OrderModel from '../order/order-model';
@@ -10,7 +10,8 @@ import { WalletService } from '../wallet/wallet-service';
 import { UserService } from '../user/user-service';
 import { IOrder } from '../order/order-interface';
 import { IWebhookResponse } from '../../types';
-import { EmailQueueService, log } from '../../utils/index';
+import { log } from '../../utils';
+import { EmailQueueService } from '../../queue/index';
 import { orderConfirmationEmail } from '../gateway/payment-email-template';
 import {
     PaystackResponse,
@@ -26,7 +27,7 @@ import {
 
 export class PaymentService {
     private readonly PAYSTACK_SECRET = config.PAYSTACK_SECRET_KEY;
-    private readonly PAYSTACK_URL = config.PAYSTACK_URL;
+    private readonly PAYSTACK_URL = `${config.PAYSTACK_URL}/transaction/initialize`;
     private paymentModel = PaymentModel;
     private settingModel = SettingModel;
     private orderModel = OrderModel;
@@ -126,6 +127,32 @@ export class PaymentService {
         }
     }
 
+    async processPayment(params: paymentProcess): Promise<PaymentResponse> {
+        const { userId, orderId, paymentMethod, userEmail } = params;
+        const order = await this.userService.getUserOrderById(userId, orderId);
+        if (!order) {
+            throw new ResourceNotFound('Order not found');
+        }
+
+        const payment = await this.paymentModel.create({
+            userId,
+            orderId: order._id,
+            amount: order.total_price,
+            paymentMethod,
+            status: 'processing',
+        });
+
+        if (paymentMethod === 'cash_on_delivery') {
+            return await this.processCashOnDelivery(payment, order as IOrder);
+        }
+
+        return await this.processPaystackPayment(
+            payment,
+            order as IOrder,
+            userEmail,
+        );
+    }
+
     private async processSuccessfulPayment(data: any): Promise<void> {
         try {
             await this.paymentModel.findOneAndUpdate(
@@ -169,32 +196,6 @@ export class PaymentService {
             log.error('Error processing successful payment:', error);
             throw error;
         }
-    }
-
-    async processPayment(params: paymentProcess): Promise<PaymentResponse> {
-        const { userId, orderId, paymentMethod, userEmail } = params;
-        const order = await this.userService.getUserOrderById(userId, orderId);
-        if (!order) {
-            throw new ResourceNotFound('Order not found');
-        }
-
-        const payment = await this.paymentModel.create({
-            userId,
-            orderId: order._id,
-            amount: order.total_price,
-            paymentMethod,
-            status: 'processing',
-        });
-
-        if (paymentMethod === 'cash_on_delivery') {
-            return await this.processCashOnDelivery(payment, order as IOrder);
-        }
-
-        return await this.processPaystackPayment(
-            payment,
-            order as IOrder,
-            userEmail,
-        );
     }
 
     async verifyPayment(reference: string): Promise<boolean> {
