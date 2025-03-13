@@ -3,8 +3,7 @@ export const orderDocs = {
         '/api/v1/order': {
             post: {
                 summary: 'Place a new order',
-                tags: ['Orders'],
-                security: [{ BearerAuth: [] }],
+                tags: ['User - Orders'],
                 requestBody: {
                     required: true,
                     content: {
@@ -19,26 +18,36 @@ export const orderDocs = {
                                             properties: {
                                                 menuId: {
                                                     type: 'string',
-                                                    example:
-                                                        '65a1b2c3d4e5f6a7b8c9d0e1',
+                                                    example: '64f1b7d4c7e8a',
                                                 },
                                                 quantity: {
                                                     type: 'number',
                                                     example: 2,
-                                                },
-                                                delivery_address: {
-                                                    type: 'string',
-                                                    example:
-                                                        '123 main st, Ajah, LA',
                                                 },
                                             },
                                         },
                                     },
                                     restaurantId: {
                                         type: 'string',
-                                        example: '65a1b2c3d4e5f6a7b8c9d0e2',
+                                        example: '65a9c8e7f0d3b',
+                                    },
+                                    delivery_address: {
+                                        type: 'string',
+                                        example:
+                                            '123 Main Street, New York, NY',
+                                    },
+                                    payment_method: {
+                                        type: 'string',
+                                        enum: ['cash_on_delivery', 'transfer'],
+                                        example: 'cash_on_delivery',
                                     },
                                 },
+                                required: [
+                                    'items',
+                                    'restaurantId',
+                                    'delivery_address',
+                                    'payment_method',
+                                ],
                             },
                         },
                     },
@@ -63,18 +72,68 @@ export const orderDocs = {
                                         data: {
                                             type: 'object',
                                             properties: {
-                                                _id: {
+                                                order_number: {
                                                     type: 'string',
-                                                    example:
-                                                        '65a1b2c3d4e5f6a7b8c9d0e3',
+                                                    example: 'ORD123456',
                                                 },
-                                                status: {
+                                                userId: {
                                                     type: 'string',
-                                                    example: 'pending',
+                                                    example: '65a9c8e7f0d3b',
                                                 },
-                                                total: {
+                                                delivery_info: {
+                                                    type: 'object',
+                                                    properties: {
+                                                        delivery_address: {
+                                                            type: 'string',
+                                                            example:
+                                                                '123 Main Street, New York, NY',
+                                                        },
+                                                    },
+                                                },
+                                                restaurantId: {
+                                                    type: 'string',
+                                                    example: '65a9c8e7f0d3b',
+                                                },
+                                                items: {
+                                                    type: 'array',
+                                                    items: {
+                                                        type: 'object',
+                                                        properties: {
+                                                            menuId: {
+                                                                type: 'string',
+                                                                example:
+                                                                    '64f1b7d4c7e8a',
+                                                            },
+                                                            quantity: {
+                                                                type: 'number',
+                                                                example: 2,
+                                                            },
+                                                            price: {
+                                                                type: 'number',
+                                                                example: 15.99,
+                                                            },
+                                                        },
+                                                    },
+                                                },
+                                                subtotal: {
                                                     type: 'number',
-                                                    example: 25.5,
+                                                    example: 31.98,
+                                                },
+                                                tax: {
+                                                    type: 'number',
+                                                    example: 2.5,
+                                                },
+                                                delivery_fee: {
+                                                    type: 'number',
+                                                    example: 5.0,
+                                                },
+                                                total_price: {
+                                                    type: 'number',
+                                                    example: 39.48,
+                                                },
+                                                payment_method: {
+                                                    type: 'string',
+                                                    example: 'cash_on_delivery',
                                                 },
                                             },
                                         },
@@ -83,75 +142,27 @@ export const orderDocs = {
                             },
                         },
                     },
-                    400: { description: 'Bad request (e.g., invalid data)' },
-                    404: { description: 'User not found' },
-                    500: { description: 'Server error' },
-                },
-            },
-            get: {
-                summary: 'Get all orders for the current user',
-                tags: ['Orders'],
-                security: [{ BearerAuth: [] }],
-                parameters: [
-                    {
-                        in: 'query',
-                        name: 'page',
-                        schema: { type: 'integer', default: 1 },
-                        description: 'Page number for pagination',
-                    },
-                    {
-                        in: 'query',
-                        name: 'limit',
-                        schema: { type: 'integer', default: 10 },
-                        description: 'Number of items per page',
-                    },
-                ],
-                responses: {
-                    200: {
-                        description: 'Orders retrieved successfully',
+                    400: {
+                        description: 'Validation error',
                         content: {
                             'application/json': {
                                 schema: {
                                     type: 'object',
                                     properties: {
-                                        status: {
-                                            type: 'number',
-                                            example: 200,
-                                        },
-                                        message: {
-                                            type: 'string',
-                                            example:
-                                                'Orders retrieved successfully',
-                                        },
-                                        total: {
-                                            type: 'integer',
-                                            example: 50,
-                                        },
-                                        page: {
-                                            type: 'integer',
-                                            example: 1,
-                                        },
-                                        limit: {
-                                            type: 'integer',
-                                            example: 10,
-                                        },
-                                        data: {
+                                        errors: {
                                             type: 'array',
                                             items: {
                                                 type: 'object',
                                                 properties: {
-                                                    _id: {
+                                                    field: {
                                                         type: 'string',
                                                         example:
-                                                            '65a1b2c3d4e5f6a7b8c9d0e3',
+                                                            'payment_method',
                                                     },
-                                                    status: {
+                                                    message: {
                                                         type: 'string',
-                                                        example: 'pending',
-                                                    },
-                                                    total: {
-                                                        type: 'number',
-                                                        example: 25.5,
+                                                        example:
+                                                            'Payment method must be either cash_on_delivery or transfer',
                                                     },
                                                 },
                                             },
@@ -161,8 +172,86 @@ export const orderDocs = {
                             },
                         },
                     },
-                    404: { description: 'User not found' },
                     500: { description: 'Server error' },
+                },
+            },
+            '/api/v1/orders': {
+                get: {
+                    summary: 'Get all orders for  user',
+                    tags: ['Restaurant - Orders'],
+                    security: [{ BearerAuth: [] }],
+                    parameters: [
+                        {
+                            in: 'query',
+                            name: 'page',
+                            schema: { type: 'integer', default: 1 },
+                            description: 'Page number for pagination',
+                        },
+                        {
+                            in: 'query',
+                            name: 'limit',
+                            schema: { type: 'integer', default: 10 },
+                            description: 'Number of items per page',
+                        },
+                    ],
+                    responses: {
+                        200: {
+                            description: 'Orders retrieved successfully',
+                            content: {
+                                'application/json': {
+                                    schema: {
+                                        type: 'object',
+                                        properties: {
+                                            status: {
+                                                type: 'number',
+                                                example: 200,
+                                            },
+                                            message: {
+                                                type: 'string',
+                                                example:
+                                                    'Orders retrieved successfully',
+                                            },
+                                            total: {
+                                                type: 'integer',
+                                                example: 50,
+                                            },
+                                            page: {
+                                                type: 'integer',
+                                                example: 1,
+                                            },
+                                            limit: {
+                                                type: 'integer',
+                                                example: 10,
+                                            },
+                                            data: {
+                                                type: 'array',
+                                                items: {
+                                                    type: 'object',
+                                                    properties: {
+                                                        _id: {
+                                                            type: 'string',
+                                                            example:
+                                                                '65a1b2c3d4e5f6a7b8c9d0e3',
+                                                        },
+                                                        status: {
+                                                            type: 'string',
+                                                            example: 'pending',
+                                                        },
+                                                        total: {
+                                                            type: 'number',
+                                                            example: 25.5,
+                                                        },
+                                                    },
+                                                },
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                        404: { description: 'User not found' },
+                        500: { description: 'Server error' },
+                    },
                 },
             },
         },
@@ -229,10 +318,129 @@ export const orderDocs = {
                     },
                 },
             },
+            paths: {
+                '/api/v1/orders/cash-on-delivery-orders': {
+                    get: {
+                        summary: 'Get all cash-on-delivery orders',
+                        tags: ['Admin - Orders'],
+                        security: [{ BearerAuth: [] }],
+                        parameters: [
+                            {
+                                name: 'page',
+                                in: 'query',
+                                required: false,
+                                schema: {
+                                    type: 'integer',
+                                    example: 1,
+                                },
+                                description: 'Page number for pagination',
+                            },
+                            {
+                                name: 'limit',
+                                in: 'query',
+                                required: false,
+                                schema: {
+                                    type: 'integer',
+                                    example: 10,
+                                },
+                                description: 'Number of results per page',
+                            },
+                        ],
+                        responses: {
+                            200: {
+                                description:
+                                    'Cash-on-delivery orders retrieved successfully',
+                                content: {
+                                    'application/json': {
+                                        schema: {
+                                            type: 'object',
+                                            properties: {
+                                                results: {
+                                                    type: 'array',
+                                                    items: {
+                                                        type: 'object',
+                                                        properties: {
+                                                            order_number: {
+                                                                type: 'string',
+                                                                example:
+                                                                    'ORD12345',
+                                                            },
+                                                            userId: {
+                                                                type: 'string',
+                                                                example:
+                                                                    'user_abc123',
+                                                            },
+                                                            restaurantId: {
+                                                                type: 'string',
+                                                                example:
+                                                                    'resto_xyz456',
+                                                            },
+                                                            payment_method: {
+                                                                type: 'string',
+                                                                example:
+                                                                    'cash_on_delivery',
+                                                            },
+                                                            subtotal: {
+                                                                type: 'number',
+                                                                example: 5000,
+                                                            },
+                                                            tax: {
+                                                                type: 'number',
+                                                                example: 500,
+                                                            },
+                                                            delivery_fee: {
+                                                                type: 'number',
+                                                                example: 300,
+                                                            },
+                                                            total_price: {
+                                                                type: 'number',
+                                                                example: 5800,
+                                                            },
+                                                            status: {
+                                                                type: 'string',
+                                                                example:
+                                                                    'pending',
+                                                            },
+                                                        },
+                                                    },
+                                                },
+                                                pagination: {
+                                                    type: 'object',
+                                                    properties: {
+                                                        totalItems: {
+                                                            type: 'integer',
+                                                            example: 100,
+                                                        },
+                                                        totalPages: {
+                                                            type: 'integer',
+                                                            example: 10,
+                                                        },
+                                                        currentPage: {
+                                                            type: 'integer',
+                                                            example: 1,
+                                                        },
+                                                        pageSize: {
+                                                            type: 'integer',
+                                                            example: 10,
+                                                        },
+                                                    },
+                                                },
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                            401: { description: 'Unauthorized' },
+                            403: { description: 'Forbidden' },
+                            500: { description: 'Server error' },
+                        },
+                    },
+                },
+            },
             '/api/v1/order/{orderId}/confirm-delivery': {
-                patch: {
+                post: {
                     summary: 'Confirm delivery of an order',
-                    tags: ['User - Orders'],
+                    tags: ['restaurant - Orders'],
                     security: [{ BearerAuth: [] }],
                     parameters: [
                         {

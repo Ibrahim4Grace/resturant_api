@@ -26,6 +26,11 @@ const orderSchema = new Schema<IOrder>(
             },
         ],
         total_price: { type: Number, required: true },
+        payment_method: {
+            type: String,
+            enum: ['transfer', 'cash_on_delivery'],
+            required: true,
+        },
         subtotal: {
             type: Number,
             required: true,

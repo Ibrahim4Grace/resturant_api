@@ -8,6 +8,12 @@ const orderSchema = z.object({
     ),
     delivery_address: z.string().min(0, 'Delivery address is required'),
     restaurantId: z.string(),
+    payment_method: z.enum(['cash_on_delivery', 'transfer'], {
+        errorMap: () => ({
+            message:
+                "Payment method must be either 'cash_on_delivery' or 'transfer'",
+        }),
+    }),
 });
 
 const orderStatusSchema = z.object({

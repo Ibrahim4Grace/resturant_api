@@ -25,15 +25,20 @@ export default class PaymentController implements Controller {
     private walletService: WalletService;
 
     constructor() {
-        this.initializeRoutes();
         this.walletService = new WalletService();
-        this.orderService = new OrderService(this.paymentService);
         this.userService = new UserService();
-        this.paymentService = new PaymentService(
+        this.orderService = new OrderService();
+        this.paymentService = new PaymentService();
+
+        // Set dependencies after creation
+        this.orderService.setPaymentService(this.paymentService);
+        this.paymentService.setServices(
             this.orderService,
             this.userService,
             this.walletService,
         );
+
+        this.initializeRoutes();
     }
 
     private initializeRoutes(): void {

@@ -59,8 +59,8 @@ class App {
         try {
             await EmailQueueService.initializeEmailQueue();
             await EmailQueueService.consumeEmails();
-            await OrderQueueService.initializeOrderQueue();
-            await OrderQueueService.startOrderWorker();
+            // await OrderQueueService.initializeOrderQueue();
+            // await OrderQueueService.startOrderWorker();
             log.info('RabbitMQ initialized successfully');
         } catch (error) {
             log.error('Failed to initialize RabbitMQ:', error);

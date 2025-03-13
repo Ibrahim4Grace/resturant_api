@@ -38,65 +38,70 @@ export class OrderQueueService {
     }
 
     // Worker method as a static class method
-    static async startOrderWorker(): Promise<void> {
-        try {
-            const channel = await connectRabbitMQ();
-            await channel.assertQueue(ORDER_QUEUE_NAME, { durable: true });
+    // static async startOrderWorker(): Promise<void> {
+    //     try {
+    //         const channel = await connectRabbitMQ();
+    //         await channel.assertQueue(ORDER_QUEUE_NAME, { durable: true });
 
-            // Initialize services
-            const userService = new UserService();
-            const walletService = new WalletService();
-            const orderService = new OrderService(null as any); // Temporary null
-            const paymentService = new PaymentService(
-                orderService,
-                userService,
-                walletService,
-            );
-            orderService['paymentService'] = paymentService; // Inject after creation
+    //         // Initialize services
+    //         const userService = new UserService();
+    //         const walletService = new WalletService();
+    //         const orderService = new OrderService(null as any); // Temporary null
+    //         const paymentService = new PaymentService(
+    //             orderService,
+    //             userService,
+    //             walletService,
+    //         );
+    //         orderService['paymentService'] = paymentService; // Inject after creation
 
-            log.info(`Worker started, listening to "${ORDER_QUEUE_NAME}"`);
+    //         log.info(`Worker started, listening to "${ORDER_QUEUE_NAME}"`);
 
-            channel.consume(
-                ORDER_QUEUE_NAME,
-                async (msg) => {
-                    if (msg) {
-                        try {
-                            const orderData = JSON.parse(
-                                msg.content.toString(),
-                            );
-                            const {
-                                userId,
-                                orderInput,
-                                paymentMethod,
-                                userEmail,
-                            } = orderData;
+    //         channel.consume(
+    //             ORDER_QUEUE_NAME,
+    //             async (msg) => {
+    //                 if (msg) {
+    //                     try {
+    //                         const orderData = JSON.parse(
+    //                             msg.content.toString(),
+    //                         );
+    //                         log.debug('Processing order data:', orderData);
+    //                         const {
+    //                             userId,
+    //                             orderInput,
+    //                             paymentMethod,
+    //                             userEmail,
+    //                         } = orderData;
 
-                            // Place the order
-                            const order = await orderService.placeOrder(
-                                userId,
-                                orderInput,
-                            );
+    //                         // Place the order
+    //                         log.info(`Placing order for user ${userId}`);
+    //                         const order = await orderService.placeOrder(
+    //                             userId,
+    //                             orderInput,
+    //                         );
 
-                            // Process payment
-                            await paymentService.processPayment({
-                                userId,
-                                orderId: order._id.toString(),
-                                paymentMethod,
-                                userEmail,
-                            });
+    //                         // Process payment
+    //                         log.info(
+    //                             `Processing payment for order ${order._id}`,
+    //                         );
+    //                         await paymentService.processPayment({
+    //                             userId,
+    //                             orderId: order._id.toString(),
+    //                             paymentMethod,
+    //                             userEmail,
+    //                         });
 
-                            log.info(`Order processed: ${order.order_number}`);
-                            channel.ack(msg); // Acknowledge success
-                        } catch (error) {
-                            log.error('Error processing order:', error);
-                            channel.nack(msg, false, true); // Requeue for retry
-                        }
-                    }
-                },
-                { noAck: false },
-            );
-        } catch (error) {
-            log.error('Worker failed to start:', error);
-        }
-    }
+    //                         log.info(`Order processed: ${order.order_number}`);
+    //                         channel.ack(msg); // Acknowledge success
+    //                     } catch (error) {
+    //                         log.error('Error processing order:', error);
+    //                         channel.nack(msg, false, true); // Requeue for retry
+    //                     }
+    //                 }
+    //             },
+    //             { noAck: false },
+    //         );
+    //     } catch (error) {
+    //         log.error('Worker failed to start:', error);
+    //     }
+    // }
 }

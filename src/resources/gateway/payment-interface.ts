@@ -6,7 +6,7 @@ export interface IPayment {
     orderId: Types.ObjectId;
     amount: number;
     status: 'processing' | 'completed' | 'failed';
-    paymentMethod: 'paystack' | 'cash_on_delivery';
+    paymentMethod: 'transfer' | 'cash_on_delivery';
     transactionDetails?: {
         reference: string;
         authorizationUrl?: string;

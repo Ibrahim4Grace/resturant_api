@@ -16,6 +16,7 @@ export function orderData(order: IOrder): Partial<IOrder> {
         items: order.items,
         subtotal: order.subtotal,
         tax: order.tax,
+        payment_method: order.payment_method,
         delivery_fee: order.delivery_fee,
         delivery_info: order.delivery_info,
         createdAt: order.createdAt,

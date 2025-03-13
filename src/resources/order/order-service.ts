@@ -2,10 +2,19 @@ import { Request, Response } from 'express';
 import UserModel from '../user/user-model';
 import OrderModel from '../order/order-model';
 import MenuModel from '../menu/menu-model';
-import { IOrderPaginatedResponse } from '../../types';
 import { PaymentService } from '../gateway/payment-service';
 import { EmailQueueService } from '../../queue';
-import { ResourceNotFound, BadRequest, Unauthorized } from '../../middlewares';
+import {
+    IOrderPaginatedResponse,
+    IPaginatedEntityResponse,
+    IPaginationResponse,
+} from '../../types';
+import {
+    ResourceNotFound,
+    BadRequest,
+    Unauthorized,
+    ServerError,
+} from '../../middlewares';
 import {
     IOrder,
     DeliveryInfo,
@@ -40,8 +49,11 @@ export class OrderService {
     private checkOrderOwnership = checkOrderOwnership;
     private calculateOrderAmounts = calculateOrderAmounts;
     private paymentService: PaymentService;
+    constructor() {
+        // No dependencies in constructor
+    }
 
-    constructor(paymentService: PaymentService) {
+    setPaymentService(paymentService: PaymentService) {
         this.paymentService = paymentService;
     }
 
@@ -51,6 +63,7 @@ export class OrderService {
             items: { menuId: string; quantity: number }[];
             restaurantId: string;
             delivery_address: string;
+            payment_method: string;
         },
     ): Promise<Partial<IOrder>> {
         await this.validateUser(userId, this.user);
@@ -79,6 +92,7 @@ export class OrderService {
             tax: roundedTax,
             delivery_fee,
             total_price: roundedTotalPrice,
+            payment_method: orderData.payment_method,
         });
 
         return this.orderData(newOrder);
@@ -86,29 +100,31 @@ export class OrderService {
 
     public async confirmDelivery(params: {
         orderId: string;
-        userId: string;
+        restaurantId: string;
     }): Promise<IOrder> {
-        const { orderId, userId } = params;
+        const { orderId, restaurantId } = params;
 
         const order = await this.order.findById(orderId);
         if (!order) throw new ResourceNotFound('Order not found');
 
-        if (order.userId.toString() !== userId.toString()) {
+        if (order.restaurantId.toString() !== restaurantId.toString()) {
             throw new Unauthorized(
-                'You are not authorized to confirm this delivery',
+                'You are not authorized to confirm payment for this order',
             );
         }
 
-        if (order.status !== 'delivered') {
+        if (order.payment_method !== 'cash_on_delivery') {
             throw new BadRequest(
-                'Cannot confirm delivery for an order that is not marked as delivered',
+                'This operation is only valid for cash on delivery orders',
             );
         }
+        await this.paymentService.processCashOnDelivery(orderId);
 
         // Mark as confirmed
         const updatedOrder = await this.order.findByIdAndUpdate(
             orderId,
             {
+                status: 'delivered',
                 delivery_confirmed: true,
                 'delivery_info.customerConfirmationTime': new Date(),
             },
@@ -116,12 +132,10 @@ export class OrderService {
         );
 
         if (!updatedOrder) throw new ResourceNotFound('Order not found');
-        await this.paymentService.processRiderPayment(updatedOrder);
 
-        // Clear relevant caches
         await Promise.all([
             deleteCacheData(CACHE_KEYS.ORDER_BY_ID(orderId)),
-            deleteCacheData(CACHE_KEYS.ALL_USER_ORDER(userId)),
+            deleteCacheData(CACHE_KEYS.ALL_RESTAURANT_ORDERS(restaurantId)),
         ]);
 
         return updatedOrder;
@@ -222,6 +236,25 @@ export class OrderService {
                 totalPages: paginatedResults.totalPages,
                 limit: paginatedResults.limit,
             },
+        };
+    }
+
+    public async getAllCashOnDeliveryOrders(
+        paginatedResults: IPaginatedEntityResponse<IOrder>,
+    ): Promise<{
+        results: Partial<IOrder>[];
+        pagination: IPaginationResponse;
+    }> {
+        if (!paginatedResults) {
+            throw new ServerError('Pagination results not found');
+        }
+
+        const sanitizedResults = paginatedResults.results.map((order) =>
+            this.orderData(order),
+        );
+        return {
+            results: sanitizedResults,
+            pagination: paginatedResults.pagination,
         };
     }
 }

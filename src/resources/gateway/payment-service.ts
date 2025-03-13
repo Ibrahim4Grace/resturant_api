@@ -32,44 +32,46 @@ export class PaymentService {
     private settingModel = SettingModel;
     private orderModel = OrderModel;
     private rider = RiderModel;
+    private orderService: OrderService;
+    private userService: UserService;
+    private walletService: WalletService;
 
-    constructor(
-        private orderService: OrderService,
-        private userService: UserService,
-        private walletService: WalletService,
-    ) {}
+    constructor() {
+        // No dependencies in constructor
+    }
 
-    private async processCashOnDelivery(
-        payment: IPayment,
-        order: IOrder,
-    ): Promise<PaymentResponse> {
-        await this.paymentModel.findByIdAndUpdate(payment._id, {
-            status: 'processing',
-        });
+    setServices(
+        orderService: OrderService,
+        userService: UserService,
+        walletService: WalletService,
+    ) {
+        this.orderService = orderService;
+        this.userService = userService;
+        this.walletService = walletService;
+    }
 
-        const updatedOrder = await this.orderService.updateOrderStatus({
-            orderId: order._id.toString(),
-            restaurantId: order.restaurantId.toString(),
-            status: 'processing',
-        });
-        const user = await this.userService.getUserById(
-            order.userId.toString(),
-        );
+    async processCashOnDelivery(orderId: string): Promise<void> {
+        try {
+            const payment = await this.paymentModel.findOne({
+                orderId,
+                paymentMethod: 'cash_on_delivery',
+            });
 
-        if (user && updatedOrder) {
-            const emailOptions = orderConfirmationEmail(
-                { name: user.name, email: user.email },
-                updatedOrder as IOrder,
-            );
-            await EmailQueueService.addEmailToQueue(emailOptions);
+            if (!payment)
+                throw new ResourceNotFound('Payment record not found');
+            await this.paymentModel.findByIdAndUpdate(payment._id, {
+                status: 'completed',
+                completedAt: new Date(),
+            });
+
+            const order = await this.orderModel.findById(orderId);
+            if (!order) throw new ResourceNotFound('Order not found');
+
+            log.info(`Cash payment completed for order #${order.order_number}`);
+        } catch (error) {
+            log.error('Error completing cash on delivery payment:', error);
+            throw error;
         }
-        return {
-            success: true,
-            message: 'Order confirmed for cash on delivery',
-            data: {
-                reference: order.order_number,
-            },
-        };
     }
 
     private async processPaystackPayment(
@@ -143,7 +145,13 @@ export class PaymentService {
         });
 
         if (paymentMethod === 'cash_on_delivery') {
-            return await this.processCashOnDelivery(payment, order as IOrder);
+            return {
+                success: true,
+                message: 'Order confirmed for cash on delivery',
+                data: {
+                    reference: order.order_number,
+                },
+            };
         }
 
         return await this.processPaystackPayment(

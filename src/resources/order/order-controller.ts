@@ -1,23 +1,28 @@
 import { Router, Request, Response } from 'express';
-import { Controller } from '../../types';
-import { OrderQueueService } from '../../queue';
+import { Controller, IPaginatedEntityResponse } from '../../types';
 import validate from '../order/order-validation';
 import { OrderService } from '../order/order-service';
 import UserModel from '../user/user-model';
 import RestaurantModel from '../restaurant/restaurant-model';
+import AdminModel from '../admin/admin-model';
+import OrderModel from '../order/order-model';
 import { PaymentService } from '../gateway/payment-service';
 import { WalletService } from '../wallet/wallet-service';
 import { UserService } from '../user/user-service';
+import { paginatedResults } from '../../utils/index';
+import { IOrder } from '../order/order-interface';
 import {
     validateData,
     sendJsonResponse,
     asyncHandler,
     ResourceNotFound,
     authAndAuthorize,
+    BadRequest,
 } from '../../middlewares';
 
 export default class OrderController implements Controller {
     public path = '/order';
+    public paths = '/orders';
     public router = Router();
     private orderService: OrderService;
     private paymentService: PaymentService;
@@ -25,16 +30,31 @@ export default class OrderController implements Controller {
     private walletService: WalletService;
 
     constructor() {
-        this.initializeRoutes();
-        this.orderService = new OrderService(this.paymentService);
-        this.paymentService = new PaymentService(
+        this.userService = new UserService();
+        this.walletService = new WalletService();
+        this.orderService = new OrderService();
+        this.paymentService = new PaymentService();
+
+        // Set dependencies after creation
+        this.orderService.setPaymentService(this.paymentService);
+        this.paymentService.setServices(
             this.orderService,
             this.userService,
             this.walletService,
         );
+
+        this.initializeRoutes();
     }
 
     private initializeRoutes(): void {
+        this.router.get(
+            `${this.paths}/cash-on-delivery-orders`,
+            ...authAndAuthorize(AdminModel, ['admin']),
+            paginatedResults(OrderModel, (req) => ({
+                payment_method: 'cash_on_delivery',
+            })),
+            this.getAllCashOnDeliveryOrders,
+        );
         this.router.post(
             `${this.path}`,
             ...authAndAuthorize(UserModel, ['user']),
@@ -43,7 +63,7 @@ export default class OrderController implements Controller {
         );
         this.router.post(
             `${this.path}/:orderId/confirm-delivery`,
-            ...authAndAuthorize(UserModel, ['user']),
+            ...authAndAuthorize(RestaurantModel, ['restaurant_owner']),
             this.confirmDelivery,
         );
         this.router.patch(
@@ -65,7 +85,7 @@ export default class OrderController implements Controller {
         );
 
         this.router.get(
-            `${this.path}`,
+            `${this.paths}`,
             ...authAndAuthorize(RestaurantModel, ['restaurant_owner']),
             this.getUsersOrders,
         );
@@ -77,24 +97,42 @@ export default class OrderController implements Controller {
         if (!userId) throw new ResourceNotFound('User not found');
 
         const orderData = req.body;
-        await OrderQueueService.addOrderToQueue(orderData);
-        sendJsonResponse(res, 202, 'Order received, processing soon', {
-            tempId: `TEMP-${Date.now()}`,
-        });
+        const order = await this.orderService.placeOrder(userId, orderData);
 
-        // const order = await this.orderService.placeOrder(userId, orderData);
-        // sendJsonResponse(res, 201, 'Order placed successfully', order);
+        if (orderData.payment_method === 'cash_on_delivery') {
+            await this.paymentService.processPayment({
+                userId: userId,
+                orderId: order._id.toString(),
+                paymentMethod: 'cash_on_delivery',
+                userEmail: userEmail,
+            });
+            sendJsonResponse(res, 201, 'Order placed successfully', order);
+        } else if (orderData.payment_method === 'transfer') {
+            const paymentResult = await this.paymentService.processPayment({
+                userId: userId,
+                orderId: order._id.toString(),
+                paymentMethod: 'transfer',
+                userEmail: userEmail,
+            });
+            sendJsonResponse(res, 202, 'Payment initialized', {
+                order: order,
+                payment: paymentResult.data,
+            });
+        } else {
+            throw new BadRequest('Invalid payment method');
+        }
     });
 
     private confirmDelivery = asyncHandler(
         async (req: Request, res: Response) => {
             const { orderId } = req.params;
-            const userId = req.currentUser._id;
-            if (!userId) throw new ResourceNotFound('User not found');
+            const restaurantId = req.currentUser._id;
+            if (!restaurantId)
+                throw new ResourceNotFound('Restaurant not found');
 
             const order = await this.orderService.confirmDelivery({
                 orderId,
-                userId,
+                restaurantId,
             });
             sendJsonResponse(
                 res,
@@ -167,6 +205,26 @@ export default class OrderController implements Controller {
                 res,
                 200,
                 'User orders retrieved successfully',
+                orders,
+            );
+        },
+    );
+
+    private getAllCashOnDeliveryOrders = asyncHandler(
+        async (req: Request, res: Response) => {
+            const AdminId = req.currentUser._id;
+            if (!AdminId) throw new ResourceNotFound('Admin owner not found');
+            const paginatedResults =
+                res.paginatedResults as IPaginatedEntityResponse<IOrder>;
+            const orders =
+                await this.orderService.getAllCashOnDeliveryOrders(
+                    paginatedResults,
+                );
+
+            sendJsonResponse(
+                res,
+                200,
+                'Cash on delivery orders retrieved successfully',
                 orders,
             );
         },

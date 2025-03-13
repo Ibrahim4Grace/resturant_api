@@ -9,6 +9,7 @@ export interface IOrder extends Document {
     restaurantId: Types.ObjectId;
     items: OrderItem[];
     subtotal: number;
+    payment_method: 'transfer' | 'cash_on_delivery';
     tax: number;
     delivery_fee: number;
     delivery_info: DeliveryInfo;

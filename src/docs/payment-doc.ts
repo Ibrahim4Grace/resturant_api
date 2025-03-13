@@ -18,7 +18,7 @@ export const paymentDocs = {
                                     },
                                     paymentMethod: {
                                         type: 'string',
-                                        example: 'paystack',
+                                        example: 'transfer',
                                     },
                                 },
                                 required: ['orderId', 'paymentMethod'],

@@ -24,7 +24,7 @@ const paymentSchema = new Schema<IPayment>(
         },
         paymentMethod: {
             type: String,
-            enum: ['paystack', 'cash_on_delivery'],
+            enum: ['transfer', 'cash_on_delivery'],
             required: true,
         },
         transactionDetails: {
