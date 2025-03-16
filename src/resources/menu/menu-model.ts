@@ -47,4 +47,6 @@ menuSchema.pre('save', async function (next) {
     next();
 });
 
+menuSchema.index({ restaurantId: 1 });
+
 export default model<IMenu>('Menu', menuSchema);

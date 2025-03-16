@@ -48,7 +48,6 @@ export interface DeliveryInfo {
     riderId?: string;
     rider_name?: string;
     estimatedDeliveryTime?: Date;
-    customerConfirmationTime?: Date;
 }
 
 export interface BaseOrderParams {

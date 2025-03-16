@@ -7,7 +7,7 @@ import { CloudinaryService } from '../../config';
 import { newMenuConfirmationEmail } from '../menu/menu-email-template';
 import { menuData, checkDuplicateMenuItem } from '../menu/menu-helper';
 import { ResourceNotFound, Unauthorized } from '../../middlewares';
-import { EmailQueueService } from '../../queue';
+import { EmailQueueService } from '../../jobs';
 import {
     CACHE_TTL,
     getPaginatedAndCachedResults,

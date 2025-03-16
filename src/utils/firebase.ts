@@ -1,6 +1,6 @@
 import admin from 'firebase-admin';
 import { config } from '../config/index';
-import { log } from '../utils/index';
+import { logger } from '../utils/index';
 
 // const serviceAccount = {
 //     projectId: config.FIREBASE_PROJECT_ID,
@@ -24,9 +24,9 @@ export const sendFirebaseNotification = async (
                 body: message,
             },
         });
-        log.info('Firebase notification sent successfully');
+        logger.info('Firebase notification sent successfully');
     } catch (error) {
-        log.error('Failed to send Firebase notification:', error);
+        logger.error('Failed to send Firebase notification:', error);
         throw error;
     }
 };

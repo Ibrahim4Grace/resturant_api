@@ -4,12 +4,16 @@ import cors from 'cors';
 import helmet from 'helmet';
 import swaggerUi from 'swagger-ui-express';
 import morgan from 'morgan';
-import { EmailQueueService, OrderQueueService } from '../src/queue';
-import { log } from '../src/utils';
-import { keepAlive, setupRiderPaymentCron } from '../src/jobs';
+import rateLimit from 'express-rate-limit';
+import { logger } from '../src/utils';
 import { Controller } from '../src/types';
 import { errorHandler, routeNotFound } from '../src/middlewares';
-import { EmailListener, FirebaseListener } from '../src/events';
+import {
+    keepAlive,
+    riderPaymentCron,
+    EmailQueueService,
+    OrderQueueConsumers,
+} from '../src/jobs';
 import {
     corsOptions,
     config,
@@ -27,7 +31,6 @@ class App {
         this.port = port;
 
         this.initializeDatabase();
-        this.initializeEventListeners();
         this.initializeMiddlewares();
         this.initializeControllers(controllers);
         this.initializeRabbitMQ();
@@ -38,6 +41,12 @@ class App {
     }
 
     private initializeMiddlewares(): void {
+        const limiter = rateLimit({
+            windowMs: 60 * 1000,
+            max: 100,
+            message: 'Too many requests from this IP, please try again later.',
+        });
+        this.express.use(limiter);
         this.express.use(helmet());
         this.express.use(cors(corsOptions));
         if (config.NODE_ENV === 'development') {
@@ -59,11 +68,11 @@ class App {
         try {
             await EmailQueueService.initializeEmailQueue();
             await EmailQueueService.consumeEmails();
-            // await OrderQueueService.initializeOrderQueue();
-            // await OrderQueueService.startOrderWorker();
-            log.info('RabbitMQ initialized successfully');
+            await OrderQueueConsumers.initializeQueues();
+            await OrderQueueConsumers.startAllConsumers();
+            logger.info('RabbitMQ initialized successfully');
         } catch (error) {
-            log.error('Failed to initialize RabbitMQ:', error);
+            logger.error('Failed to initialize RabbitMQ:', error);
             process.exit(1);
         }
     }
@@ -83,28 +92,26 @@ class App {
     }
 
     private async initializeDatabase(): Promise<void> {
-        await initializeDatabase();
-    }
-
-    private async initializeEventListeners(): Promise<void> {
         try {
-            await EmailListener.listen();
-            // await FirebaseListener.listen();
-            log.info('Event listeners initialized successfully');
+            await initializeDatabase();
         } catch (error) {
-            log.error('Failed to initialize event listeners:', error);
+            logger.error(
+                'Failed to initialize database, shutting down:',
+                error,
+            );
+            process.exit(1);
         }
     }
 
     private setupGracefulShutdown(): void {
         const shutdown = async (signal: string) => {
-            log.info(`${signal} received. Shutting down gracefully...`);
+            logger.info(`${signal} received. Shutting down gracefully...`);
             try {
                 await closeRabbitMQ();
-                log.info('RabbitMQ connection closed');
+                logger.info('RabbitMQ connection closed');
                 process.exit(0);
             } catch (error) {
-                log.error('Error during shutdown:', error);
+                logger.error('Error during shutdown:', error);
             }
         };
 
@@ -114,14 +121,14 @@ class App {
     }
 
     private initializeKeepAlive(): void {
-        log.info('Initializing server cron job...');
+        logger.info('Initializing server cron job...');
         keepAlive(config.PROD_URL);
-        setupRiderPaymentCron();
+        riderPaymentCron();
     }
 
     public listen(): void {
         this.express.listen(this.port, () => {
-            log.info(`App listening on the port ${this.port}`);
+            logger.info(`App listening on the port ${this.port}`);
         });
     }
 }

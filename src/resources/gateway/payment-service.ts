@@ -1,6 +1,9 @@
 import axios from 'axios';
+import { Agent } from 'https';
 import crypto from 'crypto';
-import { config } from '../../config';
+import { config, connectRabbitMQ } from '../../config';
+import axiosRetry from 'axios-retry';
+import { logger } from '../../utils';
 import PaymentModel from '../gateway/payment-model';
 import SettingModel from '../settings/setting-model';
 import OrderModel from '../order/order-model';
@@ -10,8 +13,7 @@ import { WalletService } from '../wallet/wallet-service';
 import { UserService } from '../user/user-service';
 import { IOrder } from '../order/order-interface';
 import { IWebhookResponse } from '../../types';
-import { log } from '../../utils';
-import { EmailQueueService } from '../../queue/index';
+import { EmailQueueService } from '../../jobs';
 import { orderConfirmationEmail } from '../gateway/payment-email-template';
 import {
     PaystackResponse,
@@ -24,6 +26,25 @@ import {
     ResourceNotFound,
     BadRequest,
 } from '../../middlewares/index';
+
+// Configure Axios for Paystack with retries and keep-alive
+const paystackClient = axios.create({
+    baseURL: config.PAYSTACK_URL,
+    headers: {
+        Authorization: `Bearer ${config.PAYSTACK_SECRET_KEY}`,
+        'Content-Type': 'application/json',
+    },
+    //HTTP Keep-Alive reuses TCP connections reducing the overhead
+    // of establishing new connections for each Paystack request.
+    httpsAgent: new Agent({ keepAlive: true }),
+});
+axiosRetry(paystackClient, {
+    retries: 3,
+    retryDelay: (retryCount) => retryCount * 1000, // 1s, 2s, 3s
+    retryCondition: (error) => {
+        return error.response?.status === 429 || error.response?.status >= 500;
+    },
+});
 
 export class PaymentService {
     private readonly PAYSTACK_SECRET = config.PAYSTACK_SECRET_KEY;
@@ -67,9 +88,25 @@ export class PaymentService {
             const order = await this.orderModel.findById(orderId);
             if (!order) throw new ResourceNotFound('Order not found');
 
-            log.info(`Cash payment completed for order #${order.order_number}`);
+            logger.info(
+                `Cash payment completed for order #${order.order_number}`,
+            );
+            const user = await this.userService.getUserById(
+                order.userId.toString(),
+            );
+
+            if (user && order) {
+                const emailOptions = orderConfirmationEmail(
+                    { name: user.name, email: user.email },
+                    order,
+                );
+                await EmailQueueService.addEmailToQueue(emailOptions);
+                logger.info(
+                    `Order confirmation email queued for ${user.email}`,
+                );
+            }
         } catch (error) {
-            log.error('Error completing cash on delivery payment:', error);
+            logger.error('Error completing cash on delivery payment:', error);
             throw error;
         }
     }
@@ -91,15 +128,9 @@ export class PaymentService {
             callback_url: config.PAYMENT_CALLBACK_URL,
         };
         try {
-            const response = await axios.post<PaystackResponse>(
+            const response = await paystackClient.post<PaystackResponse>(
                 this.PAYSTACK_URL,
                 paymentData,
-                {
-                    headers: {
-                        Authorization: `Bearer ${this.PAYSTACK_SECRET}`,
-                        'Content-Type': 'application/json',
-                    },
-                },
             );
 
             await this.paymentModel.findByIdAndUpdate(payment._id, {
@@ -118,7 +149,7 @@ export class PaymentService {
                 },
             };
         } catch (error) {
-            log.error(
+            logger.error(
                 'Paystack error details:',
                 error.response?.data || error.message,
             );
@@ -132,9 +163,7 @@ export class PaymentService {
     async processPayment(params: paymentProcess): Promise<PaymentResponse> {
         const { userId, orderId, paymentMethod, userEmail } = params;
         const order = await this.userService.getUserOrderById(userId, orderId);
-        if (!order) {
-            throw new ResourceNotFound('Order not found');
-        }
+        if (!order) throw new ResourceNotFound('Order not found');
 
         const payment = await this.paymentModel.create({
             userId,
@@ -145,6 +174,7 @@ export class PaymentService {
         });
 
         if (paymentMethod === 'cash_on_delivery') {
+            await this.processCashOnDelivery(orderId);
             return {
                 success: true,
                 message: 'Order confirmed for cash on delivery',
@@ -161,11 +191,12 @@ export class PaymentService {
         );
     }
 
-    private async processSuccessfulPayment(data: any): Promise<void> {
+    async processSuccessfulPayment(data: any): Promise<void> {
         try {
             await this.paymentModel.findOneAndUpdate(
                 { 'transactionDetails.reference': data.reference },
                 { status: 'completed' },
+                { new: true },
             );
 
             // Store these values to reuse
@@ -181,7 +212,6 @@ export class PaymentService {
                 updatedOrder.userId.toString(),
             );
 
-            // Fetch the complete order only once
             let completeOrder = null;
             if (updatedOrder) {
                 completeOrder = await this.orderModel.findById(orderId);
@@ -201,7 +231,7 @@ export class PaymentService {
                 await this.processRestaurantCommissions(completeOrder);
             }
         } catch (error) {
-            log.error('Error processing successful payment:', error);
+            logger.error('Error processing successful payment:', error);
             throw error;
         }
     }
@@ -219,7 +249,7 @@ export class PaymentService {
 
             return response.data.data.status === 'success';
         } catch (error) {
-            log.error('Payment verification error:', error);
+            logger.error('Payment verification error:', error);
             return false;
         }
     }
@@ -243,11 +273,23 @@ export class PaymentService {
             throw new BadRequest('Invalid webhook signature');
         }
 
-        // Handle specific events
         if (event === 'charge.success') {
             const isVerified = await this.verifyPayment(data.reference);
             if (isVerified) {
-                await this.processSuccessfulPayment(data);
+                // Publish to RabbitMQ queue instead of processing synchronously
+                const channel = await connectRabbitMQ();
+                if (!channel) {
+                    throw new ServerError('Failed to connect to message queue');
+                }
+
+                const queue = 'payment_success';
+                await channel.assertQueue(queue, { durable: true });
+                channel.sendToQueue(queue, Buffer.from(JSON.stringify(data)), {
+                    persistent: true,
+                });
+                logger.info(
+                    `Payment success event for reference ${data.reference} sent to queue`,
+                );
                 return true;
             } else {
                 return false;
@@ -275,9 +317,11 @@ export class PaymentService {
                 reference: `restaurant-commission-${order.order_number}`,
             });
 
-            log.info(`Processed commissions for order #${order.order_number}`);
+            logger.info(
+                `Processed commissions for order #${order.order_number}`,
+            );
         } catch (error) {
-            log.error('Error processing commissions:', error);
+            logger.error('Error processing commissions:', error);
         }
     }
 
@@ -287,10 +331,18 @@ export class PaymentService {
                 return;
             }
 
+            if (order.delivery_confirmed) {
+                logger.info(
+                    `Order #${order.order_number} already confirmed, skipping`,
+                );
+                return;
+            }
+
             const settings = await this.settingModel.findOne();
             if (!settings) throw new ResourceNotFound('Settings not found');
+
             if (!order.delivery_info || !order.delivery_info.riderId) {
-                log.warn(
+                logger.warn(
                     `No rider assigned to delivered order #${order.order_number}`,
                 );
                 return;
@@ -302,8 +354,13 @@ export class PaymentService {
                 );
 
             if (existingTransaction) {
-                log.info(
+                logger.info(
                     `Payment for order #${order.order_number} already processed`,
+                );
+                // Mark as confirmed to prevent reprocessing
+                await OrderModel.updateOne(
+                    { _id: order._id },
+                    { $set: { delivery_confirmed: true } },
                 );
                 return;
             }
@@ -329,8 +386,13 @@ export class PaymentService {
             await this.rider.findByIdAndUpdate(order.delivery_info.riderId, {
                 status: 'available',
             });
+
+            await OrderModel.updateOne(
+                { _id: order._id },
+                { $set: { delivery_confirmed: true } },
+            );
         } catch (error) {
-            log.error('Error processing rider commission:', error);
+            logger.error('Error processing rider commission:', error);
         }
     }
 }

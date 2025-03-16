@@ -8,7 +8,7 @@ import { IOrder } from '../order/order-interface';
 import { orderStatusUpdateEmail } from '../order/order-email-template';
 import { riderAssignedEmail } from '../rider/rider-email-template';
 import { orderData } from '../order/order-helper';
-import { EmailQueueService } from '../../queue';
+import { EmailQueueService } from '../../jobs';
 import {
     TokenService,
     getPaginatedAndCachedResults,
@@ -16,7 +16,6 @@ import {
     CACHE_TTL,
     CACHE_KEYS,
     deleteCacheData,
-    log,
 } from '../../utils';
 import {
     UploadedImage,

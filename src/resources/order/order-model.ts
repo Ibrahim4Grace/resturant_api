@@ -51,7 +51,6 @@ const orderSchema = new Schema<IOrder>(
             },
             rider_name: String,
             estimatedDeliveryTime: Date,
-            customerConfirmationTime: Date,
         },
         order_number: { type: String, required: true },
         status: {
@@ -89,5 +88,13 @@ const orderSchema = new Schema<IOrder>(
     },
     { timestamps: true },
 );
+
+// Add indexes for frequently queried fields
+orderSchema.index({ userId: 1 });
+orderSchema.index({ restaurantId: 1 });
+orderSchema.index({ order_number: 1 }, { unique: true });
+orderSchema.index({ status: 1 });
+orderSchema.index({ 'delivery_info.riderId': 1 });
+orderSchema.index({ delivery_confirmed: 1 });
 
 export default model<IOrder>('Order', orderSchema);

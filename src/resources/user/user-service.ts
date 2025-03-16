@@ -8,7 +8,7 @@ import { IOrder } from '../order/order-interface';
 import { IReview } from '../review/review-interface';
 import { orderData } from '../order/order-helper';
 import { reviewData } from '../review/review-helper';
-import { EmailQueueService } from '../../queue';
+import { EmailQueueService } from '../../jobs';
 import {
     LoginCredentials,
     IAddressPaginatedResponse,

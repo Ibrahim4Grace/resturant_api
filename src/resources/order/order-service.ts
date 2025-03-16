@@ -3,7 +3,7 @@ import UserModel from '../user/user-model';
 import OrderModel from '../order/order-model';
 import MenuModel from '../menu/menu-model';
 import { PaymentService } from '../gateway/payment-service';
-import { EmailQueueService } from '../../queue';
+import { EmailQueueService } from '../../jobs';
 import {
     IOrderPaginatedResponse,
     IPaginatedEntityResponse,
@@ -27,7 +27,6 @@ import {
     getPaginatedAndCachedResults,
     deleteCacheData,
     CACHE_KEYS,
-    log,
 } from '../../utils';
 import {
     orderStatusUpdateEmail,

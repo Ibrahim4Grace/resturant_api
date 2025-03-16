@@ -20,7 +20,7 @@ import { riderData } from '../rider/rider-helper';
 import { reviewData } from '../review/review-helper';
 import { restaurantData } from '../restaurant/restaurant-helper';
 import { IReview } from '../review/review-interface';
-import { EmailQueueService } from '../../queue';
+import { EmailQueueService } from '../../jobs';
 import {
     IRestaurant,
     RestaurantAnalytics,

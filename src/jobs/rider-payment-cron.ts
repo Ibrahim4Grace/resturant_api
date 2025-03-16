@@ -1,5 +1,5 @@
 import cron from 'node-cron';
-import { log } from '../utils';
+import { logger } from '../utils';
 import SettingModel from '../resources/settings/setting-model';
 import OrderModel from '../resources/order/order-model';
 import { PaymentService } from '../resources/gateway/payment-service';
@@ -7,28 +7,26 @@ import { OrderService } from '../resources/order/order-service';
 import { UserService } from '../resources/user/user-service';
 import { WalletService } from '../resources/wallet/wallet-service';
 
-const orderService = new OrderService(paymentService);
+// Instantiate without arguments
+const orderService = new OrderService();
 const userService = new UserService();
 const walletService = new WalletService();
-var paymentService = new PaymentService(
-    orderService,
-    userService,
-    walletService,
-);
+const paymentService = new PaymentService();
 
-export const setupRiderPaymentCron = () => {
+// Set dependencies after creation
+paymentService.setServices(orderService, userService, walletService);
+
+export const riderPaymentCron = () => {
     // Run every hour at the start of the hour (e.g., 1:00, 2:00, etc.)
     cron.schedule(
         '0 * * * *',
         async () => {
             try {
-                log.info('Checking for pending rider payments');
+                logger.info('Checking for pending rider payments');
 
                 const settings = await SettingModel.findOne();
-                if (!settings) {
-                    log.warn('No settings found, skipping rider payment check');
-                    return;
-                }
+                if (!settings) return;
+
                 // Process payment after a delay period if no dispute raised
                 const disputeWindowHours = settings.dispute_window_hours || 2;
                 const cutoffTime = new Date();
@@ -41,21 +39,37 @@ export const setupRiderPaymentCron = () => {
                     'delivery_info.riderId': { $exists: true },
                 });
 
-                log.info(
+                logger.info(
                     `Found ${pendingOrders.length} orders with pending rider payments`,
                 );
 
+                let processedCount = 0;
                 for (const order of pendingOrders) {
-                    await paymentService.processRiderPayment(order);
+                    try {
+                        await paymentService.processRiderPayment(order);
+                        processedCount++;
+                    } catch (error) {
+                        logger.error(
+                            `Failed to process rider payment for order #${order.order_number}:`,
+                            error.message,
+                        );
+                    }
                 }
 
-                if (pendingOrders.length > 0) {
-                    log.info(
-                        `Processed ${pendingOrders.length} rider payments`,
+                if (processedCount > 0) {
+                    logger.info(
+                        `Successfully processed ${processedCount} rider payments`,
+                    );
+                } else if (pendingOrders.length > 0) {
+                    logger.warn(
+                        `Failed to process any of the ${pendingOrders.length} pending rider payments`,
                     );
                 }
             } catch (error) {
-                log.error('Error checking pending rider payments:', error);
+                logger.error(
+                    'Error checking pending rider payments:',
+                    error.message,
+                );
             }
         },
         {
@@ -64,5 +78,5 @@ export const setupRiderPaymentCron = () => {
         },
     );
 
-    log.info('Rider payment cron job scheduled');
+    logger.info('Rider payment cron job scheduled');
 };

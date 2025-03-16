@@ -7,7 +7,7 @@ import UserModel from '../user/user-model';
 import OrderModel from '../order/order-model';
 import { orderData } from '../order/order-helper';
 import { IOrder } from '../order/order-interface';
-import { EmailQueueService } from '../../queue';
+import { EmailQueueService } from '../../jobs';
 import {
     LoginCredentials,
     UploadedImage,

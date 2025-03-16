@@ -1,5 +1,5 @@
 export interface ISetting {
-    _id: string;
+    _id?: string;
     tax_rate: number;
     delivery_fee: number;
     app_commission: number;

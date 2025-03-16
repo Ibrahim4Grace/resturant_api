@@ -10,6 +10,7 @@ src/ormconfig.ts
 yarn.lock
 build
 dist
+load-test.yml
 issueformat.md
 requests.rest
 package-lock.json
